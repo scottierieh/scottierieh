@@ -74,4 +74,22 @@ th{background:#f8fafc;font-weight:600}
 .sig{color:#059669;font-weight:700;}
 .nsig{color:#9ca3af;font-weight:700;}
 
+.styled-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 12px;
+  font-size: 13px;
+}
+.styled-table th, .styled-table td {
+  padding: 8px 12px;
+  border-bottom: 1px solid #eef2f7;
+  text-align: center;
+}
+.styled-table th {
+  background: #f8fafc;
+  font-weight: 600;
+}
 
+/* p-value 강조 색상 */
+.sig { color: #059669; font-weight: 700; }   /* 유의 */
+.nsig { color: #9ca3af; font-weight: 700; } /* 비유의 */
