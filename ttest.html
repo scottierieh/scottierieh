@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -81,6 +82,11 @@
   .data-info{background:#f0f9ff;padding:12px;border-radius:8px;margin:10px 0;border:1px solid #e0f2fe}
   .variable-list{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
   .variable-tag{background:#e5e7eb;padding:4px 8px;border-radius:6px;font-size:12px}
+  .interpretation{background:#f8fafc;border-left:4px solid #64748b;padding:18px;margin-top:20px;border-radius:8px;border:1px solid #e2e8f0}
+  .interpretation h4{margin:0 0 12px 0;color:#334155;font-size:16px}
+  .status-badge{padding:4px 8px;border-radius:6px;font-size:12px;font-weight:600}
+  .status-success{background:#d1fae5;color:#065f46}
+  .status-danger{background:#fee2e2;color:#991b1b}
 </style>
 </head>
 <body>
@@ -92,7 +98,7 @@
       <div class="menu-item" data-target="stats.html">기술통계</div>
 
       <div class="menu-category">집단 간 차이 검정</div>
-      <div class="menu-item active" data-target="ttest.html">t-검정 (독립/대응)</div>
+      <div class="menu-item active" data-target="t_test.html">t-검정 (독립/대응)</div>
       <div class="menu-item" data-target="chisquare.html">카이제곱 검정</div>
       <div class="menu-item" data-target="main-nonparam">비모수 검정</div>
       <div class="menu-item" data-target="main-anova">분산분석 (ANOVA)</div>
@@ -164,6 +170,12 @@
       <h3>분석 결과</h3>
       <div id="resultTables"></div>
       <div id="ttestPlot" style="height:350px;margin-top:20px;"></div>
+    </div>
+
+    <!-- 결과 해석 -->
+    <div class="panel" id="interpretationPanel" style="display:none;">
+      <h3>결과 해석</h3>
+      <div id="interpretation"></div>
     </div>
   </div>
 
@@ -332,6 +344,7 @@ function tCdf(t, df) {
 function runTtest(){
   const type=document.getElementById('testType').value;
   let result="", plotData=[], layout={}, pval=1;
+  let testResult = null; // 해석용 결과 저장
 
   if(type==="one"){
     const v=document.getElementById('oneVar').value;
@@ -342,6 +355,21 @@ function runTtest(){
     const df=n-1; 
     pval=2*(1-tCdf(Math.abs(t),df));
     const d=(m-mu0)/s;
+    
+    // 해석용 결과 저장
+    testResult = {
+      type: '단일표본 t-검정',
+      variable: v,
+      n: n,
+      mean: m,
+      std: s,
+      mu0: mu0,
+      t: t,
+      df: df,
+      pvalue: pval,
+      cohensD: d,
+      significant: pval < 0.05
+    };
     
     result+=tableHTML(
       ["N","평균","표준편차","t","df","p","Cohen's d"],
@@ -437,6 +465,27 @@ function runTtest(){
     const sp=(type==="independent")?Math.sqrt(((n1-1)*sd1*sd1+(n2-1)*sd2*sd2)/(n1+n2-2)):Math.sqrt((sd1*sd1+sd2*sd2)/2);
     const d=(m1-m2)/sp;
 
+    // 해석용 결과 저장
+    testResult = {
+      type: type==="independent" ? '독립표본 t-검정 (Student)' : '독립표본 t-검정 (Welch)',
+      groupVar: gVar,
+      variable: v,
+      group1: keys[0],
+      group2: keys[1],
+      n1: n1,
+      n2: n2,
+      mean1: m1,
+      mean2: m2,
+      std1: sd1,
+      std2: sd2,
+      t: t,
+      df: df,
+      pvalue: pval,
+      cohensD: d,
+      significant: pval < 0.05,
+      meanDiff: m1 - m2
+    };
+
     result+=tableHTML(
       ["집단","N","평균","표준편차"],
       [[keys[0],n1,m1.toFixed(2),sd1.toFixed(2)],[keys[1],n2,m2.toFixed(2),sd2.toFixed(2)]]
@@ -473,6 +522,23 @@ function runTtest(){
     pval = 2 * (1 - tCdf(Math.abs(t), df));
     const d = md / sd;
     
+    // 해석용 결과 저장
+    testResult = {
+      type: '대응표본 t-검정',
+      variable1: v1,
+      variable2: v2,
+      n: n,
+      mean1: mean(x1),
+      mean2: mean(x2),
+      meanDiff: md,
+      stdDiff: sd,
+      t: t,
+      df: df,
+      pvalue: pval,
+      cohensD: d,
+      significant: pval < 0.05
+    };
+    
     result += tableHTML(
       ["N","평균차","표준편차(차)","t","df","p","Cohen's d"],
       [[n,md.toFixed(2),sd.toFixed(2),t.toFixed(3),df,formatP(pval),d.toFixed(3)]]
@@ -488,6 +554,105 @@ function runTtest(){
   document.getElementById('resultTables').innerHTML=result;
   document.getElementById('resultsPanel').style.display='block';
   Plotly.newPlot('ttestPlot',plotData,layout,{displayModeBar:false});
+  
+  // 해석 생성
+  generateInterpretation(testResult);
+}
+
+// 해석 생성 함수
+function generateInterpretation(result) {
+  if (!result) return;
+
+  let html = '<div class="interpretation">';
+  html += '<h4>📊 t-검정 결과 해석</h4>';
+  
+  // 유의성 검정 결과
+  if (result.pvalue < 0.001) {
+    html += `<div style="margin-bottom:15px;"><strong>매우 강한 유의성:</strong><br>`;
+    html += `• p < 0.001로 <span class="status-badge status-danger">매우 높은 유의수준</span>에서 통계적으로 유의한 차이가 있습니다.<br>`;
+  } else if (result.pvalue < 0.01) {
+    html += `<div style="margin-bottom:15px;"><strong>강한 유의성:</strong><br>`;
+    html += `• p < 0.01로 <span class="status-badge status-danger">높은 유의수준</span>에서 통계적으로 유의한 차이가 있습니다.<br>`;
+  } else if (result.pvalue < 0.05) {
+    html += `<div style="margin-bottom:15px;"><strong>유의한 차이:</strong><br>`;
+    html += `• p < 0.05로 <span class="status-badge status-danger">통계적으로 유의한 차이</span>가 있습니다.<br>`;
+  } else {
+    html += `<div style="margin-bottom:15px;"><strong>유의하지 않음:</strong><br>`;
+    html += `• p = ${result.pvalue.toFixed(3)}으로 <span class="status-badge status-success">통계적으로 유의한 차이가 없습니다</span>.<br>`;
+  }
+  
+  // 검정별 구체적 해석
+  if (result.type === '단일표본 t-검정') {
+    html += `• 표본평균 ${result.mean.toFixed(2)}와 모집단 기준값 ${result.mu0} 간의 차이를 검정했습니다.<br>`;
+    if (result.significant) {
+      if (result.mean > result.mu0) {
+        html += `• 표본평균이 기준값보다 <strong>유의하게 높습니다</strong>.<br>`;
+      } else {
+        html += `• 표본평균이 기준값보다 <strong>유의하게 낮습니다</strong>.<br>`;
+      }
+    } else {
+      html += `• 표본평균과 기준값 사이에 <strong>유의한 차이가 없습니다</strong>.<br>`;
+    }
+    html += `</div>`;
+    
+  } else if (result.type.includes('독립표본')) {
+    html += `• ${result.group1}(평균: ${result.mean1.toFixed(2)})과 ${result.group2}(평균: ${result.mean2.toFixed(2)}) 집단 간 ${result.variable}의 차이를 검정했습니다.<br>`;
+    if (result.significant) {
+      if (result.meanDiff > 0) {
+        html += `• ${result.group1} 집단이 ${result.group2} 집단보다 <strong>유의하게 높은 값</strong>을 보입니다 (차이: ${Math.abs(result.meanDiff).toFixed(2)}).<br>`;
+      } else {
+        html += `• ${result.group2} 집단이 ${result.group1} 집단보다 <strong>유의하게 높은 값</strong>을 보입니다 (차이: ${Math.abs(result.meanDiff).toFixed(2)}).<br>`;
+      }
+    } else {
+      html += `• 두 집단 간에 <strong>유의한 차이가 없습니다</strong>.<br>`;
+    }
+    html += `</div>`;
+    
+  } else if (result.type === '대응표본 t-검정') {
+    html += `• ${result.variable1}(평균: ${result.mean1.toFixed(2)})과 ${result.variable2}(평균: ${result.mean2.toFixed(2)}) 간의 차이를 검정했습니다.<br>`;
+    if (result.significant) {
+      if (result.meanDiff > 0) {
+        html += `• ${result.variable1}이 ${result.variable2}보다 <strong>유의하게 높습니다</strong> (평균차이: ${result.meanDiff.toFixed(2)}).<br>`;
+      } else {
+        html += `• ${result.variable2}가 ${result.variable1}보다 <strong>유의하게 높습니다</strong> (평균차이: ${Math.abs(result.meanDiff).toFixed(2)}).<br>`;
+      }
+    } else {
+      html += `• 두 측정값 간에 <strong>유의한 차이가 없습니다</strong>.<br>`;
+    }
+    html += `</div>`;
+  }
+  
+  // 효과크기 해석
+  html += `<div style="margin-bottom:15px;"><strong>효과크기 (Cohen's d = ${result.cohensD.toFixed(3)}):</strong><br>`;
+  const absD = Math.abs(result.cohensD);
+  if (absD < 0.2) {
+    html += `• <strong>매우 작은 효과크기</strong>입니다. 실질적 차이는 미미합니다.<br>`;
+  } else if (absD < 0.5) {
+    html += `• <strong>작은 효과크기</strong>입니다. 실질적으로 작은 차이가 있습니다.<br>`;
+  } else if (absD < 0.8) {
+    html += `• <strong>중간 효과크기</strong>입니다. 실질적으로 의미있는 차이가 있습니다.<br>`;
+  } else {
+    html += `• <strong>큰 효과크기</strong>입니다. 실질적으로 매우 큰 차이가 있습니다.<br>`;
+  }
+  html += `</div>`;
+  
+  // 실용적 결론
+  html += `<div style="margin-bottom:15px;"><strong>실용적 결론:</strong><br>`;
+  if (result.significant && absD >= 0.2) {
+    html += `• 통계적으로 유의하고 실질적으로도 의미있는 차이가 발견되었습니다.<br>`;
+    html += `• 이 결과는 <strong>실제 적용에서 고려할 만한 차이</strong>로 해석됩니다.<br>`;
+  } else if (result.significant && absD < 0.2) {
+    html += `• 통계적으로는 유의하지만 효과크기가 작아 <strong>실질적 의미는 제한적</strong>일 수 있습니다.<br>`;
+    html += `• 표본 크기가 클 때 나타날 수 있는 현상입니다.<br>`;
+  } else {
+    html += `• 통계적으로 유의한 차이가 없으므로 <strong>현재 증거로는 차이가 있다고 결론내릴 수 없습니다</strong>.<br>`;
+  }
+  html += `</div>`;
+  
+  html += '</div>';
+  
+  document.getElementById('interpretation').innerHTML = html;
+  document.getElementById('interpretationPanel').style.display = 'block';
 }
 
 // 유틸리티 함수들
