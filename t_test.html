@@ -251,6 +251,40 @@ label {
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
 
+ <!-- 사이드바 -->
+  <div class="sidebar">
+    <h2>📊 분석 메뉴</h2>
+    <div id="menuList">
+      <div class="menu-category">데이터 탐색</div>
+      <div class="menu-item" data-target="main-descriptive">기술통계</div>
+
+      <div class="menu-category">집단 간 차이 검정</div>
+      <div class="menu-item" data-target="main-ttest">t-검정 (독립/대응)</div>
+      <div class="menu-item active" data-target="main-chi">카이제곱 검정</div>
+      <div class="menu-item" data-target="main-nonparam">비모수 검정</div>
+      <div class="menu-item" data-target="main-anova">분산분석 (ANOVA)</div>
+
+      <div class="menu-category">변수 간 관계 분석</div>
+      <div class="menu-item" data-target="main-corr">상관분석</div>
+      <div class="menu-item" data-target="main-reg">회귀분석</div>
+      <div class="menu-item" data-target="main-probit">프로빗분석</div>
+      <div class="menu-item" data-target="main-mediation">매개효과</div>
+      <div class="menu-item" data-target="main-moderation">조절효과</div>
+      <div class="menu-item" data-target="main-discriminant">판별분석</div>
+      <div class="menu-item" data-target="main-sem">SEM (구조방정식 모형)</div>
+
+      <div class="menu-category">차원 축소 / 군집화</div>
+      <div class="menu-item" data-target="main-pca">PCA</div>
+      <div class="menu-item" data-target="main-efa">탐색적 요인분석 (EFA)</div>
+      <div class="menu-item" data-target="main-cfa">확인적 요인분석 (CFA)</div>
+      <div class="menu-item" data-target="main-cluster">군집분석</div>
+    </div>
+  </div>
+
+  
+
+
+  
 </head>
 <body>
   <div class="main">
