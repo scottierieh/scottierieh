@@ -614,6 +614,21 @@ Female,College,High,Adult`;
 
 document.getElementById("runBasic").addEventListener("click", runBasicAnalysis);
 document.getElementById("runDetailed").addEventListener("click", runDetailedAnalysis);
+
+// 🔥 여기에 메뉴 이동 JavaScript 추가
+document.querySelectorAll('.menu-item').forEach(item => {
+  item.addEventListener('click', function() {
+    const target = this.dataset.target;
+    if (target) {
+      // 현재 페이지와 다른 경우에만 이동
+      const currentPage = window.location.pathname.split('/').pop();
+      if (target !== currentPage) {
+        window.location.href = target;
+      }
+    }
+  });
+});
+  
 </script>
 </body>
 </html>
