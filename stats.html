@@ -886,6 +886,21 @@ document.getElementById("runTtest").addEventListener("click", () => {
     alert("T-검정 실행 중 오류가 발생했습니다: " + error.message);
   }
 });
+document.querySelectorAll('.menu-item').forEach(item => {
+  item.addEventListener('click', function() {
+    const target = this.dataset.target;
+    if (target) {
+      // 현재 페이지와 다른 경우에만 이동
+      const currentPage = window.location.pathname.split('/').pop();
+      if (target !== currentPage) {
+        window.location.href = target;
+      }
+    }
+  });
+});
+  
+  
 </script>
 </body>
 </html>
+
