@@ -1,73 +1,93 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>TTEST</title>
-  <link rel="stylesheet" href="style.css" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>통계분석 종합도구</title>
+
+<!-- 라이브러리 -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+
+<style>
+  body {font-family: sans-serif; margin:0; display:flex; min-height:100vh; background:#f4f5f7;}
+  .sidebar {width:250px; background:#ffffff; padding:20px; box-shadow:0 0 8px rgba(0,0,0,0.1);}
+  .menu-item {padding:10px; margin:5px 0; cursor:pointer; border-radius:6px; color:#333;}
+  .menu-item.active {background:#2563eb; color:#fff;}
+  .main {flex:1; padding:20px;}
+  .analysis-section {display:none;}
+  .analysis-section.active {display:block;}
+
+  /* 카드/버튼/테이블 */
+  .panel{background:#fff;border-radius:16px;padding:18px;box-shadow:0 8px 30px rgba(16,24,40,0.06);margin-bottom:20px}
+  h1{margin:0;font-size:22px;color:#2563eb}
+  .controls{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+  .btn{border:0;padding:10px 16px;border-radius:10px;cursor:pointer;font-weight:600}
+  .btn.primary{background:#2563eb;color:#fff}
+  .btn.success{background:#059669;color:#fff}
+  .btn.ghost{background:#f3f4f6;color:#111827}
+
+  /* 테이블 */
+  .styled-table {width:100%;border-collapse:collapse;margin-top:12px;font-size:13px}
+  .styled-table th, .styled-table td {padding:8px 12px;border-bottom:1px solid #eef2f7;text-align:center}
+  .styled-table th {background:#f8fafc;font-weight:600}
+
+  /* p-value 강조 */
+  .sig{color:#059669;font-weight:700;}
+  .nsig{color:#9ca3af;font-weight:700;}
+</style>
 </head>
 <body>
 
+  <!-- 사이드바 -->
   <div class="sidebar">
-    <h2>📊 분석 메뉴</h2>
-    <div id="menuList">
-      <div class="menu-category">데이터 탐색</div>
-      <a href="descriptive.html" class="menu-item">기술통계</a>
-
-      <div class="menu-category">집단 간 차이 검정</div>
-      <a href="ttest.html" class="menu-item">t-검정 (독립/대응)</a>
-      <a href="chi.html" class="menu-item">카이제곱 검정</a>
-      <a href="anova.html" class="menu-item">분산분석 (ANOVA)</a>
-
-      <div class="menu-category">변수 간 관계 분석</div>
-      <a href="corr.html" class="menu-item">상관분석</a>
-      <a href="reg.html" class="menu-item">회귀분석</a>
-      <a href="probit.html" class="menu-item">프로빗분석</a>
-      <a href="mediation.html" class="menu-item">매개효과</a>
-      <a href="moderation.html" class="menu-item">조절효과</a>
-      <a href="discriminant.html" class="menu-item">판별분석</a>
-      <a href="sem.html" class="menu-item">SEM (구조방정식 모형)</a>
-
-      <div class="menu-category">차원 축소 / 군집화</div>
-      <a href="pca.html" class="menu-item">PCA</a>
-      <a href="efa.html" class="menu-item">탐색적 요인분석 (EFA)</a>
-      <a href="cfa.html" class="menu-item">확인적 요인분석 (CFA)</a>
-      <a href="cluster.html" class="menu-item">군집분석</a>
-    </div>
+    <h2>📊 분석도구</h2>
+    <div class="menu-item active" data-section="descriptive">기술통계</div>
+    <div class="menu-item" data-section="ttest">T-검정</div>
   </div>
 
-<div class="main">
+  <!-- 메인 -->
+  <div class="main">
+    <!-- 기술통계 자리 -->
     <div id="descriptiveSection" class="analysis-section active">
-      <h1>t-검정 올인원 도구</h1>
-      <div class="muted">CSV 업로드 → 검정 종류 선택 → 변수 설정 → 실행</div>
+      <h1>📊 기술통계</h1>
+      <p>여기에 기술통계 기능이 들어갈 자리입니다.</p>
     </div>
 
+    <!-- T-검정 도구 -->
     <div id="ttestSection" class="analysis-section">
-      <div class="controls">
-        <input id="fileInput" type="file" accept=".csv">
-        <button class="btn success" onclick="loadExample()">예제 불러오기</button>
-        <button class="btn ghost" onclick="resetAll()">초기화</button>
+      <div class="panel">
+        <h1>t-검정 올인원 도구</h1>
+        <div class="muted">CSV 업로드 → 검정 종류 선택 → 변수 설정 → 실행</div>
       </div>
-      <div id="dataPreview"></div>
-    </div>
 
-    <div class="panel" id="varPanel" style="display:none;">
-      <div>검정 종류</div>
-      <select id="testType" onchange="updateVarUI()">
-        <option value="one">단일표본 t-검정</option>
-        <option value="independent">독립표본 t-검정 (Student)</option>
-        <option value="welch">독립표본 t-검정 (Welch)</option>
-        <option value="paired">대응표본 t-검정</option>
-      </select>
+      <div class="panel">
+        <div class="controls">
+          <input id="fileInput" type="file" accept=".csv">
+          <button class="btn success" onclick="loadExample()">예제 불러오기</button>
+          <button class="btn ghost" onclick="resetAll()">초기화</button>
+        </div>
+        <div id="dataPreview"></div>
+      </div>
 
-      <div id="varSettings" style="margin-top:16px;"></div>
-      <div class="controls"><button class="btn primary" onclick="runTtest()">🚀 실행</button></div>
-    </div>
+      <div class="panel" id="varPanel" style="display:none;">
+        <div>검정 종류</div>
+        <select id="testType" onchange="updateVarUI()">
+          <option value="one">단일표본 t-검정</option>
+          <option value="independent">독립표본 t-검정 (Student)</option>
+          <option value="welch">독립표본 t-검정 (Welch)</option>
+          <option value="paired">대응표본 t-검정</option>
+        </select>
 
-    <div class="panel" id="resultsPanel" style="display:none;">
-      <div class="section-title">분석 결과</div>
-      <div id="resultTables"></div>
-      <div id="ttestPlot" style="height:350px;margin-top:20px;"></div>
+        <div id="varSettings" style="margin-top:16px;"></div>
+        <div class="controls"><button class="btn primary" onclick="runTtest()">🚀 실행</button></div>
+      </div>
+
+      <div class="panel" id="resultsPanel" style="display:none;">
+        <div class="section-title">분석 결과</div>
+        <div id="resultTables"></div>
+        <div id="ttestPlot" style="height:350px;margin-top:20px;"></div>
+      </div>
     </div>
   </div>
 
@@ -110,7 +130,7 @@ document.getElementById('fileInput').addEventListener('change', function(event) 
 function processData(data){
   currentData=data;
   const headers=Object.keys(data[0]);
-  let preview='<table><thead><tr>';
+  let preview='<table class="styled-table"><thead><tr>';
   headers.forEach(h=>preview+=`<th>${h}</th>`); preview+='</tr></thead><tbody>';
   data.slice(0,5).forEach(r=>{
     preview+='<tr>';
@@ -144,220 +164,18 @@ function updateVarUI(headers=null){
   document.getElementById('varSettings').innerHTML=html;
 }
 
-// t분포 확률밀도함수
-function tPdf(x, df) {
-  const gamma1 = Math.exp(logGamma((df + 1) / 2));
-  const gamma2 = Math.exp(logGamma(df / 2));
-  return (gamma1 / (Math.sqrt(df * Math.PI) * gamma2)) * Math.pow(1 + x * x / df, -(df + 1) / 2);
-}
-
-// 감마함수의 로그
-function logGamma(z) {
-  if (z < 0.5) {
-    return Math.log(Math.PI) - Math.log(Math.sin(Math.PI * z)) - logGamma(1 - z);
-  }
-  z -= 1;
-  let x = 0.99999999999999709182;
-  const cof = [57.156235665862923517, -59.597960355475491248, 14.136097974741747174, -0.49191381609762019978, 0.33994649984811888699e-4, 0.46523628927048575665e-4, -0.98374475304879564677e-4, 0.15808870322491248884e-3, -0.21026444172410488319e-3, 0.21743961811521264320e-3, -0.16431810653676389022e-3, 0.84418223983852743293e-4, -0.26190838401581408670e-4, 0.36899182659531622704e-5];
-  for (let i = 0; i < cof.length; i++) {
-    x += cof[i] / (z + i + 1);
-  }
-  const t = z + cof.length - 0.5;
-  return Math.log(Math.sqrt(2 * Math.PI)) + (z + 0.5) * Math.log(t) - t + Math.log(x);
-}
-
-// t분포 누적분포함수
-function tCdf(t, df) {
-  if (t === 0) return 0.5;
-  
-  // 근사식 사용
-  const x = t / Math.sqrt(df);
-  const a = Math.atan(x) / Math.PI + 0.5;
-  
-  if (df === 1) return a;
-  if (df === 2) return 0.5 + x / (2 * Math.sqrt(1 + x * x));
-  
-  // 더 일반적인 근사
-  return 0.5 + 0.5 * Math.sign(t) * (1 - Math.exp(-2 * t * t / Math.PI));
-}
-
-// ✅ 실행
-function runTtest(){
-  const type=document.getElementById('testType').value;
-  let result="", plotData=[], layout={}, pval=1;
-
-  if(type==="one"){
-    const v=document.getElementById('oneVar').value;
-    const mu0=parseFloat(document.getElementById('mu0').value);
-    const x=currentData.map(r=>parseFloat(r[v])).filter(n=>!isNaN(n));
-    const m=mean(x), s=std(x), n=x.length;
-    const t=(m-mu0)/(s/Math.sqrt(n));
-    const df=n-1; 
-    pval=2*(1-tCdf(Math.abs(t),df));
-    const d=(m-mu0)/s;
-    
-    result+=tableHTML(
-      ["N","평균","표준편차","t","df","p","Cohen's d"],
-      [[n,m.toFixed(2),s.toFixed(2),t.toFixed(3),df,formatP(pval),d.toFixed(3)]]
-    );
-
-    // 밀도분포와 기각역을 포함한 그래프
-    const xRange = [];
-    const yDensity = [];
-    const xCritical = [];
-    const yCritical = [];
-    
-    // t분포 그래프를 위한 x 범위 설정
-    const alpha = 0.05;
-    const tCritical = 2.086; // df에 따라 조정 가능하지만 여기서는 근사값
-    const xMin = -4;
-    const xMax = 4;
-    const steps = 200;
-    
-    for (let i = 0; i <= steps; i++) {
-      const xVal = xMin + (xMax - xMin) * i / steps;
-      xRange.push(xVal);
-      yDensity.push(tPdf(xVal, df));
-      
-      // 기각역 표시
-      if (Math.abs(xVal) >= tCritical) {
-        xCritical.push(xVal);
-        yCritical.push(tPdf(xVal, df));
-      }
-    }
-    
-    plotData = [
-      {
-        x: xRange,
-        y: yDensity,
-        type: 'scatter',
-        mode: 'lines',
-        name: 't-분포',
-        line: { color: '#2563eb', width: 2 }
-      },
-      {
-        x: xCritical,
-        y: yCritical,
-        type: 'scatter',
-        mode: 'lines',
-        fill: 'tonexty',
-        name: '기각역 (α=0.05)',
-        line: { color: '#dc2626' },
-        fillcolor: 'rgba(220, 38, 38, 0.3)'
-      },
-      {
-        x: [t, t],
-        y: [0, tPdf(t, df)],
-        type: 'scatter',
-        mode: 'lines',
-        name: `관측된 t = ${t.toFixed(3)}`,
-        line: { color: '#059669', width: 3, dash: 'dash' }
-      }
-    ];
-    
-    layout = {
-      title: `단일표본 t-검정: ${v} (μ₀ = ${mu0})`,
-      xaxis: { title: 't 값' },
-      yaxis: { title: '확률밀도' },
-      showlegend: true
-    };
-  }
-
-  else if(type==="independent"||type==="welch"){
-    const gVar=document.getElementById('groupVar').value;
-    const v=document.getElementById('indVar').value;
-    const groups={};
-    currentData.forEach(r=>{
-      if(r[gVar]!==''&&!isNaN(parseFloat(r[v]))){
-        if(!groups[r[gVar]]) groups[r[gVar]]=[];
-        groups[r[gVar]].push(parseFloat(r[v]));
-      }
-    });
-    const keys=Object.keys(groups);
-    if(keys.length!==2){alert("두 집단 필요");return;}
-    const g1=groups[keys[0]], g2=groups[keys[1]];
-    const m1=mean(g1), m2=mean(g2), sd1=std(g1), sd2=std(g2);
-    const n1=g1.length, n2=g2.length;
-
-    let t,df;
-    if(type==="independent"){
-      const sp=Math.sqrt(((n1-1)*sd1*sd1+(n2-1)*sd2*sd2)/(n1+n2-2));
-      t=(m1-m2)/(sp*Math.sqrt(1/n1+1/n2));
-      df=n1+n2-2;
-    }else{
-      t=(m1-m2)/Math.sqrt(sd1*sd1/n1+sd2*sd2/n2);
-      df=Math.pow(sd1*sd1/n1+sd2*sd2/n2,2)/((Math.pow(sd1*sd1/n1,2)/(n1-1))+(Math.pow(sd2*sd2/n2,2)/(n2-1)));
-    }
-    pval=2*(1-tCdf(Math.abs(t),df));
-    const sp=(type==="independent")?Math.sqrt(((n1-1)*sd1*sd1+(n2-1)*sd2*sd2)/(n1+n2-2)):Math.sqrt((sd1*sd1+sd2*sd2)/2);
-    const d=(m1-m2)/sp;
-
-    result+=tableHTML(
-      ["집단","N","평균","표준편차"],
-      [[keys[0],n1,m1.toFixed(2),sd1.toFixed(2)],[keys[1],n2,m2.toFixed(2),sd2.toFixed(2)]]
-    );
-    result+=tableHTML(
-      ["t","df","p","Cohen's d"],
-      [[t.toFixed(3),df.toFixed(1),formatP(pval),d.toFixed(3)]]
-    );
-    plotData=[{y:g1,type:'box',name:keys[0]},{y:g2,type:'box',name:keys[1]}];
-    layout={title:`${type==="independent"?"독립(Student)":"Welch"} t-검정: ${keys[0]} vs ${keys[1]} (${v})`};
-  }
-
-  else if(type==="paired"){
-    const v1=document.getElementById('pair1').value;
-    const v2=document.getElementById('pair2').value;
-    const pairs = [];
-    
-    currentData.forEach(r => {
-      const val1 = parseFloat(r[v1]);
-      const val2 = parseFloat(r[v2]);
-      if (!isNaN(val1) && !isNaN(val2)) {
-        pairs.push({[v1]: val1, [v2]: val2});
-      }
-    });
-    
-    if(pairs.length === 0){alert("유효한 쌍 데이터 없음");return;}
-    
-    const x1 = pairs.map(p => p[v1]);
-    const x2 = pairs.map(p => p[v2]);
-    const dVals = x1.map((a,i) => a - x2[i]);
-    const md = mean(dVals), sd = std(dVals), n = x1.length;
-    const t = md / (sd / Math.sqrt(n));
-    const df = n - 1; 
-    pval = 2 * (1 - tCdf(Math.abs(t), df));
-    const d = md / sd;
-    
-    result += tableHTML(
-      ["N","평균차","표준편차(차)","t","df","p","Cohen's d"],
-      [[n,md.toFixed(2),sd.toFixed(2),t.toFixed(3),df,formatP(pval),d.toFixed(3)]]
-    );
-    
-    // 박스플롯으로 변경
-    plotData = [
-      {y: x1, type: 'box', name: v1},
-      {y: x2, type: 'box', name: v2}
-    ];
-    layout = {title: `대응표본 t-검정: ${v1} vs ${v2}`};
-  }
-
-  document.getElementById('resultTables').innerHTML=result;
-  document.getElementById('resultsPanel').style.display='block';
-  Plotly.newPlot('ttestPlot',plotData,layout,{displayModeBar:false});
-}
-
 // ✅ 유틸
-function tableHTML(headers, rows) {
-  let html = "<table class='styled-table'><thead><tr>";
-  headers.forEach(h => html += `<th>${h}</th>`);
-  html += "</tr></thead><tbody>";
-  rows.forEach(r => {
-    html += "<tr>";
-    if (!Array.isArray(r)) r = [r];
-    r.forEach(v => { html += `<td>${v}</td>`; });
-    html += "</tr>";
+function tableHTML(headers,rows){
+  let html="<table class='styled-table'><thead><tr>";
+  headers.forEach(h=>html+=`<th>${h}</th>`);
+  html+="</tr></thead><tbody>";
+  rows.forEach(r=>{
+    html+="<tr>";
+    if(!Array.isArray(r)) r=[r];
+    r.forEach(v=>{html+=`<td>${v}</td>`;});
+    html+="</tr>";
   });
-  html += "</tbody></table>";
+  html+="</tbody></table>";
   return html;
 }
 function mean(a){return a.reduce((x,y)=>x+y,0)/a.length;}
@@ -370,7 +188,16 @@ function resetAll(){
   document.getElementById('resultsPanel').style.display='none';
   document.getElementById('fileInput').value='';
 }
-</script>
 
+// ✅ 사이드바 섹션 전환
+document.querySelectorAll('.menu-item').forEach(item=>{
+  item.addEventListener('click', ()=>{
+    document.querySelectorAll('.menu-item').forEach(m=>m.classList.remove('active'));
+    item.classList.add('active');
+    document.querySelectorAll('.analysis-section').forEach(sec=>sec.classList.remove('active'));
+    document.getElementById(item.dataset.section+"Section").classList.add('active');
+  });
+});
+</script>
 </body>
 </html>
