@@ -37,12 +37,12 @@
   </div>
 
 <div class="main">
-    <div class="panel">
+    <div id="descriptiveSection" class="analysis-section active">
       <h1>t-검정 올인원 도구</h1>
       <div class="muted">CSV 업로드 → 검정 종류 선택 → 변수 설정 → 실행</div>
     </div>
 
-    <div class="panel">
+    <div id="ttestSection" class="analysis-section">
       <div class="controls">
         <input id="fileInput" type="file" accept=".csv">
         <button class="btn success" onclick="loadExample()">예제 불러오기</button>
@@ -347,17 +347,17 @@ function runTtest(){
 }
 
 // ✅ 유틸
-function tableHTML(headers,rows){
-  let html="<table><thead><tr>";
-  headers.forEach(h=>html+=`<th>${h}</th>`);
-  html+="</tr></thead><tbody>";
-  rows.forEach(r=>{
-    html+="<tr>";
-    if(!Array.isArray(r)) r=[r];
-    r.forEach(v=>{html+=`<td>${v}</td>`;});
-    html+="</tr>";
+function tableHTML(headers, rows) {
+  let html = "<table class='styled-table'><thead><tr>";
+  headers.forEach(h => html += `<th>${h}</th>`);
+  html += "</tr></thead><tbody>";
+  rows.forEach(r => {
+    html += "<tr>";
+    if (!Array.isArray(r)) r = [r];
+    r.forEach(v => { html += `<td>${v}</td>`; });
+    html += "</tr>";
   });
-  html+="</tbody></table>";
+  html += "</tbody></table>";
   return html;
 }
 function mean(a){return a.reduce((x,y)=>x+y,0)/a.length;}
