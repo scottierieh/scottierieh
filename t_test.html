@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>t-검정 올인원 도구</title>
+
+<style>
+/* 공통 CSS 변수 */
+:root {
+  --bg: #f4f5f7;
+  --card: #ffffff;
+  --muted: #6b7280;
+  --accent: #2563eb;
+  --success: #059669;
+  --fail: #9ca3af;
+  --shadow: 0 8px 30px rgba(16, 24, 40, 0.06);
+  --border: #e6eef7;
+  --text: #111827;
+  --text-secondary: #374151;
+}
+
+/* 기본 스타일 */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: "Inter", "Segoe UI", Roboto, Arial, sans-serif;
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  padding: 24px;
+}
+
+/* 레이아웃 */
+.main {
+  max-width: 950px;
+  margin: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* 패널 */
+.panel {
+  background: var(--card);
+  border-radius: 16px;
+  padding: 18px;
+  box-shadow: var(--shadow);
+}
+
+/* 제목 */
+h1 {
+  margin: 0;
+  font-size: 22px;
+  color: var(--accent);
+}
+
+h3 {
+  margin: 0 0 15px 0;
+  font-size: 16px;
+  color: var(--text);
+}
+
+h4 {
+  margin: 0 0 10px 0;
+  font-size: 15px;
+  color: var(--text);
+}
+
+h5 {
+  margin: 15px 0 8px 0;
+  font-size: 14px;
+  color: var(--text);
+  font-weight: 600;
+}
+
+/* 컨트롤 */
+.controls {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+}
+
+.btn {
+  border: 0;
+  padding: 10px 16px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 14px;
+  transition: all 0.2s ease;
+}
+
+.btn.primary {
+  background: var(--accent);
+  color: #fff;
+}
+
+.btn.primary:hover {
+  background: #1d4ed8;
+}
+
+.btn.success {
+  background: var(--success);
+  color: #fff;
+}
+
+.btn.success:hover {
+  background: #047857;
+}
+
+.btn.ghost {
+  background: #f3f4f6;
+  color: var(--text);
+}
+
+.btn.ghost:hover {
+  background: #e5e7eb;
+}
+
+/* 폼 요소 */
+select, input[type="file"], input[type="number"] {
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  margin-top: 8px;
+  font-size: 14px;
+  background: var(--card);
+  color: var(--text);
+}
+
+input[type="file"] {
+  width: auto;
+  padding: 6px 8px;
+}
+
+select:focus, input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+/* 테이블 */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 12px;
+  font-size: 13px;
+  background: var(--card);
+}
+
+th, td {
+  padding: 8px 12px;
+  border-bottom: 1px solid #eef2f7;
+  text-align: center;
+}
+
+th {
+  background: #f8fafc;
+  font-weight: 600;
+  color: var(--text);
+}
+
+td {
+  color: var(--text);
+}
+
+/* 텍스트 */
+.muted {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+/* 그리드 */
+.grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+/* 결과 관련 */
+.sig {
+  color: var(--success);
+  font-weight: 700;
+}
+
+.nsig {
+  color: var(--fail);
+  font-weight: 700;
+}
+
+/* 라벨 */
+label {
+  display: block;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 4px;
+  font-size: 14px;
+}
+
+.mb-2 {
+  margin-bottom: 12px;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+  body {
+    padding: 16px;
+  }
+  
+  .main {
+    gap: 12px;
+  }
+  
+  .panel {
+    padding: 12px;
+  }
+  
+  .grid-2 {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  
+  .controls {
+    gap: 6px;
+  }
+  
+  .btn {
+    font-size: 12px;
+    padding: 8px 12px;
+  }
+  
+  h1 {
+    font-size: 20px;
+  }
+  
+  table {
+    font-size: 12px;
+  }
+  
+  th, td {
+    padding: 6px 8px;
+  }
+}
+</style>
+
+<!-- 외부 라이브러리 -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+
+</head>
+<body>
+  <div class="main">
+    <div class="panel">
+      <h1>📊 t-검정 올인원 도구</h1>
+      <div class="muted">CSV 업로드 → 검정 종류 선택 → 변수 설정 → 실행</div>
+    </div>
+
+    <div class="panel">
+      <h3>데이터 업로드</h3>
+      <div class="controls">
+        <input id="fileInput" type="file" accept=".csv">
+        <button class="btn success" onclick="loadExample()">예제 불러오기</button>
+        <button class="btn ghost" onclick="resetAll()">초기화</button>
+      </div>
+      <div id="dataPreview"></div>
+    </div>
+
+    <div class="panel" id="varPanel" style="display:none;">
+      <h3>분석 설정</h3>
+      <div class="mb-2">
+        <label>검정 종류</label>
+        <select id="testType" onchange="updateVarUI()">
+          <option value="one">단일표본 t-검정</option>
+          <option value="independent">독립표본 t-검정 (Student)</option>
+          <option value="welch">독립표본 t-검정 (Welch)</option>
+          <option value="paired">대응표본 t-검정</option>
+        </select>
+      </div>
+
+      <div id="varSettings"></div>
+      <div class="controls">
+        <button class="btn primary" onclick="runTtest()">🚀 분석 실행</button>
+      </div>
+    </div>
+
+    <div class="panel" id="resultsPanel" style="display:none;">
+      <h3>분석 결과</h3>
+      <div id="resultTables"></div>
+      <div id="ttestPlot" style="height:350px;margin-top:20px;"></div>
+    </div>
+  </div>
+
+<script>
+let currentData = null;
+
+// 예제 데이터
+function loadExample() {
+  const example = [
+    {group:"남", score:85, pre:70, post:80},
+    {group:"남", score:78, pre:68, post:74},
+    {group:"남", score:90, pre:72, post:88},
+    {group:"여", score:88, pre:75, post:85},
+    {group:"여", score:92, pre:77, post:90},
+    {group:"여", score:95, pre:74, post:93}
+  ];
+  processData(example);
+}
+
+// CSV 파일 로드
+document.getElementById('fileInput').addEventListener('change', function(event) {
+  const file = event.target.files[0];
+  if (file && file.type === "text/csv") {
+    Papa.parse(file, {
+      complete: function(results) {
+        processData(results.data.slice(1).map(row => {
+          const obj = {};
+          results.data[0].forEach((header, index) => {
+            obj[header] = row[index];
+          });
+          return obj;
+        }));
+      },
+      header: false
+    });
+  }
+});
+
+// 데이터 처리
+function processData(data) {
+  currentData = data;
+  const headers = Object.keys(data[0]);
+  let preview = '<table><thead><tr>';
+  headers.forEach(h => preview += `<th>${h}</th>`); 
+  preview += '</tr></thead><tbody>';
+  data.slice(0, 5).forEach(r => {
+    preview += '<tr>';
+    headers.forEach(h => preview += `<td>${r[h]}</td>`);
+    preview += '</tr>';
+  });
+  preview += '</tbody></table>';
+  document.getElementById('dataPreview').innerHTML = preview;
+  updateVarUI(headers);
+  document.getElementById('varPanel').style.display = 'block';
+}
+
+// 변수 UI 업데이트
+function updateVarUI(headers = null) {
+  if (!headers && currentData) headers = Object.keys(currentData[0]);
+  const type = document.getElementById('testType').value;
+  let html = "";
+  
+  if (type === "one") {
+    html = `<div class="grid-2">
+      <div>
+        <label>분석 변수</label>
+        <select id="oneVar">${headers.map(h=>`<option>${h}</option>`).join('')}</select>
+      </div>
+      <div>
+        <label>비교 기준값 μ₀</label>
+        <input id="mu0" type="number" value="80">
+      </div>
+    </div>`;
+  } else if (type === "independent" || type === "welch") {
+    html = `<div class="grid-2">
+      <div>
+        <label>집단 변수</label>
+        <select id="groupVar">${headers.map(h=>`<option>${h}</option>`).join('')}</select>
+      </div>
+      <div>
+        <label>분석 변수</label>
+        <select id="indVar">${headers.map(h=>`<option>${h}</option>`).join('')}</select>
+      </div>
+    </div>`;
+  } else if (type === "paired") {
+    html = `<div class="grid-2">
+      <div>
+        <label>변수 1 (사전)</label>
+        <select id="pair1">${headers.map(h=>`<option>${h}</option>`).join('')}</select>
+      </div>
+      <div>
+        <label>변수 2 (사후)</label>
+        <select id="pair2">${headers.map(h=>`<option>${h}</option>`).join('')}</select>
+      </div>
+    </div>`;
+  }
+  document.getElementById('varSettings').innerHTML = html;
+}
+
+// t분포 확률밀도함수
+function tPdf(x, df) {
+  const gamma1 = Math.exp(logGamma((df + 1) / 2));
+  const gamma2 = Math.exp(logGamma(df / 2));
+  return (gamma1 / (Math.sqrt(df * Math.PI) * gamma2)) * Math.pow(1 + x * x / df, -(df + 1) / 2);
+}
+
+// 감마함수의 로그
+function logGamma(z) {
+  if (z < 0.5) {
+    return Math.log(Math.PI) - Math.log(Math.sin(Math.PI * z)) - logGamma(1 - z);
+  }
+  z -= 1;
+  let x = 0.99999999999999709182;
+  const cof = [57.156235665862923517, -59.597960355475491248, 14.136097974741747174, -0.49191381609762019978, 0.33994649984811888699e-4, 0.46523628927048575665e-4, -0.98374475304879564677e-4, 0.15808870322491248884e-3, -0.21026444172410488319e-3, 0.21743961811521264320e-3, -0.16431810653676389022e-3, 0.84418223983852743293e-4, -0.26190838401581408670e-4, 0.36899182659531622704e-5];
+  for (let i = 0; i < cof.length; i++) {
+    x += cof[i] / (z + i + 1);
+  }
+  const t = z + cof.length - 0.5;
+  return Math.log(Math.sqrt(2 * Math.PI)) + (z + 0.5) * Math.log(t) - t + Math.log(x);
+}
+
+// t분포 누적분포함수
+function tCdf(t, df) {
+  if (t === 0) return 0.5;
+  
+  const x = t / Math.sqrt(df);
+  const a = Math.atan(x) / Math.PI + 0.5;
+  
+  if (df === 1) return a;
+  if (df === 2) return 0.5 + x / (2 * Math.sqrt(1 + x * x));
+  
+  return 0.5 + 0.5 * Math.sign(t) * (1 - Math.exp(-2 * t * t / Math.PI));
+}
+
+// 분석 실행
+function runTtest() {
+  const type = document.getElementById('testType').value;
+  let result = "", plotData = [], layout = {}, pval = 1;
+
+  if (type === "one") {
+    const v = document.getElementById('oneVar').value;
+    const mu0 = parseFloat(document.getElementById('mu0').value);
+    const x = currentData.map(r => parseFloat(r[v])).filter(n => !isNaN(n));
+    const m = mean(x), s = std(x), n = x.length;
+    const t = (m - mu0) / (s / Math.sqrt(n));
+    const df = n - 1; 
+    pval = 2 * (1 - tCdf(Math.abs(t), df));
+    const d = (m - mu0) / s;
+    
+    result += tableHTML(
+      ["N", "평균", "표준편차", "t", "df", "p", "Cohen's d"],
+      [[n, m.toFixed(2), s.toFixed(2), t.toFixed(3), df, formatP(pval), d.toFixed(3)]]
+    );
+
+    // 밀도분포와 기각역을 포함한 그래프
+    const xRange = [];
+    const yDensity = [];
+    const xCritical = [];
+    const yCritical = [];
+    
+    const alpha = 0.05;
+    const tCritical = 2.086;
+    const xMin = -4;
+    const xMax = 4;
+    const steps = 200;
+    
+    for (let i = 0; i <= steps; i++) {
+      const xVal = xMin + (xMax - xMin) * i / steps;
+      xRange.push(xVal);
+      yDensity.push(tPdf(xVal, df));
+      
+      if (Math.abs(xVal) >= tCritical) {
+        xCritical.push(xVal);
+        yCritical.push(tPdf(xVal, df));
+      }
+    }
+    
+    plotData = [
+      {
+        x: xRange,
+        y: yDensity,
+        type: 'scatter',
+        mode: 'lines',
+        name: 't-분포',
+        line: { color: '#2563eb', width: 2 }
+      },
+      {
+        x: xCritical,
+        y: yCritical,
+        type: 'scatter',
+        mode: 'lines',
+        fill: 'tonexty',
+        name: '기각역 (α=0.05)',
+        line: { color: '#dc2626' },
+        fillcolor: 'rgba(220, 38, 38, 0.3)'
+      },
+      {
+        x: [t, t],
+        y: [0, tPdf(t, df)],
+        type: 'scatter',
+        mode: 'lines',
+        name: `관측된 t = ${t.toFixed(3)}`,
+        line: { color: '#059669', width: 3, dash: 'dash' }
+      }
+    ];
+    
+    layout = {
+      title: `단일표본 t-검정: ${v} (μ₀ = ${mu0})`,
+      xaxis: { title: 't 값' },
+      yaxis: { title: '확률밀도' },
+      showlegend: true
+    };
+  }
+
+  else if (type === "independent" || type === "welch") {
+    const gVar = document.getElementById('groupVar').value;
+    const v = document.getElementById('indVar').value;
+    const groups = {};
+    currentData.forEach(r => {
+      if (r[gVar] !== '' && !isNaN(parseFloat(r[v]))) {
+        if (!groups[r[gVar]]) groups[r[gVar]] = [];
+        groups[r[gVar]].push(parseFloat(r[v]));
+      }
+    });
+    const keys = Object.keys(groups);
+    if (keys.length !== 2) { alert("두 집단 필요"); return; }
+    const g1 = groups[keys[0]], g2 = groups[keys[1]];
+    const m1 = mean(g1), m2 = mean(g2), sd1 = std(g1), sd2 = std(g2);
+    const n1 = g1.length, n2 = g2.length;
+
+    let t, df;
+    if (type === "independent") {
+      const sp = Math.sqrt(((n1 - 1) * sd1 * sd1 + (n2 - 1) * sd2 * sd2) / (n1 + n2 - 2));
+      t = (m1 - m2) / (sp * Math.sqrt(1 / n1 + 1 / n2));
+      df = n1 + n2 - 2;
+    } else {
+      t = (m1 - m2) / Math.sqrt(sd1 * sd1 / n1 + sd2 * sd2 / n2);
+      df = Math.pow(sd1 * sd1 / n1 + sd2 * sd2 / n2, 2) / ((Math.pow(sd1 * sd1 / n1, 2) / (n1 - 1)) + (Math.pow(sd2 * sd2 / n2, 2) / (n2 - 1)));
+    }
+    pval = 2 * (1 - tCdf(Math.abs(t), df));
+    const sp = (type === "independent") ? Math.sqrt(((n1 - 1) * sd1 * sd1 + (n2 - 1) * sd2 * sd2) / (n1 + n2 - 2)) : Math.sqrt((sd1 * sd1 + sd2 * sd2) / 2);
+    const d = (m1 - m2) / sp;
+
+    result += tableHTML(
+      ["집단", "N", "평균", "표준편차"],
+      [[keys[0], n1, m1.toFixed(2), sd1.toFixed(2)], [keys[1], n2, m2.toFixed(2), sd2.toFixed(2)]]
+    );
+    result += tableHTML(
+      ["t", "df", "p", "Cohen's d"],
+      [[t.toFixed(3), df.toFixed(1), formatP(pval), d.toFixed(3)]]
+    );
+    plotData = [{y: g1, type: 'box', name: keys[0]}, {y: g2, type: 'box', name: keys[1]}];
+    layout = {title: `${type === "independent" ? "독립(Student)" : "Welch"} t-검정: ${keys[0]} vs ${keys[1]} (${v})`};
+  }
+
+  else if (type === "paired") {
+    const v1 = document.getElementById('pair1').value;
+    const v2 = document.getElementById('pair2').value;
+    const pairs = [];
+    
+    currentData.forEach(r => {
+      const val1 = parseFloat(r[v1]);
+      const val2 = parseFloat(r[v2]);
+      if (!isNaN(val1) && !isNaN(val2)) {
+        pairs.push({[v1]: val1, [v2]: val2});
+      }
+    });
+    
+    if (pairs.length === 0) { alert("유효한 쌍 데이터 없음"); return; }
+    
+    const x1 = pairs.map(p => p[v1]);
+    const x2 = pairs.map(p => p[v2]);
+    const dVals = x1.map((a, i) => a - x2[i]);
+    const md = mean(dVals), sd = std(dVals), n = x1.length;
+    const t = md / (sd / Math.sqrt(n));
+    const df = n - 1; 
+    pval = 2 * (1 - tCdf(Math.abs(t), df));
+    const d = md / sd;
+    
+    result += tableHTML(
+      ["N", "평균차", "표준편차(차)", "t", "df", "p", "Cohen's d"],
+      [[n, md.toFixed(2), sd.toFixed(2), t.toFixed(3), df, formatP(pval), d.toFixed(3)]]
+    );
+    
+    plotData = [
+      {y: x1, type: 'box', name: v1},
+      {y: x2, type: 'box', name: v2}
+    ];
+    layout = {title: `대응표본 t-검정: ${v1} vs ${v2}`};
+  }
+
+  document.getElementById('resultTables').innerHTML = result;
+  document.getElementById('resultsPanel').style.display = 'block';
+  Plotly.newPlot('ttestPlot', plotData, layout, {displayModeBar: false});
+}
+
+// 유틸리티 함수들
+function tableHTML(headers, rows) {
+  let html = "<table><thead><tr>";
+  headers.forEach(h => html += `<th>${h}</th>`);
+  html += "</tr></thead><tbody>";
+  rows.forEach(r => {
+    html += "<tr>";
+    if (!Array.isArray(r)) r = [r];
+    r.forEach(v => { html += `<td>${v}</td>`; });
+    html += "</tr>";
+  });
+  html += "</tbody></table>";
+  return html;
+}
+
+function mean(a) { return a.reduce((x, y) => x + y, 0) / a.length; }
+function std(a) { const m = mean(a); return Math.sqrt(a.reduce((s, x) => s + (x - m) ** 2, 0) / (a.length - 1)); }
+function formatP(p) { return p < 0.05 ? `<span class='sig'>${p.toFixed(3)} ★</span>` : `<span class='nsig'>${p.toFixed(3)}</span>`; }
+
+function resetAll() {
+  currentData = null;
+  document.getElementById('dataPreview').innerHTML = '';
+  document.getElementById('varPanel').style.display = 'none';
+  document.getElementById('resultsPanel').style.display = 'none';
+  document.getElementById('fileInput').value = '';
+}
+</script>
+</body>
+</html>
