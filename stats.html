@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -9,7 +10,6 @@
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jstat/1.9.5/jstat.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/ml-matrix/6.10.4/ml-matrix.min.js"></script>
 
 <style>
   :root{
@@ -20,9 +20,40 @@
   body{font-family:"Inter","Segoe UI",Roboto,Arial,sans-serif;margin:0;background:var(--bg);color:#111827;padding:24px;display:flex;gap:20px;min-height:100vh}
   .sidebar{width:280px;background:var(--card);border-radius:16px;padding:18px;box-shadow:var(--shadow);height:fit-content;position:sticky;top:24px}
   .sidebar h2{text-align:center;margin-bottom:15px;font-size:18px}
-  .menu-category{margin-bottom:20px}
-  .menu-category-title{font-size:14px;font-weight:600;color:var(--muted);margin-bottom:8px;padding:0 12px}
-  .menu-item{display:block;padding:10px 12px;border-radius:12px;color:#374151;margin-bottom:4px;cursor:pointer;transition:all .18s ease;font-size:14px}
+  
+  /* 🔥 수정된 메뉴 간격 */
+  .menu-category{
+    font-size:13px;
+    font-weight:700;
+    color:var(--muted);
+    margin-top:16px;      /* 카테고리 위 간격 */
+    margin-bottom:6px;    /* 카테고리 아래 간격 */
+    padding:0 12px;
+    text-transform:uppercase;
+    letter-spacing:0.5px;
+  }
+  
+  /* 첫 번째 카테고리는 위 간격 제거 */
+  .menu-category:first-child{
+    margin-top:0;
+  }
+  
+  .menu-item{
+    display:block;
+    padding:10px 12px;
+    border-radius:12px;
+    color:#374151;
+    margin-bottom:3px;    /* 메뉴 아이템 간격 줄임 */
+    cursor:pointer;
+    transition:all .18s ease;
+    font-size:14px;
+  }
+  
+  /* 마지막 메뉴 아이템은 아래 간격 추가 */
+  .menu-item:last-of-type{
+    margin-bottom:8px;
+  }
+  
   .menu-item.active{background:var(--accent);color:white;font-weight:600;box-shadow:0 6px 18px rgba(37,99,235,0.14)}
   .menu-item:hover:not(.active){background:#f3f4f6}
   .main{flex:1;display:flex;flex-direction:column;gap:16px}
@@ -101,8 +132,6 @@
       <div class="menu-item" data-target="main-cluster">군집분석</div>
     </div>
   </div>
-
-  
 
   <div class="main">
     <!-- 공통 데이터 업로드 패널 -->
@@ -261,14 +290,14 @@ let analysisResults = {};
 // 메뉴 시스템
 const menuConfig = {
   descriptive: { title: '📊 기술통계', desc: 'CSV 업로드 → 변수 선택 → 분석 실행' },
-  ttest: { title: '🔍 T-검정', desc: '평균 차이 검정 (일표본, 독립표본, 대응표본)' },
+  ttest: { title: '📈 T-검정', desc: '평균 차이 검정 (일표본, 독립표본, 대응표본)' },
   chisquare: { title: '🎯 카이제곱검정', desc: '범주형 변수 간의 독립성 검정' },
   nonparametric: { title: '📈 비모수검정', desc: '분포를 가정하지 않는 검정' },
   anova: { title: '📊 분산분석(ANOVA)', desc: '여러 집단 간의 평균 비교' },
   regression: { title: '📈 단순·다중회귀', desc: '연속형 종속변수 예측 모델' },
   logistic: { title: '🎯 로지스틱회귀', desc: '이항 종속변수 예측 모델' },
   probit: { title: '📊 프로빗모형', desc: '이항 종속변수의 또 다른 예측 모델' },
-  factor: { title: '🔍 요인분석', desc: '잠재 요인 발견 및 차원 축소' },
+  factor: { title: '📈 요인분석', desc: '잠재 요인 발견 및 차원 축소' },
   pca: { title: '📊 주성분분석(PCA)', desc: '차원 축소 및 주성분 추출' },
   cluster: { title: '🎯 군집분석', desc: '유사한 관측치들을 그룹으로 분류' },
   discriminant: { title: '📈 판별분석', desc: '집단 분류 및 판별 함수 도출' }
@@ -277,27 +306,13 @@ const menuConfig = {
 // 메뉴 이벤트 처리
 document.querySelectorAll('.menu-item').forEach(item => {
   item.addEventListener('click', function() {
-    const section = this.dataset.section;
-    if (!section) return;
-    
-    // 메뉴 활성화 상태 변경
-    document.querySelectorAll('.menu-item').forEach(i => i.classList.remove('active'));
-    this.classList.add('active');
-    
-    // 섹션 변경
-    document.querySelectorAll('.analysis-section').forEach(s => s.classList.remove('active'));
-    document.getElementById(section + 'Section').classList.add('active');
-    
-    // 제목과 설명 변경
-    const config = menuConfig[section];
-    document.getElementById('mainTitle').textContent = config.title;
-    document.getElementById('mainDescription').textContent = config.desc;
-    
-    currentAnalysis = section;
-    
-    // 데이터가 있으면 해당 섹션의 변수 선택 패널 표시
-    if (parsedData) {
-      showVariableSelection(section);
+    const target = this.dataset.target;
+    if (target) {
+      // 현재 페이지와 다른 경우에만 이동
+      const currentPage = window.location.pathname.split('/').pop();
+      if (target !== currentPage) {
+        window.location.href = target;
+      }
     }
   });
 });
@@ -886,21 +901,7 @@ document.getElementById("runTtest").addEventListener("click", () => {
     alert("T-검정 실행 중 오류가 발생했습니다: " + error.message);
   }
 });
-document.querySelectorAll('.menu-item').forEach(item => {
-  item.addEventListener('click', function() {
-    const target = this.dataset.target;
-    if (target) {
-      // 현재 페이지와 다른 경우에만 이동
-      const currentPage = window.location.pathname.split('/').pop();
-      if (target !== currentPage) {
-        window.location.href = target;
-      }
-    }
-  });
-});
-  
-  
+
 </script>
 </body>
 </html>
-
