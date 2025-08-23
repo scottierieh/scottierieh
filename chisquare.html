@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>카이제곱 교차표 분석</title>
+
+<!-- 라이브러리 -->
+<script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jstat/1.9.5/jstat.min.js"></script>
+
+<style>
+  :root{
+    --bg:#f4f5f7; --card:#ffffff; --muted:#6b7280; --accent:#2563eb; --success:#059669;
+    --shadow:0 8px 30px rgba(16,24,40,0.06);
+  }
+  *{box-sizing:border-box}
+  body{font-family:"Inter","Segoe UI",Roboto,Arial,sans-serif;margin:0;background:var(--bg);color:#111827;padding:24px;display:flex;gap:20px;min-height:100vh}
+  .sidebar{width:260px;background:var(--card);border-radius:16px;padding:18px;box-shadow:var(--shadow);height:fit-content}
+  .sidebar h2{text-align:center;margin-bottom:10px}
+  .menu-item{display:block;padding:10px 12px;border-radius:12px;color:#374151;margin-bottom:8px;cursor:pointer;transition:all .18s ease}
+  .menu-item.active{background:var(--accent);color:white;font-weight:600;box-shadow:0 6px 18px rgba(37,99,235,0.14)}
+  .main{flex:1;display:flex;flex-direction:column;gap:16px}
+  .panel{background:var(--card);border-radius:16px;padding:18px;box-shadow:var(--shadow)}
+  h1{margin:0;font-size:20px}
+  h3{margin:0 0 15px 0;font-size:16px}
+  .controls{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+  .btn{border:0;padding:10px 12px;border-radius:10px;cursor:pointer;font-weight:600;font-size:14px}
+  .btn.primary{background:var(--accent);color:#fff}
+  .btn.success{background:var(--success);color:#fff}
+  .btn.ghost{background:#f3f4f6;color:#111827}
+  select,input[type="file"]{padding:8px;border-radius:8px;border:1px solid #e6eef7;margin-top:8px}
+  input[type="file"]{width:auto}
+  table{width:100%;border-collapse:collapse;margin-top:12px;font-size:13px}
+  th,td{padding:8px;border-bottom:1px solid #eef2f7;text-align:center}
+  .muted{color:var(--muted);font-size:13px}
+  .resultCard{margin-top:20px;padding:15px;background:#fafafa;border-radius:12px}
+  .graphRow{display:flex;gap:20px;margin-top:10px}
+  .graphCell{flex:1}
+  .section{margin-bottom:15px}
+  .inline{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  .var-select{width:220px;margin-top:6px}
+  .interpretation{background:#f8fafc;border-left:4px solid #64748b;padding:15px;margin-top:15px;border-radius:8px;border:1px solid #e2e8f0}
+  .interpretation h4{margin:0 0 10px 0;color:#334155}
+</style>
+</head>
+<body>
+
+  <div class="sidebar">
+    <h2>🔄 분석 메뉴</h2>
+    <div id="menuList">
+      <div class="menu-item active">카이제곱 교차표</div>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="panel">
+      <h1>🔄 카이제곱 교차표 분석</h1>
+      <div class="muted">CSV 업로드 → 변수 선택 → 분석 실행</div>
+    </div>
+
+    <div class="panel">
+      <h3>데이터 업로드</h3>
+      <div class="inline">
+        <input id="file" type="file" accept=".csv">
+        <button id="loadExample" class="btn success">예제 데이터 불러오기</button>
+      </div>
+      
+      <div id="varSelectPanel" class="section" style="margin-top:15px; display:none">
+        <div style="margin-bottom:10px">
+          <strong>범주형 변수 선택 (두 개 선택):</strong><br>
+          <select id="catSelect" multiple size="6" class="var-select"></select>
+        </div>
+        <div class="controls">
+          <button id="runBasic" class="btn primary">기본 분석</button>
+          <button id="runDetailed" class="btn success">상세 분석</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel" id="resultPanel" style="display:none">
+      <h3>분석 결과</h3>
+      <div id="results"></div>
+    </div>
+
+    <div class="panel" id="interpretationPanel" style="display:none">
+      <h3>결과 해석</h3>
+      <div id="interpretation"></div>
+    </div>
+  </div>
+
+<script>
+let parsedData = null;
+let analysisResults = null;
+
+function parseCSV(text) {
+  const { data, errors } = Papa.parse(text.trim(), {
+    header: true,
+    dynamicTyping: false,
+    skipEmptyLines: true
+  });
+  if (errors && errors.length) throw new Error('CSV 파싱 오류: ' + errors[0].message);
+  if (!data.length) throw new Error('데이터가 비었습니다.');
+
+  const headers = Object.keys(data[0]);
+  const catCols = headers.filter(h => {
+    const values = data.map(row => row[h]).filter(v => v !== null && v !== "");
+    const uniqueValues = [...new Set(values)];
+    return uniqueValues.length >= 2 && uniqueValues.length <= Math.min(20, values.length * 0.8);
+  });
+
+  const catSelect = document.getElementById("catSelect");
+  catSelect.innerHTML = "";
+  catCols.forEach(c => {
+    const opt = document.createElement("option");
+    opt.value = c; 
+    opt.textContent = c;
+    catSelect.appendChild(opt);
+  });
+
+  document.getElementById("varSelectPanel").style.display = "block";
+  return { raw: data, catCols };
+}
+
+// 통계 함수들
+function gammaln(x) {
+  const cof = [76.18009172947146, -86.50532032941677, 24.01409824083091,
+               -1.231739572450155, 0.1208650973866179e-2, -0.5395239384953e-5];
+  let y = x; 
+  let tmp = x + 5.5; 
+  tmp -= (x + 0.5) * Math.log(tmp);
+  let ser = 1.000000000190015;
+  for (let j = 0; j < cof.length; j++) { 
+    y += 1; 
+    ser += cof[j] / y; 
+  }
+  return -tmp + Math.log(2.5066282746310005 * ser / x);
+}
+
+function regularizedGammaP(a, x) {
+  if (x < 0 || a <= 0) return 0;
+  if (x === 0) return 0;
+  if (x < a + 1) {
+    let ap = a, sum = 1 / a, del = sum;
+    for (let n = 1; n <= 200; n++) {
+      ap += 1; 
+      del *= x / ap; 
+      sum += del;
+      if (Math.abs(del) < Math.abs(sum) * 1e-14) break;
+    }
+    return sum * Math.exp(-x + a * Math.log(x) - gammaln(a));
+  } else {
+    let b = x + 1 - a, c = 1 / 1e-30, d = 1 / b, h = d;
+    for (let i = 1; i <= 200; i++) {
+      const an = -i * (i - a);
+      b += 2;
+      d = an * d + b;
+      if (Math.abs(d) < 1e-30) d = 1e-30;
+      c = b + an / c;
+      if (Math.abs(c) < 1e-30) c = 1e-30;
+      d = 1 / d;
+      const del = d * c;
+      h *= del;
+      if (Math.abs(del - 1.0) < 1e-14) break;
+    }
+    const Q = Math.exp(-x + a * Math.log(x) - gammaln(a)) * h;
+    return 1 - Q;
+  }
+}
+
+function cramersV(chi2, n, rows, cols) {
+  const k = Math.min(rows, cols);
+  return Math.sqrt(chi2 / (n * (k - 1)));
+}
+
+function pearsonResiduals(observed, expected) {
+  return observed.map((row, i) => 
+    row.map((cell, j) => 
+      expected[i][j] > 0 ? (cell - expected[i][j]) / Math.sqrt(expected[i][j]) : 0
+    )
+  );
+}
+
+function calculateChiSquare(var1, var2) {
+  if (!parsedData || !parsedData.raw) {
+    throw new Error('데이터가 로드되지 않았습니다.');
+  }
+  
+  const data = parsedData.raw;
+  
+  // 유효한 관측치만 선택
+  const validData = [];
+  for (let i = 0; i < data.length; i++) {
+    const v1 = data[i][var1];
+    const v2 = data[i][var2];
+    if (v1 && v1 !== "" && v1 !== null && v1 !== undefined &&
+        v2 && v2 !== "" && v2 !== null && v2 !== undefined) {
+      validData.push([String(v1).trim(), String(v2).trim()]);
+    }
+  }
+  
+  if (validData.length === 0) {
+    throw new Error('선택한 변수들에 유효한 데이터가 없습니다.');
+  }
+  
+  const levels1 = [...new Set(validData.map(d => d[0]))].sort();
+  const levels2 = [...new Set(validData.map(d => d[1]))].sort();
+  
+  const R = levels1.length;
+  const C = levels2.length;
+  const N = validData.length;
+  
+  if (R < 2 || C < 2) {
+    throw new Error('각 변수는 최소 2개의 서로 다른 값을 가져야 합니다.');
+  }
+  
+  // 관찰빈도 계산
+  const observed = Array.from({length: R}, () => Array(C).fill(0));
+  validData.forEach(([v1, v2]) => {
+    const i = levels1.indexOf(v1);
+    const j = levels2.indexOf(v2);
+    if (i >= 0 && j >= 0) {
+      observed[i][j]++;
+    }
+  });
+  
+  // 주변 합 계산
+  const rowSums = observed.map(row => row.reduce((sum, val) => sum + val, 0));
+  const colSums = levels2.map((_, j) => observed.reduce((sum, row) => sum + row[j], 0));
+  
+  // 기대빈도 계산
+  const expected = Array.from({length: R}, () => Array(C).fill(0));
+  for (let i = 0; i < R; i++) {
+    for (let j = 0; j < C; j++) {
+      expected[i][j] = (rowSums[i] * colSums[j]) / N;
+    }
+  }
+  
+  // 카이제곱 통계량 계산
+  let chi2 = 0;
+  for (let i = 0; i < R; i++) {
+    for (let j = 0; j < C; j++) {
+      if (expected[i][j] > 0) {
+        chi2 += Math.pow(observed[i][j] - expected[i][j], 2) / expected[i][j];
+      }
+    }
+  }
+  
+  const df = (R - 1) * (C - 1);
+  const pvalue = df > 0 ? (1 - regularizedGammaP(df / 2, chi2 / 2)) : NaN;
+  const cramersVValue = cramersV(chi2, N, R, C);
+  const residuals = pearsonResiduals(observed, expected);
+  
+  return {
+    observed,
+    expected,
+    residuals,
+    rowSums,
+    colSums,
+    levels1,
+    levels2,
+    chi2,
+    df,
+    pvalue,
+    cramersV: cramersVValue,
+    N,
+    R,
+    C
+  };
+}
+
+function renderChiSquareBasic(result, var1, var2) {
+  let html = `<div class='resultCard'><h4>카이제곱 교차표: ${var1} × ${var2}</h4>`;
+  
+  // 기본 통계량 테이블
+  html += `<table><thead><tr><th>통계량</th><th>값</th></tr></thead>`;
+  html += `<tbody>`;
+  html += `<tr><td>카이제곱 통계량</td><td>${result.chi2.toFixed(4)}</td></tr>`;
+  html += `<tr><td>자유도</td><td>${result.df}</td></tr>`;
+  html += `<tr><td>p-값</td><td>${result.pvalue < 0.001 ? result.pvalue.toExponential(3) : result.pvalue.toFixed(4)}</td></tr>`;
+  html += `<tr><td>크래머의 V</td><td>${result.cramersV.toFixed(4)}</td></tr>`;
+  html += `<tr><td>표본 크기</td><td>${result.N}</td></tr>`;
+  html += `</tbody></table>`;
+  
+  // 교차표
+  html += `<h5>교차표</h5>`;
+  html += `<table><thead><tr><th>${var1} \\ ${var2}</th>${result.levels2.map(h=>`<th>${h}</th>`).join('')}<th>합계</th></tr></thead>`;
+  html += `<tbody>`;
+  for(let i=0; i<result.R; i++){
+    html += `<tr><td><strong>${result.levels1[i]}</strong></td>`;
+    for(let j=0; j<result.C; j++){
+      html += `<td>${result.observed[i][j]}</td>`;
+    }
+    html += `<td><strong>${result.rowSums[i]}</strong></td></tr>`;
+  }
+  html += `<tr><td><strong>합계</strong></td>${result.colSums.map(sum => `<td><strong>${sum}</strong></td>`).join('')}<td><strong>${result.N}</strong></td></tr>`;
+  html += `</tbody></table>`;
+  
+  html += `</div>`;
+  return html;
+}
+
+function renderChiSquareDetailed(result, var1, var2) {
+  let html = `<div class='resultCard'><h4>카이제곱 교차표 (상세): ${var1} × ${var2}</h4>`;
+  
+  // 기본 통계량 테이블
+  html += `<table><thead><tr><th>통계량</th><th>값</th></tr></thead>`;
+  html += `<tbody>`;
+  html += `<tr><td>카이제곱 통계량</td><td>${result.chi2.toFixed(4)}</td></tr>`;
+  html += `<tr><td>자유도</td><td>${result.df}</td></tr>`;
+  html += `<tr><td>p-값</td><td>${result.pvalue < 0.001 ? result.pvalue.toExponential(3) : result.pvalue.toFixed(4)}</td></tr>`;
+  html += `<tr><td>크래머의 V</td><td>${result.cramersV.toFixed(4)}</td></tr>`;
+  html += `<tr><td>표본 크기</td><td>${result.N}</td></tr>`;
+  html += `</tbody></table>`;
+  
+  // 관찰빈도 + 기대빈도 교차표
+  html += `<h5>교차표 (관찰빈도 / 기대빈도)</h5>`;
+  html += `<table><thead><tr><th>${var1} \\ ${var2}</th>${result.levels2.map(h=>`<th>${h}</th>`).join('')}<th>합계</th></tr></thead>`;
+  html += `<tbody>`;
+  for(let i=0; i<result.R; i++){
+    html += `<tr><td><strong>${result.levels1[i]}</strong></td>`;
+    for(let j=0; j<result.C; j++){
+      html += `<td>${result.observed[i][j]} <small style="color:#666">(E=${result.expected[i][j].toFixed(2)})</small></td>`;
+    }
+    html += `<td><strong>${result.rowSums[i]}</strong></td></tr>`;
+  }
+  html += `<tr><td><strong>합계</strong></td>${result.colSums.map(sum => `<td><strong>${sum}</strong></td>`).join('')}<td><strong>${result.N}</strong></td></tr>`;
+  html += `</tbody></table>`;
+  
+  // 표준화 잔차 테이블
+  html += `<h5>표준화 잔차</h5>`;
+  html += `<table><thead><tr><th>${var1} \\ ${var2}</th>${result.levels2.map(h=>`<th>${h}</th>`).join('')}</tr></thead>`;
+  html += `<tbody>`;
+  for(let i=0; i<result.R; i++){
+    html += `<tr><td><strong>${result.levels1[i]}</strong></td>`;
+    for(let j=0; j<result.C; j++){
+      const residual = result.residuals[i][j];
+      const color = Math.abs(residual) > 2 ? 'color: red' : Math.abs(residual) > 1.96 ? 'color: orange' : '';
+      html += `<td style="${color}">${residual.toFixed(3)}</td>`;
+    }
+    html += `</tr>`;
+  }
+  html += `</tbody></table>`;
+  
+  // 가정 검토
+  let lowExpectedCells = 0;
+  let minExpected = Infinity;
+  for (let i = 0; i < result.R; i++) {
+    for (let j = 0; j < result.C; j++) {
+      if (result.expected[i][j] < 5) lowExpectedCells++;
+      if (result.expected[i][j] < minExpected) minExpected = result.expected[i][j];
+    }
+  }
+  const totalCells = result.R * result.C;
+  const percentLowExpected = (lowExpectedCells / totalCells) * 100;
+  
+  html += `<h5>가정 검토</h5>`;
+  html += `<ul>`;
+  html += `<li>기대빈도 5 미만인 셀: ${lowExpectedCells}개 (${percentLowExpected.toFixed(1)}%)</li>`;
+  html += `<li>최소 기대빈도: ${minExpected.toFixed(2)}</li>`;
+  html += `<li>전체 셀 수: ${totalCells}개</li>`;
+  html += `</ul>`;
+  
+  if (percentLowExpected <= 20 && minExpected >= 1) {
+    html += `<div class="muted">✅ 카이제곱 검정의 가정이 충족되었습니다.</div>`;
+  } else {
+    html += `<div class="muted">⚠️ 기대빈도가 낮은 셀이 많습니다. Fisher's exact test나 범주 합치기를 고려하세요.</div>`;
+  }
+  
+  html += `</div>`;
+  
+  // 시각화
+  const divId1 = `heatmap_${var1}_${var2}`;
+  const divId2 = `residual_${var1}_${var2}`;
+  html += `<div class='graphRow'><div class='graphCell'><div id='${divId1}' style='height:300px'></div></div><div class='graphCell'><div id='${divId2}' style='height:300px'></div></div></div>`;
+  
+  setTimeout(() => {
+    // 관찰빈도 히트맵
+    Plotly.newPlot(divId1, [{
+      z: result.observed,
+      x: result.levels2,
+      y: result.levels1,
+      type: 'heatmap',
+      colorscale: 'Blues',
+      text: result.observed,
+      texttemplate: "%{text}",
+      textfont: {size: 12, color: "white"}
+    }], {
+      title: `관찰 빈도: ${var1} × ${var2}`,
+      xaxis: {title: var2},
+      yaxis: {title: var1},
+      margin: {l: 60, r: 60, t: 50, b: 50}
+    });
+    
+    // 잔차 히트맵
+    Plotly.newPlot(divId2, [{
+      z: result.residuals,
+      x: result.levels2,
+      y: result.levels1,
+      type: 'heatmap',
+      colorscale: 'RdBu',
+      zmid: 0,
+      text: result.residuals.map(row => row.map(val => val.toFixed(2))),
+      texttemplate: "%{text}",
+      textfont: {size: 12}
+    }], {
+      title: `표준화 잔차: ${var1} × ${var2}`,
+      xaxis: {title: var2},
+      yaxis: {title: var1},
+      margin: {l: 60, r: 60, t: 50, b: 50}
+    });
+  }, 100);
+  
+  return html;
+}
+
+function generateInterpretation(result, var1, var2, isDetailed = false) {
+  if (!result) return;
+
+  let html = '<div class="interpretation">';
+  html += '<h4>🔄 카이제곱 교차표 분석 해석</h4>';
+  
+  // 기본 유의성 검정 결과
+  if (result.pvalue < 0.001) {
+    html += `<div style="margin-bottom:15px;"><strong>매우 강한 연관성:</strong><br>`;
+    html += `• ${var1}과 ${var2} 간에 통계적으로 매우 유의한 연관성이 있습니다 (χ² = ${result.chi2.toFixed(3)}, df = ${result.df}, p < 0.001).<br>`;
+  } else if (result.pvalue < 0.01) {
+    html += `<div style="margin-bottom:15px;"><strong>강한 연관성:</strong><br>`;
+    html += `• ${var1}과 ${var2} 간에 통계적으로 유의한 연관성이 있습니다 (χ² = ${result.chi2.toFixed(3)}, df = ${result.df}, p < 0.01).<br>`;
+  } else if (result.pvalue < 0.05) {
+    html += `<div style="margin-bottom:15px;"><strong>유의한 연관성:</strong><br>`;
+    html += `• ${var1}과 ${var2} 간에 통계적으로 유의한 연관성이 있습니다 (χ² = ${result.chi2.toFixed(3)}, df = ${result.df}, p = ${result.pvalue.toFixed(3)}).<br>`;
+  } else {
+    html += `<div style="margin-bottom:15px;"><strong>연관성 없음:</strong><br>`;
+    html += `• ${var1}과 ${var2} 간에 통계적으로 유의한 연관성을 찾을 수 없습니다 (χ² = ${result.chi2.toFixed(3)}, df = ${result.df}, p = ${result.pvalue.toFixed(3)}).<br>`;
+  }
+  
+  // 효과크기 해석
+  if (result.cramersV < 0.1) {
+    html += `• 크래머의 V = ${result.cramersV.toFixed(3)}으로 <strong>매우 약한 연관성</strong>입니다. 실질적 의미는 제한적일 수 있습니다.<br>`;
+  } else if (result.cramersV < 0.3) {
+    html += `• 크래머의 V = ${result.cramersV.toFixed(3)}으로 <strong>약한 연관성</strong>입니다. 작지만 의미있는 연관성이 있습니다.<br>`;
+  } else if (result.cramersV < 0.5) {
+    html += `• 크래머의 V = ${result.cramersV.toFixed(3)}으로 <strong>중간 정도의 연관성</strong>입니다. 실질적으로 의미있는 연관성입니다.<br>`;
+  } else {
+    html += `• 크래머의 V = ${result.cramersV.toFixed(3)}으로 <strong>강한 연관성</strong>입니다. 매우 강한 실질적 연관성이 있습니다.<br>`;
+  }
+  html += `</div>`;
+  
+  if (isDetailed) {
+    // 잔차 분석
+    let significantResiduals = [];
+    for (let i = 0; i < result.R; i++) {
+      for (let j = 0; j < result.C; j++) {
+        if (Math.abs(result.residuals[i][j]) > 2) {
+          const direction = result.residuals[i][j] > 0 ? '예상보다 많음' : '예상보다 적음';
+          significantResiduals.push(`${result.levels1[i]} × ${result.levels2[j]}: ${direction} (잔차 = ${result.residuals[i][j].toFixed(2)})`);
+        }
+      }
+    }
+    
+    if (significantResiduals.length > 0) {
+      html += `<div style="margin-bottom:15px;"><strong>주목할 만한 셀들:</strong><br>`;
+      significantResiduals.forEach(item => {
+        html += `• ${item}<br>`;
+      });
+      html += `</div>`;
+    }
+    
+    // 실용적 해석
+    if (result.pvalue < 0.05 && result.cramersV > 0.1) {
+      html += `<div style="margin-bottom:15px;"><strong>실용적 해석:</strong><br>`;
+      html += `• <strong>${var1}</strong>의 값을 알면 <strong>${var2}</strong>의 분포를 어느 정도 예측할 수 있습니다. 이 두 변수는 서로 독립적이지 않습니다.</div>`;
+    } else if (result.pvalue < 0.05 && result.cramersV <= 0.1) {
+      html += `<div style="margin-bottom:15px;"><strong>실용적 해석:</strong><br>`;
+      html += `• 통계적으로는 유의하지만 실질적 연관성은 매우 약합니다. 표본 크기가 클 때 나타날 수 있는 현상입니다.</div>`;
+    } else {
+      html += `<div style="margin-bottom:15px;"><strong>실용적 해석:</strong><br>`;
+      html += `• <strong>${var1}</strong>과 <strong>${var2}</strong>는 통계적으로 독립적인 것으로 보입니다. 한 변수의 값이 다른 변수의 분포에 영향을 주지 않습니다.</div>`;
+    }
+  }
+  
+  html += '</div>';
+  
+  document.getElementById('interpretation').innerHTML = html;
+  document.getElementById('interpretationPanel').style.display = 'block';
+}
+
+function runBasicAnalysis() {
+  if (!parsedData) {
+    alert("CSV 파일을 먼저 업로드하거나 예제를 불러오세요");
+    return;
+  }
+
+  const selected = Array.from(document.getElementById("catSelect").selectedOptions).map(o => o.value);
+  if (selected.length !== 2) {
+    alert("정확히 두 개의 변수를 선택하세요");
+    return;
+  }
+
+  try {
+    const [var1, var2] = selected;
+    const result = calculateChiSquare(var1, var2);
+    
+    analysisResults = result;
+    
+    let html = renderChiSquareBasic(result, var1, var2);
+    
+    document.getElementById("results").innerHTML = html;
+    document.getElementById("resultPanel").style.display = "block";
+    
+    generateInterpretation(result, var1, var2, false);
+  } catch (error) {
+    alert("분석 오류: " + error.message);
+  }
+}
+
+function runDetailedAnalysis() {
+  if (!parsedData) {
+    alert("CSV 파일을 먼저 업로드하거나 예제를 불러오세요");
+    return;
+  }
+
+  const selected = Array.from(document.getElementById("catSelect").selectedOptions).map(o => o.value);
+  if (selected.length !== 2) {
+    alert("정확히 두 개의 변수를 선택하세요");
+    return;
+  }
+
+  try {
+    const [var1, var2] = selected;
+    const result = calculateChiSquare(var1, var2);
+    
+    analysisResults = result;
+    
+    let html = renderChiSquareDetailed(result, var1, var2);
+    
+    document.getElementById("results").innerHTML = html;
+    document.getElementById("resultPanel").style.display = "block";
+    
+    generateInterpretation(result, var1, var2, true);
+  } catch (error) {
+    alert("분석 오류: " + error.message);
+  }
+}
+
+// 이벤트 처리
+document.getElementById("file").addEventListener("change", async e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const text = await file.text();
+  try {
+    parsedData = parseCSV(text);
+  } catch (error) {
+    alert("파일 로드 오류: " + error.message);
+  }
+});
+
+document.getElementById("loadExample").addEventListener("click", () => {
+  const sampleData = `Gender,Education,Satisfaction,Age_Group
+Male,High_School,High,Young
+Female,College,Medium,Adult
+Male,Graduate,High,Adult
+Female,High_School,Low,Young
+Male,College,Medium,Adult
+Female,Graduate,High,Adult
+Male,High_School,Medium,Young
+Female,College,High,Adult
+Male,Graduate,High,Adult
+Female,High_School,Medium,Young
+Male,College,Low,Adult
+Female,Graduate,High,Adult
+Male,High_School,High,Young
+Female,College,Medium,Adult
+Male,Graduate,Low,Adult
+Female,High_School,Medium,Young
+Male,College,High,Adult
+Female,Graduate,Medium,Adult
+Male,High_School,Low,Young
+Female,College,High,Adult`;
+
+  try {
+    parsedData = parseCSV(sampleData);
+  } catch (error) {
+    alert("예제 데이터 로드 오류: " + error.message);
+  }
+});
+
+document.getElementById("runBasic").addEventListener("click", runBasicAnalysis);
+document.getElementById("runDetailed").addEventListener("click", runDetailedAnalysis);
+</script>
+</body>
+</html>
