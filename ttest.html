@@ -5,31 +5,142 @@
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>t-검정 올인원 도구</title>
 
-<!-- 공통 CSS -->
-<link rel="stylesheet" href="common.css">
-
-<!-- 외부 라이브러리 -->
+<!-- CSV 파싱 -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<!-- Plotly -->
 <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
 
+<style>
+  :root{
+    --bg:#f4f5f7; --card:#ffffff; --muted:#6b7280; --accent:#2563eb; --success:#059669;
+    --fail:#9ca3af; --shadow:0 8px 30px rgba(16,24,40,0.06); --warning:#f59e0b; --danger:#ef4444;
+  }
+  *{box-sizing:border-box}
+  body{font-family:"Inter","Segoe UI",Roboto,Arial,sans-serif;margin:0;background:var(--bg);color:#111827;padding:24px;display:flex;gap:20px;min-height:100vh}
+  
+  /* 사이드바 */
+  .sidebar{width:280px;background:var(--card);border-radius:16px;padding:18px;box-shadow:var(--shadow);height:fit-content;position:sticky;top:24px}
+  .sidebar h2{text-align:center;margin-bottom:15px;font-size:18px}
+  
+  /* 메뉴 간격 조정 */
+  .menu-category{
+    font-size:13px;
+    font-weight:700;
+    color:var(--muted);
+    margin-top:16px;
+    margin-bottom:6px;
+    padding:0 12px;
+    text-transform:uppercase;
+    letter-spacing:0.5px;
+  }
+  
+  .menu-category:first-child{
+    margin-top:0;
+  }
+  
+  .menu-item{
+    display:block;
+    padding:10px 12px;
+    border-radius:12px;
+    color:#374151;
+    margin-bottom:3px;
+    cursor:pointer;
+    transition:all .18s ease;
+    font-size:14px;
+  }
+  
+  .menu-item.active{background:var(--accent);color:white;font-weight:600;box-shadow:0 6px 18px rgba(37,99,235,0.14)}
+  .menu-item:hover:not(.active){background:#f3f4f6}
+  
+  /* 메인 */
+  .main{flex:1;display:flex;flex-direction:column;gap:16px}
+  .panel{background:var(--card);border-radius:16px;padding:18px;box-shadow:var(--shadow)}
+  h1{margin:0;font-size:22px;color:var(--accent)}
+  h3{margin:0 0 15px 0;font-size:16px}
+  .controls{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+  .btn{border:0;padding:10px 16px;border-radius:10px;cursor:pointer;font-weight:600;font-size:14px;transition:all .15s ease}
+  .btn.primary{background:var(--accent);color:#fff}
+  .btn.primary:hover{background:#1d4ed8}
+  .btn.success{background:var(--success);color:#fff}
+  .btn.success:hover{background:#047857}
+  .btn.ghost{background:#f3f4f6;color:#111827}
+  .btn.ghost:hover{background:#e5e7eb}
+  select,input[type="file"],input[type="number"]{padding:8px 12px;border-radius:8px;border:1px solid #d1d5db;margin-top:8px;font-size:14px}
+  input[type="file"]{width:auto}
+  table{width:100%;border-collapse:collapse;margin-top:12px;font-size:13px}
+  th{background:#f9fafb;padding:10px 8px;border-bottom:2px solid #e5e7eb;text-align:center;font-weight:600}
+  td{padding:8px;border-bottom:1px solid #f3f4f6;text-align:center}
+  .muted{color:var(--muted);font-size:13px}
+  .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  .sig{color:var(--success);font-weight:700;}
+  .nsig{color:var(--fail);font-weight:700;}
+  label{display:block;font-weight:600;color:#111827;margin-bottom:4px;font-size:14px}
+  .mb-2{margin-bottom:12px}
+  .section{margin-bottom:15px}
+  .inline{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  .data-info{background:#f0f9ff;padding:12px;border-radius:8px;margin:10px 0;border:1px solid #e0f2fe}
+  .variable-list{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+  .variable-tag{background:#e5e7eb;padding:4px 8px;border-radius:6px;font-size:12px}
+</style>
 </head>
 <body>
+  <!-- 사이드바 -->
+  <div class="sidebar">
+    <h2>📊 분석 메뉴</h2>
+    <div id="menuList">
+      <div class="menu-category">데이터 탐색</div>
+      <div class="menu-item" data-target="stats.html">기술통계</div>
+
+      <div class="menu-category">집단 간 차이 검정</div>
+      <div class="menu-item active" data-target="ttest.html">t-검정 (독립/대응)</div>
+      <div class="menu-item" data-target="chisquare.html">카이제곱 검정</div>
+      <div class="menu-item" data-target="main-nonparam">비모수 검정</div>
+      <div class="menu-item" data-target="main-anova">분산분석 (ANOVA)</div>
+
+      <div class="menu-category">변수 간 관계 분석</div>
+      <div class="menu-item" data-target="main-corr">상관분석</div>
+      <div class="menu-item" data-target="main-reg">회귀분석</div>
+      <div class="menu-item" data-target="main-probit">프로빗분석</div>
+      <div class="menu-item" data-target="main-mediation">매개효과</div>
+      <div class="menu-item" data-target="main-moderation">조절효과</div>
+      <div class="menu-item" data-target="main-discriminant">판별분석</div>
+      <div class="menu-item" data-target="main-sem">SEM (구조방정식 모형)</div>
+
+      <div class="menu-category">차원 축소 / 군집화</div>
+      <div class="menu-item" data-target="main-pca">PCA</div>
+      <div class="menu-item" data-target="main-efa">탐색적 요인분석 (EFA)</div>
+      <div class="menu-item" data-target="main-cfa">확인적 요인분석 (CFA)</div>
+      <div class="menu-item" data-target="main-cluster">군집분석</div>
+    </div>
+  </div>
+
+  <!-- 메인 -->
   <div class="main">
+    <!-- 헤더 -->
     <div class="panel">
       <h1>📊 t-검정 올인원 도구</h1>
       <div class="muted">CSV 업로드 → 검정 종류 선택 → 변수 설정 → 실행</div>
     </div>
 
+    <!-- 데이터 업로드 -->
     <div class="panel">
       <h3>데이터 업로드</h3>
-      <div class="controls">
-        <input id="fileInput" type="file" accept=".csv">
-        <button class="btn success" onclick="loadExample()">예제 불러오기</button>
-        <button class="btn ghost" onclick="resetAll()">초기화</button>
+      <div class="section" style="margin-top:15px">
+        <div class="inline">
+          <input id="fileInput" type="file" accept=".csv">
+          <button class="btn success" onclick="loadExample()">예제 불러오기</button>
+          <button class="btn ghost" onclick="resetAll()">초기화</button>
+        </div>
+        
+        <div id="dataInfo" class="data-info" style="display:none">
+          <strong>데이터 정보:</strong>
+          <div id="dataDetails"></div>
+        </div>
       </div>
       <div id="dataPreview"></div>
     </div>
 
+    <!-- 분석 설정 -->
     <div class="panel" id="varPanel" style="display:none;">
       <h3>분석 설정</h3>
       <div class="mb-2">
@@ -48,6 +159,7 @@
       </div>
     </div>
 
+    <!-- 분석 결과 -->
     <div class="panel" id="resultsPanel" style="display:none;">
       <h3>분석 결과</h3>
       <div id="resultTables"></div>
@@ -56,11 +168,11 @@
   </div>
 
 <script>
-let currentData = null;
+let currentData=null;
 
 // 예제 데이터
-function loadExample() {
-  const example = [
+function loadExample(){
+  const example=[
     {group:"남", score:85, pre:70, post:80},
     {group:"남", score:78, pre:68, post:74},
     {group:"남", score:90, pre:72, post:88},
@@ -91,31 +203,61 @@ document.getElementById('fileInput').addEventListener('change', function(event) 
 });
 
 // 데이터 처리
-function processData(data) {
-  currentData = data;
-  const headers = Object.keys(data[0]);
-  let preview = '<table><thead><tr>';
-  headers.forEach(h => preview += `<th>${h}</th>`); 
-  preview += '</tr></thead><tbody>';
-  data.slice(0, 5).forEach(r => {
-    preview += '<tr>';
-    headers.forEach(h => preview += `<td>${r[h]}</td>`);
-    preview += '</tr>';
+function processData(data){
+  currentData=data;
+  const headers=Object.keys(data[0]);
+  
+  // 데이터 정보 표시
+  showDataInfo(data, headers);
+  
+  // 미리보기 테이블
+  let preview='<table><thead><tr>';
+  headers.forEach(h=>preview+=`<th>${h}</th>`); 
+  preview+='</tr></thead><tbody>';
+  data.slice(0,5).forEach(r=>{
+    preview+='<tr>';
+    headers.forEach(h=>preview+=`<td>${r[h]}</td>`);
+    preview+='</tr>';
   });
-  preview += '</tbody></table>';
-  document.getElementById('dataPreview').innerHTML = preview;
+  preview+='</tbody></table>';
+  document.getElementById('dataPreview').innerHTML=preview;
   updateVarUI(headers);
-  document.getElementById('varPanel').style.display = 'block';
+  document.getElementById('varPanel').style.display='block';
+}
+
+// 데이터 정보 표시
+function showDataInfo(data, headers) {
+  // 수치형/범주형 변수 분류
+  const numericCols = headers.filter(h => 
+    data.some(row => row[h] !== null && row[h] !== "" && !isNaN(parseFloat(row[h])))
+  );
+  const categoricalCols = headers.filter(h => !numericCols.includes(h));
+  
+  const info = `
+    <strong>행 수:</strong> ${data.length} | 
+    <strong>열 수:</strong> ${headers.length}<br>
+    <strong>수치형 변수 (${numericCols.length}):</strong> 
+    <div class="variable-list">
+      ${numericCols.map(col => `<span class="variable-tag">${col}</span>`).join('')}
+    </div>
+    <strong>범주형 변수 (${categoricalCols.length}):</strong>
+    <div class="variable-list">
+      ${categoricalCols.map(col => `<span class="variable-tag">${col}</span>`).join('')}
+    </div>
+  `;
+  
+  document.getElementById('dataDetails').innerHTML = info;
+  document.getElementById('dataInfo').style.display = 'block';
 }
 
 // 변수 UI 업데이트
-function updateVarUI(headers = null) {
-  if (!headers && currentData) headers = Object.keys(currentData[0]);
-  const type = document.getElementById('testType').value;
-  let html = "";
+function updateVarUI(headers=null){
+  if(!headers&&currentData) headers=Object.keys(currentData[0]);
+  const type=document.getElementById('testType').value;
+  let html="";
   
-  if (type === "one") {
-    html = `<div class="grid-2">
+  if(type==="one"){
+    html=`<div class="grid-2">
       <div>
         <label>분석 변수</label>
         <select id="oneVar">${headers.map(h=>`<option>${h}</option>`).join('')}</select>
@@ -125,8 +267,8 @@ function updateVarUI(headers = null) {
         <input id="mu0" type="number" value="80">
       </div>
     </div>`;
-  } else if (type === "independent" || type === "welch") {
-    html = `<div class="grid-2">
+  }else if(type==="independent"||type==="welch"){
+    html=`<div class="grid-2">
       <div>
         <label>집단 변수</label>
         <select id="groupVar">${headers.map(h=>`<option>${h}</option>`).join('')}</select>
@@ -136,8 +278,8 @@ function updateVarUI(headers = null) {
         <select id="indVar">${headers.map(h=>`<option>${h}</option>`).join('')}</select>
       </div>
     </div>`;
-  } else if (type === "paired") {
-    html = `<div class="grid-2">
+  }else if(type==="paired"){
+    html=`<div class="grid-2">
       <div>
         <label>변수 1 (사전)</label>
         <select id="pair1">${headers.map(h=>`<option>${h}</option>`).join('')}</select>
@@ -148,7 +290,7 @@ function updateVarUI(headers = null) {
       </div>
     </div>`;
   }
-  document.getElementById('varSettings').innerHTML = html;
+  document.getElementById('varSettings').innerHTML=html;
 }
 
 // t분포 확률밀도함수
@@ -186,24 +328,24 @@ function tCdf(t, df) {
   return 0.5 + 0.5 * Math.sign(t) * (1 - Math.exp(-2 * t * t / Math.PI));
 }
 
-// 분석 실행
-function runTtest() {
-  const type = document.getElementById('testType').value;
-  let result = "", plotData = [], layout = {}, pval = 1;
+// 실행
+function runTtest(){
+  const type=document.getElementById('testType').value;
+  let result="", plotData=[], layout={}, pval=1;
 
-  if (type === "one") {
-    const v = document.getElementById('oneVar').value;
-    const mu0 = parseFloat(document.getElementById('mu0').value);
-    const x = currentData.map(r => parseFloat(r[v])).filter(n => !isNaN(n));
-    const m = mean(x), s = std(x), n = x.length;
-    const t = (m - mu0) / (s / Math.sqrt(n));
-    const df = n - 1; 
-    pval = 2 * (1 - tCdf(Math.abs(t), df));
-    const d = (m - mu0) / s;
+  if(type==="one"){
+    const v=document.getElementById('oneVar').value;
+    const mu0=parseFloat(document.getElementById('mu0').value);
+    const x=currentData.map(r=>parseFloat(r[v])).filter(n=>!isNaN(n));
+    const m=mean(x), s=std(x), n=x.length;
+    const t=(m-mu0)/(s/Math.sqrt(n));
+    const df=n-1; 
+    pval=2*(1-tCdf(Math.abs(t),df));
+    const d=(m-mu0)/s;
     
-    result += tableHTML(
-      ["N", "평균", "표준편차", "t", "df", "p", "Cohen's d"],
-      [[n, m.toFixed(2), s.toFixed(2), t.toFixed(3), df, formatP(pval), d.toFixed(3)]]
+    result+=tableHTML(
+      ["N","평균","표준편차","t","df","p","Cohen's d"],
+      [[n,m.toFixed(2),s.toFixed(2),t.toFixed(3),df,formatP(pval),d.toFixed(3)]]
     );
 
     // 밀도분포와 기각역을 포함한 그래프
@@ -266,50 +408,50 @@ function runTtest() {
     };
   }
 
-  else if (type === "independent" || type === "welch") {
-    const gVar = document.getElementById('groupVar').value;
-    const v = document.getElementById('indVar').value;
-    const groups = {};
-    currentData.forEach(r => {
-      if (r[gVar] !== '' && !isNaN(parseFloat(r[v]))) {
-        if (!groups[r[gVar]]) groups[r[gVar]] = [];
+  else if(type==="independent"||type==="welch"){
+    const gVar=document.getElementById('groupVar').value;
+    const v=document.getElementById('indVar').value;
+    const groups={};
+    currentData.forEach(r=>{
+      if(r[gVar]!==''&&!isNaN(parseFloat(r[v]))){
+        if(!groups[r[gVar]]) groups[r[gVar]]=[];
         groups[r[gVar]].push(parseFloat(r[v]));
       }
     });
-    const keys = Object.keys(groups);
-    if (keys.length !== 2) { alert("두 집단 필요"); return; }
-    const g1 = groups[keys[0]], g2 = groups[keys[1]];
-    const m1 = mean(g1), m2 = mean(g2), sd1 = std(g1), sd2 = std(g2);
-    const n1 = g1.length, n2 = g2.length;
+    const keys=Object.keys(groups);
+    if(keys.length!==2){alert("두 집단 필요");return;}
+    const g1=groups[keys[0]], g2=groups[keys[1]];
+    const m1=mean(g1), m2=mean(g2), sd1=std(g1), sd2=std(g2);
+    const n1=g1.length, n2=g2.length;
 
-    let t, df;
-    if (type === "independent") {
-      const sp = Math.sqrt(((n1 - 1) * sd1 * sd1 + (n2 - 1) * sd2 * sd2) / (n1 + n2 - 2));
-      t = (m1 - m2) / (sp * Math.sqrt(1 / n1 + 1 / n2));
-      df = n1 + n2 - 2;
-    } else {
-      t = (m1 - m2) / Math.sqrt(sd1 * sd1 / n1 + sd2 * sd2 / n2);
-      df = Math.pow(sd1 * sd1 / n1 + sd2 * sd2 / n2, 2) / ((Math.pow(sd1 * sd1 / n1, 2) / (n1 - 1)) + (Math.pow(sd2 * sd2 / n2, 2) / (n2 - 1)));
+    let t,df;
+    if(type==="independent"){
+      const sp=Math.sqrt(((n1-1)*sd1*sd1+(n2-1)*sd2*sd2)/(n1+n2-2));
+      t=(m1-m2)/(sp*Math.sqrt(1/n1+1/n2));
+      df=n1+n2-2;
+    }else{
+      t=(m1-m2)/Math.sqrt(sd1*sd1/n1+sd2*sd2/n2);
+      df=Math.pow(sd1*sd1/n1+sd2*sd2/n2,2)/((Math.pow(sd1*sd1/n1,2)/(n1-1))+(Math.pow(sd2*sd2/n2,2)/(n2-1)));
     }
-    pval = 2 * (1 - tCdf(Math.abs(t), df));
-    const sp = (type === "independent") ? Math.sqrt(((n1 - 1) * sd1 * sd1 + (n2 - 1) * sd2 * sd2) / (n1 + n2 - 2)) : Math.sqrt((sd1 * sd1 + sd2 * sd2) / 2);
-    const d = (m1 - m2) / sp;
+    pval=2*(1-tCdf(Math.abs(t),df));
+    const sp=(type==="independent")?Math.sqrt(((n1-1)*sd1*sd1+(n2-1)*sd2*sd2)/(n1+n2-2)):Math.sqrt((sd1*sd1+sd2*sd2)/2);
+    const d=(m1-m2)/sp;
 
-    result += tableHTML(
-      ["집단", "N", "평균", "표준편차"],
-      [[keys[0], n1, m1.toFixed(2), sd1.toFixed(2)], [keys[1], n2, m2.toFixed(2), sd2.toFixed(2)]]
+    result+=tableHTML(
+      ["집단","N","평균","표준편차"],
+      [[keys[0],n1,m1.toFixed(2),sd1.toFixed(2)],[keys[1],n2,m2.toFixed(2),sd2.toFixed(2)]]
     );
-    result += tableHTML(
-      ["t", "df", "p", "Cohen's d"],
-      [[t.toFixed(3), df.toFixed(1), formatP(pval), d.toFixed(3)]]
+    result+=tableHTML(
+      ["t","df","p","Cohen's d"],
+      [[t.toFixed(3),df.toFixed(1),formatP(pval),d.toFixed(3)]]
     );
-    plotData = [{y: g1, type: 'box', name: keys[0]}, {y: g2, type: 'box', name: keys[1]}];
-    layout = {title: `${type === "independent" ? "독립(Student)" : "Welch"} t-검정: ${keys[0]} vs ${keys[1]} (${v})`};
+    plotData=[{y:g1,type:'box',name:keys[0]},{y:g2,type:'box',name:keys[1]}];
+    layout={title:`${type==="independent"?"독립(Student)":"Welch"} t-검정: ${keys[0]} vs ${keys[1]} (${v})`};
   }
 
-  else if (type === "paired") {
-    const v1 = document.getElementById('pair1').value;
-    const v2 = document.getElementById('pair2').value;
+  else if(type==="paired"){
+    const v1=document.getElementById('pair1').value;
+    const v2=document.getElementById('pair2').value;
     const pairs = [];
     
     currentData.forEach(r => {
@@ -320,11 +462,11 @@ function runTtest() {
       }
     });
     
-    if (pairs.length === 0) { alert("유효한 쌍 데이터 없음"); return; }
+    if(pairs.length === 0){alert("유효한 쌍 데이터 없음");return;}
     
     const x1 = pairs.map(p => p[v1]);
     const x2 = pairs.map(p => p[v2]);
-    const dVals = x1.map((a, i) => a - x2[i]);
+    const dVals = x1.map((a,i) => a - x2[i]);
     const md = mean(dVals), sd = std(dVals), n = x1.length;
     const t = md / (sd / Math.sqrt(n));
     const df = n - 1; 
@@ -332,8 +474,8 @@ function runTtest() {
     const d = md / sd;
     
     result += tableHTML(
-      ["N", "평균차", "표준편차(차)", "t", "df", "p", "Cohen's d"],
-      [[n, md.toFixed(2), sd.toFixed(2), t.toFixed(3), df, formatP(pval), d.toFixed(3)]]
+      ["N","평균차","표준편차(차)","t","df","p","Cohen's d"],
+      [[n,md.toFixed(2),sd.toFixed(2),t.toFixed(3),df,formatP(pval),d.toFixed(3)]]
     );
     
     plotData = [
@@ -343,37 +485,51 @@ function runTtest() {
     layout = {title: `대응표본 t-검정: ${v1} vs ${v2}`};
   }
 
-  document.getElementById('resultTables').innerHTML = result;
-  document.getElementById('resultsPanel').style.display = 'block';
-  Plotly.newPlot('ttestPlot', plotData, layout, {displayModeBar: false});
+  document.getElementById('resultTables').innerHTML=result;
+  document.getElementById('resultsPanel').style.display='block';
+  Plotly.newPlot('ttestPlot',plotData,layout,{displayModeBar:false});
 }
 
 // 유틸리티 함수들
-function tableHTML(headers, rows) {
-  let html = "<table><thead><tr>";
-  headers.forEach(h => html += `<th>${h}</th>`);
-  html += "</tr></thead><tbody>";
-  rows.forEach(r => {
-    html += "<tr>";
-    if (!Array.isArray(r)) r = [r];
-    r.forEach(v => { html += `<td>${v}</td>`; });
-    html += "</tr>";
+function tableHTML(headers,rows){
+  let html="<table><thead><tr>";
+  headers.forEach(h=>html+=`<th>${h}</th>`);
+  html+="</tr></thead><tbody>";
+  rows.forEach(r=>{
+    html+="<tr>";
+    if(!Array.isArray(r)) r=[r];
+    r.forEach(v=>{html+=`<td>${v}</td>`;});
+    html+="</tr>";
   });
-  html += "</tbody></table>";
+  html+="</tbody></table>";
   return html;
 }
 
-function mean(a) { return a.reduce((x, y) => x + y, 0) / a.length; }
-function std(a) { const m = mean(a); return Math.sqrt(a.reduce((s, x) => s + (x - m) ** 2, 0) / (a.length - 1)); }
-function formatP(p) { return p < 0.05 ? `<span class='sig'>${p.toFixed(3)} ★</span>` : `<span class='nsig'>${p.toFixed(3)}</span>`; }
+function mean(a){return a.reduce((x,y)=>x+y,0)/a.length;}
+function std(a){const m=mean(a);return Math.sqrt(a.reduce((s,x)=>s+(x-m)**2,0)/(a.length-1));}
+function formatP(p){return p<0.05?`<span class='sig'>${p.toFixed(3)} ★</span>`:`<span class='nsig'>${p.toFixed(3)}</span>`;}
 
-function resetAll() {
-  currentData = null;
-  document.getElementById('dataPreview').innerHTML = '';
-  document.getElementById('varPanel').style.display = 'none';
-  document.getElementById('resultsPanel').style.display = 'none';
-  document.getElementById('fileInput').value = '';
+function resetAll(){
+  currentData=null;
+  document.getElementById('dataPreview').innerHTML='';
+  document.getElementById('dataInfo').style.display='none';
+  document.getElementById('varPanel').style.display='none';
+  document.getElementById('resultsPanel').style.display='none';
+  document.getElementById('fileInput').value='';
 }
+
+// 메뉴 네비게이션
+document.querySelectorAll('.menu-item').forEach(item => {
+  item.addEventListener('click', function() {
+    const target = this.dataset.target;
+    if (target) {
+      const currentPage = window.location.pathname.split('/').pop();
+      if (target !== currentPage) {
+        window.location.href = target;
+      }
+    }
+  });
+});
 </script>
 </body>
 </html>
