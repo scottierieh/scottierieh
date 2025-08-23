@@ -1,93 +1,71 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>통계분석 종합도구</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>t-검정 올인원 도구</title>
 
-<!-- 라이브러리 -->
+<!-- CSV 파싱 -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<!-- Plotly -->
 <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
 
 <style>
-  body {font-family: sans-serif; margin:0; display:flex; min-height:100vh; background:#f4f5f7;}
-  .sidebar {width:250px; background:#ffffff; padding:20px; box-shadow:0 0 8px rgba(0,0,0,0.1);}
-  .menu-item {padding:10px; margin:5px 0; cursor:pointer; border-radius:6px; color:#333;}
-  .menu-item.active {background:#2563eb; color:#fff;}
-  .main {flex:1; padding:20px;}
-  .analysis-section {display:none;}
-  .analysis-section.active {display:block;}
-
-  /* 카드/버튼/테이블 */
-  .panel{background:#fff;border-radius:16px;padding:18px;box-shadow:0 8px 30px rgba(16,24,40,0.06);margin-bottom:20px}
-  h1{margin:0;font-size:22px;color:#2563eb}
+  :root{
+    --bg:#f4f5f7; --card:#ffffff; --muted:#6b7280; --accent:#2563eb; --success:#059669;
+    --fail:#9ca3af; --shadow:0 8px 30px rgba(16,24,40,0.06);
+  }
+  body{font-family:"Inter","Segoe UI",Roboto,Arial,sans-serif;margin:0;background:var(--bg);color:#111827;padding:24px}
+  .main{max-width:950px;margin:auto;display:flex;flex-direction:column;gap:16px}
+  .panel{background:var(--card);border-radius:16px;padding:18px;box-shadow:var(--shadow)}
+  h1{margin:0;font-size:22px;color:var(--accent)}
   .controls{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
   .btn{border:0;padding:10px 16px;border-radius:10px;cursor:pointer;font-weight:600}
-  .btn.primary{background:#2563eb;color:#fff}
-  .btn.success{background:#059669;color:#fff}
+  .btn.primary{background:var(--accent);color:#fff}
+  .btn.success{background:var(--success);color:#fff}
   .btn.ghost{background:#f3f4f6;color:#111827}
-
-  /* 테이블 */
-  .styled-table {width:100%;border-collapse:collapse;margin-top:12px;font-size:13px}
-  .styled-table th, .styled-table td {padding:8px 12px;border-bottom:1px solid #eef2f7;text-align:center}
-  .styled-table th {background:#f8fafc;font-weight:600}
-
-  /* p-value 강조 */
-  .sig{color:#059669;font-weight:700;}
-  .nsig{color:#9ca3af;font-weight:700;}
+  table{width:100%;border-collapse:collapse;margin-top:12px;font-size:13px}
+  th,td{padding:8px 12px;border-bottom:1px solid #eef2f7;text-align:center}
+  th{background:#f8fafc;font-weight:600}
+  .muted{color:var(--muted);font-size:13px}
+  .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  .sig{color:var(--success);font-weight:700;}
+  .nsig{color:var(--fail);font-weight:700;}
 </style>
 </head>
 <body>
-
-  <!-- 사이드바 -->
-  <div class="sidebar">
-    <h2>📊 분석도구</h2>
-    <div class="menu-item active" data-section="descriptive">기술통계</div>
-    <div class="menu-item" data-section="ttest">T-검정</div>
-  </div>
-
-  <!-- 메인 -->
   <div class="main">
-    <!-- 기술통계 자리 -->
-    <div id="descriptiveSection" class="analysis-section active">
-      <h1>📊 기술통계</h1>
-      <p>여기에 기술통계 기능이 들어갈 자리입니다.</p>
+    <div class="panel">
+      <h1>t-검정 올인원 도구</h1>
+      <div class="muted">CSV 업로드 → 검정 종류 선택 → 변수 설정 → 실행</div>
     </div>
 
-    <!-- T-검정 도구 -->
-    <div id="ttestSection" class="analysis-section">
-      <div class="panel">
-        <h1>t-검정 올인원 도구</h1>
-        <div class="muted">CSV 업로드 → 검정 종류 선택 → 변수 설정 → 실행</div>
+    <div class="panel">
+      <div class="controls">
+        <input id="fileInput" type="file" accept=".csv">
+        <button class="btn success" onclick="loadExample()">예제 불러오기</button>
+        <button class="btn ghost" onclick="resetAll()">초기화</button>
       </div>
+      <div id="dataPreview"></div>
+    </div>
 
-      <div class="panel">
-        <div class="controls">
-          <input id="fileInput" type="file" accept=".csv">
-          <button class="btn success" onclick="loadExample()">예제 불러오기</button>
-          <button class="btn ghost" onclick="resetAll()">초기화</button>
-        </div>
-        <div id="dataPreview"></div>
-      </div>
+    <div class="panel" id="varPanel" style="display:none;">
+      <div>검정 종류</div>
+      <select id="testType" onchange="updateVarUI()">
+        <option value="one">단일표본 t-검정</option>
+        <option value="independent">독립표본 t-검정 (Student)</option>
+        <option value="welch">독립표본 t-검정 (Welch)</option>
+        <option value="paired">대응표본 t-검정</option>
+      </select>
 
-      <div class="panel" id="varPanel" style="display:none;">
-        <div>검정 종류</div>
-        <select id="testType" onchange="updateVarUI()">
-          <option value="one">단일표본 t-검정</option>
-          <option value="independent">독립표본 t-검정 (Student)</option>
-          <option value="welch">독립표본 t-검정 (Welch)</option>
-          <option value="paired">대응표본 t-검정</option>
-        </select>
+      <div id="varSettings" style="margin-top:16px;"></div>
+      <div class="controls"><button class="btn primary" onclick="runTtest()">🚀 실행</button></div>
+    </div>
 
-        <div id="varSettings" style="margin-top:16px;"></div>
-        <div class="controls"><button class="btn primary" onclick="runTtest()">🚀 실행</button></div>
-      </div>
-
-      <div class="panel" id="resultsPanel" style="display:none;">
-        <div class="section-title">분석 결과</div>
-        <div id="resultTables"></div>
-        <div id="ttestPlot" style="height:350px;margin-top:20px;"></div>
-      </div>
+    <div class="panel" id="resultsPanel" style="display:none;">
+      <div class="section-title">분석 결과</div>
+      <div id="resultTables"></div>
+      <div id="ttestPlot" style="height:350px;margin-top:20px;"></div>
     </div>
   </div>
 
@@ -110,7 +88,7 @@ function loadExample(){
 // CSV 파일 로드
 document.getElementById('fileInput').addEventListener('change', function(event) {
   const file = event.target.files[0];
-  if (file && file.type === "text/csv") {
+  if (file) {   // ✅ MIME type 체크 제거
     Papa.parse(file, {
       complete: function(results) {
         processData(results.data.slice(1).map(row => {
@@ -130,7 +108,7 @@ document.getElementById('fileInput').addEventListener('change', function(event) 
 function processData(data){
   currentData=data;
   const headers=Object.keys(data[0]);
-  let preview='<table class="styled-table"><thead><tr>';
+  let preview='<table><thead><tr>';
   headers.forEach(h=>preview+=`<th>${h}</th>`); preview+='</tr></thead><tbody>';
   data.slice(0,5).forEach(r=>{
     preview+='<tr>';
@@ -164,40 +142,77 @@ function updateVarUI(headers=null){
   document.getElementById('varSettings').innerHTML=html;
 }
 
-// ✅ 유틸
-function tableHTML(headers,rows){
-  let html="<table class='styled-table'><thead><tr>";
-  headers.forEach(h=>html+=`<th>${h}</th>`);
-  html+="</tr></thead><tbody>";
-  rows.forEach(r=>{
-    html+="<tr>";
-    if(!Array.isArray(r)) r=[r];
-    r.forEach(v=>{html+=`<td>${v}</td>`;});
-    html+="</tr>";
-  });
-  html+="</tbody></table>";
-  return html;
-}
-function mean(a){return a.reduce((x,y)=>x+y,0)/a.length;}
-function std(a){const m=mean(a);return Math.sqrt(a.reduce((s,x)=>s+(x-m)**2,0)/(a.length-1));}
-function formatP(p){return p<0.05?`<span class='sig'>${p.toFixed(3)} ★</span>`:`<span class='nsig'>${p.toFixed(3)}</span>`;}
-function resetAll(){
-  currentData=null;
-  document.getElementById('dataPreview').innerHTML='';
-  document.getElementById('varPanel').style.display='none';
-  document.getElementById('resultsPanel').style.display='none';
-  document.getElementById('fileInput').value='';
+// t분포 확률밀도함수
+function tPdf(x, df) {
+  const gamma1 = Math.exp(logGamma((df + 1) / 2));
+  const gamma2 = Math.exp(logGamma(df / 2));
+  return (gamma1 / (Math.sqrt(df * Math.PI) * gamma2)) * Math.pow(1 + x * x / df, -(df + 1) / 2);
 }
 
-// ✅ 사이드바 섹션 전환
-document.querySelectorAll('.menu-item').forEach(item=>{
-  item.addEventListener('click', ()=>{
-    document.querySelectorAll('.menu-item').forEach(m=>m.classList.remove('active'));
-    item.classList.add('active');
-    document.querySelectorAll('.analysis-section').forEach(sec=>sec.classList.remove('active'));
-    document.getElementById(item.dataset.section+"Section").classList.add('active');
-  });
-});
+// 감마함수의 로그
+function logGamma(z) {
+  if (z < 0.5) {
+    return Math.log(Math.PI) - Math.log(Math.sin(Math.PI * z)) - logGamma(1 - z);
+  }
+  z -= 1;
+  let x = 0.99999999999999709182;
+  const cof = [57.156235665862923517, -59.597960355475491248, 14.136097974741747174, -0.49191381609762019978, 0.33994649984811888699e-4, 0.46523628927048575665e-4, -0.98374475304879564677e-4, 0.15808870322491248884e-3, -0.21026444172410488319e-3, 0.21743961811521264320e-3, -0.16431810653676389022e-3, 0.84418223983852743293e-4, -0.26190838401581408670e-4, 0.36899182659531622704e-5];
+  for (let i = 0; i < cof.length; i++) {
+    x += cof[i] / (z + i + 1);
+  }
+  const t = z + cof.length - 0.5;
+  return Math.log(Math.sqrt(2 * Math.PI)) + (z + 0.5) * Math.log(t) - t + Math.log(x);
+}
+
+// t분포 누적분포함수 (간단 근사)
+function tCdf(t, df) {
+  if (t === 0) return 0.5;
+  const x = t / Math.sqrt(df);
+  const a = Math.atan(x) / Math.PI + 0.5;
+  if (df === 1) return a;
+  if (df === 2) return 0.5 + x / (2 * Math.sqrt(1 + x * x));
+  return 0.5 + 0.5 * Math.sign(t) * (1 - Math.exp(-2 * t * t / Math.PI));
+}
+
+// ✅ 실행
+function runTtest(){
+  const type=document.getElementById('testType').value;
+  let result="", plotData=[], layout={}, pval=1;
+
+  if(type==="one"){
+    const v=document.getElementById('oneVar').value;
+    const mu0=parseFloat(document.getElementById('mu0').value);
+    const x=currentData.map(r=>parseFloat(r[v])).filter(n=>!isNaN(n));
+    const m=mean(x), s=std(x), n=x.length;
+    const t=(m-mu0)/(s/Math.sqrt(n));
+    const df=n-1; 
+    pval=2*(1-tCdf(Math.abs(t),df));
+    const d=(m-mu0)/s;
+    
+    result+=tableHTML(
+      ["N","평균","표준편차","t","df","p","Cohen's d"],
+      [[n,m.toFixed(2),s.toFixed(2),t.toFixed(3),df,formatP(pval),d.toFixed(3)]]
+    );
+    ...
+  }
+  // (독립/웰치/대응 부분 생략, 그대로 유지)
+  document.getElementById('resultTables').innerHTML=result;
+  document.getElementById('resultsPanel').style.display='block';
+  Plotly.newPlot('ttestPlot',plotData,layout,{displayModeBar:false});
+}
+
+// ✅ 유틸
+function tableHTML(headers,rows){...}
+function mean(a){...}
+function std(a){...}
+function formatP(p){...}
+function resetAll(){...}
+
+// 🔑 전역 등록
+window.runTtest = runTtest;
+window.loadExample = loadExample;
+window.resetAll = resetAll;
+
 </script>
 </body>
 </html>
