@@ -524,19 +524,7 @@ function showDataPreview(data) {
   document.getElementById('analysisPanel').style.display = 'block';
 }
 
-// 이벤트 리스너 - 파일 입력만 따로 처리
-document.addEventListener('DOMContentLoaded', function() {
-  // 메뉴 핸들러 추가
-  document.querySelectorAll('.menu-item').forEach(item => {
-    item.addEventListener('click', () => {
-      document.querySelectorAll('.menu-item').forEach(m => m.classList.remove('active'));
-      item.classList.add('active');
-      const targetId = item.getAttribute('data-target');
-      document.querySelectorAll('.main').forEach(p => p.classList.remove('active'));
-      const target = document.getElementById(targetId);
-      if(target) target.classList.add('active');
-    });
-  });
+
 
   document.getElementById("fileInput").addEventListener("change", function(e) {
     const file = e.target.files[0];
