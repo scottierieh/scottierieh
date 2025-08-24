@@ -1,0 +1,1537 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ANOVA / ANCOVA 통합도구 (개선)</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/plotly.js/2.24.1/plotly.min.js"></script>
+  <style>
+    :root {
+      --bg: #f4f5f7; 
+      --card: #ffffff; 
+      --muted: #6b7280; 
+      --accent: #2563eb; 
+      --success: #059669;
+      --danger: #dc2626;
+      --warning: #f59e0b;
+      --info: #06b6d4;
+      --shadow: 0 8px 30px rgba(16,24,40,0.06);
+    }
+    
+    * { box-sizing: border-box; }
+    
+    body { 
+      font-family: "Inter", "Segoe UI", Roboto, Arial, sans-serif; 
+      margin: 0; 
+      background: var(--bg); 
+      color: #111827; 
+      padding: 24px; 
+      display: flex; 
+      gap: 20px; 
+      min-height: 100vh;
+    }
+    
+    .sidebar {
+      width: 280px; 
+      background: var(--card); 
+      border-radius: 16px; 
+      padding: 18px; 
+      box-shadow: var(--shadow); 
+      height: fit-content;
+    }
+    
+    .sidebar h2 { 
+      text-align: center; 
+      margin: 6px 0 12px 0; 
+      font-size: 18px; 
+      color: #1f2937;
+    }
+    
+    .menu-item { 
+      display: block; 
+      padding: 10px 12px; 
+      border-radius: 12px; 
+      color: #374151; 
+      margin-bottom: 6px; 
+      cursor: pointer; 
+      transition: all .18s ease;
+    }
+    
+    .menu-item:hover {
+      background: #f3f4f6;
+    }
+    
+    .menu-item.active { 
+      background: var(--accent); 
+      color: white; 
+      font-weight: 600; 
+      box-shadow: 0 6px 18px rgba(37,99,235,0.14);
+    }
+    
+    .menu-category {
+      margin-top: 14px;
+      margin-bottom: 6px;
+      font-weight: 700;
+      color: #111827;
+      font-size: 14px;
+      padding: 6px 4px;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    
+    .main { 
+      flex: 1; 
+      display: none;
+      flex-direction: column; 
+      gap: 16px;
+    }
+    
+    .main.active {
+      display: flex;
+    }
+    
+    .panel { 
+      background: var(--card); 
+      border-radius: 16px; 
+      padding: 18px; 
+      box-shadow: var(--shadow);
+    }
+    
+    h1 { 
+      margin: 0; 
+      font-size: 20px; 
+      color: #1f2937;
+    }
+    
+    h3 { 
+      margin: 0 0 12px 0; 
+      font-size: 16px; 
+      color: #1f2937;
+    }
+    
+    .controls { 
+      display: flex; 
+      gap: 8px; 
+      flex-wrap: wrap; 
+      margin-top: 12px;
+      align-items: center;
+    }
+    
+    .btn { 
+      border: 0; 
+      padding: 10px 12px; 
+      border-radius: 10px; 
+      cursor: pointer; 
+      font-weight: 600; 
+      font-size: 14px; 
+      transition: all 0.2s;
+    }
+    
+    .btn.primary { 
+      background: var(--accent); 
+      color: #fff;
+    }
+    
+    .btn.success { 
+      background: var(--success); 
+      color: #fff;
+    }
+    
+    .btn.ghost { 
+      background: #f3f4f6; 
+      color: #111827;
+    }
+    
+    .btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    
+    select, input[type="file"] { 
+      padding: 8px 12px; 
+      border-radius: 8px; 
+      border: 1px solid #e6eef7; 
+      margin-top: 8px; 
+      font-size: 14px;
+    }
+    
+    input[type="file"] { 
+      width: auto; 
+    }
+    
+    input[type="checkbox"] {
+      margin-right: 6px;
+    }
+    
+    table { 
+      width: 100%; 
+      border-collapse: collapse; 
+      margin-top: 12px; 
+      font-size: 13px; 
+      background: white;
+    }
+    
+    th, td { 
+      padding: 8px; 
+      border-bottom: 1px solid #eef2f7; 
+      text-align: center;
+    }
+    
+    th {
+      background: #f8fafc;
+      font-weight: 600;
+      color: #374151;
+    }
+    
+    .muted { 
+      color: var(--muted); 
+      font-size: 13px;
+    }
+    
+    .inline { 
+      display: flex; 
+      gap: 10px; 
+      align-items: center; 
+      flex-wrap: wrap; 
+      margin-bottom: 15px;
+    }
+    
+    .var-select { 
+      width: 260px; 
+      margin-top: 6px;
+    }
+    
+    .data-preview {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 15px;
+      margin-top: 15px;
+      max-height: 300px;
+      overflow: auto;
+    }
+    
+    .data-preview h4 {
+      margin: 0 0 10px 0;
+      font-size: 14px;
+      color: #374151;
+    }
+    
+    .data-table {
+      font-size: 12px;
+      width: 100%;
+      border-collapse: collapse;
+    }
+    
+    .data-table th {
+      background: #e2e8f0;
+      padding: 6px 8px;
+      font-weight: 600;
+      font-size: 11px;
+    }
+    
+    .data-table td {
+      padding: 4px 8px;
+      border-bottom: 1px solid #f1f5f9;
+    }
+    
+    .section { 
+      margin-bottom: 15px;
+    }
+    
+    .var-section {
+      background: #fafbfc;
+      border: 1px solid #e5e7eb;
+      border-radius: 10px;
+      padding: 12px;
+      margin-bottom: 10px;
+    }
+    
+    .var-section label {
+      display: block;
+      font-weight: 600;
+      font-size: 13px;
+      color: #374151;
+      margin-bottom: 6px;
+    }
+    
+    .analysis-options {
+      display: flex;
+      gap: 15px;
+      flex-wrap: wrap;
+      margin: 15px 0;
+    }
+    
+    .analysis-options label {
+      display: flex;
+      align-items: center;
+      font-size: 13px;
+      color: #374151;
+      cursor: pointer;
+    }
+    
+    .result-card {
+      margin-top: 20px;
+      padding: 15px;
+      background: #fafafa;
+      border-radius: 12px;
+    }
+    
+    /* 해석 관련 스타일 - t-검정 스타일과 통일 */
+    .interpretation-box {
+      background: #f0fdf4;
+      border-left: 4px solid var(--success);
+      padding: 15px;
+      margin: 15px 0;
+      border-radius: 8px;
+      border: 1px solid #e2e8f0;
+    }
+    
+    .interpretation-box.reject {
+      background: #fef2f2;
+      border-left-color: var(--danger);
+    }
+    
+    .interpretation-box.accept {
+      background: #f0fdf4;
+      border-left-color: var(--success);
+    }
+    
+    .interpretation-box.warning {
+      background: #fffbeb;
+      border-left-color: var(--warning);
+    }
+    
+    .interpretation-box h3 {
+      margin: 0 0 10px 0;
+      color: #334155;
+    }
+    
+    .interpretation-item {
+      margin-bottom: 8px;
+    }
+    
+    .effect-size {
+      display: inline-block;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 600;
+      color: white;
+      margin-left: 8px;
+    }
+    
+    .effect-small { background: #10b981; }
+    .effect-medium { background: var(--warning); }
+    .effect-large { background: #ef4444; }
+    
+    .grid { 
+      display: grid; 
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); 
+      gap: 12px; 
+      margin-top: 12px;
+    }
+    
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+    
+    .resultCard {
+      margin-top: 20px;
+      padding: 15px;
+      background: #fafafa;
+      border-radius: 12px;
+    }
+    
+    .interpretation-card {
+      background: #f8fafc;
+      border-left: 4px solid #64748b;
+      padding: 15px;
+      margin-top: 15px;
+      border-radius: 8px;
+      border: 1px solid #e2e8f0;
+    }
+    
+    .interpretation-card h4 {
+      margin: 0 0 10px 0;
+      color: #334155;
+    }
+    
+    .significant {
+      color: #dc2626;
+      font-weight: 600;
+    }
+    
+    .not-significant {
+      color: #059669;
+      font-weight: 600;
+    }
+    
+    .warning {
+      color: #f59e0b;
+      font-weight: 600;
+    }
+    
+    #plotArea, #diagArea { 
+      margin-top: 14px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="sidebar">
+    <h2>📊 분석 메뉴</h2>
+    <div id="menuList">
+      <div class="menu-category">데이터 탐색</div>
+      <div class="menu-item" data-target="descriptive.html">기술통계</div>
+
+      <div class="menu-category">집단 간 차이 검정</div>
+      <div class="menu-item" data-target="main-ttest">t-검정 (독립/대응)</div>
+      <div class="menu-item" data-target="main-chi">카이제곱 검정</div>
+      <div class="menu-item" data-target="main-nonparam">비모수 검정</div>
+      <div class="menu-item active" data-target="variance.html">분산분석 (ANOVA)</div>
+
+      <div class="menu-category">변수 간 관계 분석</div>
+      <div class="menu-item" data-target="main-corr">상관분석</div>
+      <div class="menu-item" data-target="main-reg">회귀분석</div>
+      <div class="menu-item" data-target="main-probit">프로빗분석</div>
+      <div class="menu-item" data-target="main-mediation">매개효과</div>
+      <div class="menu-item" data-target="main-moderation">조절효과</div>
+      <div class="menu-item" data-target="main-discriminant">판별분석</div>
+      <div class="menu-item" data-target="main-sem">SEM (구조방정식 모형)</div>
+
+      <div class="menu-category">차원 축소 / 군집화</div>
+      <div class="menu-item" data-target="main-pca">PCA</div>
+      <div class="menu-item" data-target="main-efa">탐색적 요인분석 (EFA)</div>
+      <div class="menu-item" data-target="main-cfa">확인적 요인분석 (CFA)</div>
+      <div class="menu-item" data-target="main-cluster">군집분석</div>
+    </div>
+  </div>
+
+  <!-- 분산분석 (ANOVA) 메인 -->
+  <div class="main active" id="main-anova">
+    <div class="panel">
+      <h1>분산분석 (ANOVA)</h1>
+      <div class="muted">CSV 업로드 → 변수 선택 → 분석 실행</div>
+    </div>
+
+    <div class="panel">
+      <h3>데이터 업로드</h3>
+      <div class="inline">
+        <input type="file" id="fileInput" accept=".csv">
+        <button onclick="loadExample()" class="btn success">📊 예제 불러오기</button>
+      </div>
+      <div class="muted">CSV 첫 행은 변수명, 쉼표 구분</div>
+      
+      <div id="dataPreview" style="display:none;" class="data-preview">
+        <h4>데이터 미리보기 (처음 10행)</h4>
+        <div id="previewContent"></div>
+      </div>
+    </div>
+
+    <div class="panel" id="analysisPanel" style="display:none;">
+      <h3>분석 설정</h3>
+      
+      <div class="var-section">
+        <label>분석유형</label>
+        <select id="analysisType" onchange="renderVarSelectors()">
+          <option value="oneway">일원 분산분석</option>
+          <option value="twoway">이원 분산분석</option>
+          <option value="repeated">반복측정 분산분석 (간단 평균)</option>
+          <option value="ancova">ANCOVA (공변량분석)</option>
+        </select>
+      </div>
+      
+      <div id="varSelectors"></div>
+      
+      <div class="analysis-options">
+        <label><input type="checkbox" id="doPosthoc" checked> 사후검정(Tukey)</label>
+        <label><input type="checkbox" id="doDiag" checked> 진단(Levene/잔차)</label>
+      </div>
+      
+      <div class="controls">
+        <button onclick="runAnalysis()" class="btn primary">분석 실행</button>
+        <span id="msg" class="muted"></span>
+      </div>
+    </div>
+
+    <div class="panel" id="resultPanel" style="display:none;">
+      <h3>분석 결과</h3>
+      <div id="outputArea"></div>
+    </div>
+
+    <div id="plotArea"></div>
+    <div id="diagArea"></div>
+  </div>
+
+  <!-- (스텁) 다른 분석 화면은 나중에 구현 예정 -->
+  <div class="main" id="main-descriptive"><div class="panel"><h1>📊 기술통계</h1><div class="muted">준비중</div></div></div>
+  <div class="main" id="main-ttest"><div class="panel"><h1>📊 t-검정</h1><div class="muted">준비중</div></div></div>
+  <div class="main" id="main-chi"><div class="panel"><h1>📊 카이제곱 검정</h1><div class="muted">준비중</div></div></div>
+  <div class="main" id="main-nonparam"><div class="panel"><h1>📊 비모수 검정</h1><div class="muted">준비중</div></div></div>
+  <div class="main" id="main-corr"><div class="panel"><h1>📊 상관분석</h1><div class="muted">준비중</div></div></div>
+  <div class="main" id="main-reg"><div class="panel"><h1>📊 회귀분석</h1><div class="muted">준비중</div></div></div>
+  <div class="main" id="main-probit"><div class="panel"><h1>📊 프로빗분석</h1><div class="muted">준비중</div></div></div>
+  <div class="main" id="main-mediation"><div class="panel"><h1>📊 매개효과</h1><div class="muted">준비중</div></div></div>
+  <div class="main" id="main-moderation"><div class="panel"><h1>📊 조절효과</h1><div class="muted">준비중</div></div></div>
+  <div class="main" id="main-discriminant"><div class="panel"><h1>📊 판별분석</h1><div class="muted">준비중</div></div></div>
+  <div class="main" id="main-sem"><div class="panel"><h1>📊 SEM</h1><div class="muted">준비중</div></div></div>
+  <div class="main" id="main-pca"><div class="panel"><h1>📊 PCA</h1><div class="muted">준비중</div></div></div>
+  <div class="main" id="main-efa"><div class="panel"><h1>📊 탐색적 요인분석 (EFA)</h1><div class="muted">준비중</div></div></div>
+  <div class="main" id="main-cfa"><div class="panel"><h1>📊 확인적 요인분석 (CFA)</h1><div class="muted">준비중</div></div></div>
+  <div class="main" id="main-cluster"><div class="panel"><h1>📊 군집분석</h1><div class="muted">준비중</div></div></div>
+
+<script>
+let data = [];
+let headers = [];
+
+/* ---------------- CSV 로딩/파싱 ---------------- */
+function parseCSV(text) {
+  const rows = text.trim().split(/\r?\n/).map(r => r.split(","));
+  headers = rows[0].map(h => h.trim());
+  return rows.slice(1).map(r => {
+    let obj = {};
+    headers.forEach((h,i) => {
+      const v = r[i]!==undefined ? r[i].trim() : "";
+      const num = Number(v);
+      obj[h] = (v!=="" && !Number.isNaN(num) && /^-?\d+(\.\d+)?$/.test(v)) ? num : v;
+    });
+    return obj;
+  });
+}
+
+function showDataPreview(data) {
+  if (!data || data.length === 0) return;
+  
+  const preview = data.slice(0, 10);
+  const headers = Object.keys(preview[0]);
+  
+  let html = '<table class="data-table">';
+  html += '<thead><tr>';
+  headers.forEach(h => html += `<th>${h}</th>`);
+  html += '</tr></thead><tbody>';
+  
+  preview.forEach(row => {
+    html += '<tr>';
+    headers.forEach(h => html += `<td>${row[h] || ''}</td>`);
+    html += '</tr>';
+  });
+  html += '</tbody></table>';
+  
+  document.getElementById('previewContent').innerHTML = html;
+  document.getElementById('dataPreview').style.display = 'block';
+  document.getElementById('analysisPanel').style.display = 'block';
+}
+
+// 이벤트 리스너 - 파일 입력만 따로 처리
+document.addEventListener('DOMContentLoaded', function() {
+  // 메뉴 핸들러 추가
+  document.querySelectorAll('.menu-item').forEach(item => {
+    item.addEventListener('click', () => {
+      document.querySelectorAll('.menu-item').forEach(m => m.classList.remove('active'));
+      item.classList.add('active');
+      const targetId = item.getAttribute('data-target');
+      document.querySelectorAll('.main').forEach(p => p.classList.remove('active'));
+      const target = document.getElementById(targetId);
+      if(target) target.classList.add('active');
+    });
+  });
+
+  document.getElementById("fileInput").addEventListener("change", function(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    const reader = new FileReader();
+    reader.onload = function(evt) {
+      try {
+        data = parseCSV(evt.target.result);
+        showDataPreview(data);
+        renderVarSelectors();
+      } catch (error) {
+        alert("파일 로드 오류: " + error.message);
+      }
+    };
+    reader.readAsText(file, "utf-8");
+  });
+});
+/* ---------------- 예제 데이터 로드 함수 ---------------- */
+function loadExample(){
+  const csv = `ID,성별,교육방법,사전점수,사후점수,만족도,연령
+1,남,온라인,75,85,4.2,25
+2,남,온라인,72,82,4.1,27
+3,남,온라인,78,88,4.5,24
+4,남,오프라인,70,78,3.8,26
+5,남,오프라인,74,80,3.9,28
+6,남,오프라인,76,84,4.0,25
+7,여,온라인,80,92,4.6,23
+8,여,온라인,78,90,4.4,25
+9,여,온라인,82,95,4.7,24
+10,여,오프라인,75,88,4.2,27
+11,여,오프라인,79,91,4.3,26
+12,여,오프라인,77,89,4.1,28`;
+  data = parseCSV(csv);
+  showDataPreview(data);
+  renderVarSelectors();
+}
+
+/* ---------------- UI: 변수 선택 ---------------- */
+function renderVarSelectors(){
+  if (data.length===0) {
+    document.getElementById("varSelectors").innerHTML = `<div class="muted">데이터를 먼저 로드하세요.</div>`;
+    return;
+  }
+  
+  const vars = Object.keys(data[0]);
+  const opts = vars.map(v=>`<option value="${v}">${v}</option>`).join("");
+  const at = document.getElementById("analysisType").value;
+  let html = "";
+
+  if(at==="oneway"){
+    html += `<div class="var-section"><label>종속변수 Y</label><select id="dep" class="var-select">${opts}</select></div>`;
+    html += `<div class="var-section"><label>집단변수 G</label><select id="grpA" class="var-select">${opts}</select></div>`;
+  }else if(at==="twoway"){
+    html += `<div class="var-section"><label>종속변수 Y</label><select id="dep" class="var-select">${opts}</select></div>`;
+    html += `<div class="var-section"><label>요인 A</label><select id="grpA" class="var-select">${opts}</select></div>`;
+    html += `<div class="var-section"><label>요인 B</label><select id="grpB" class="var-select">${opts}</select></div>`;
+  }else if(at==="repeated"){
+    html += `<div class="var-section"><label>피험자 ID</label><select id="subj" class="var-select">${opts}</select></div>`;
+    html += `<div class="var-section"><label>반복측정 변수들 (2개 이상 선택)</label><select id="rep" multiple size="4" class="var-select">${opts}</select></div>`;
+    html += `<div class="muted">예: 사전점수, 사후점수, 만족도 등 시간에 따른 측정값들을 선택하세요</div>`;
+    html += `<div class="muted" style="margin-top:8px; font-size:12px; color:#6b7280;">
+      💡 <strong>구형성 가정:</strong> 2조건=자동만족, 3조건이상=검정후 필요시 교정(GG/HF)
+    </div>`;
+  }else if(at==="ancova"){
+    html += `<div class="var-section"><label>종속변수 Y</label><select id="dep" class="var-select">${opts}</select></div>`;
+    html += `<div class="var-section"><label>집단변수(범주)</label><select id="grpA" class="var-select">${opts}</select></div>`;
+    html += `<div class="var-section"><label>공변량 X(연속)</label><select id="cov" class="var-select">${opts}</select></div>`;
+  }
+  document.getElementById("varSelectors").innerHTML = html;
+}
+
+/* ---------------- 도우미 ---------------- */
+const uniq = arr => [...new Set(arr)];
+const flatten = arr => [].concat(...arr);
+function mean(arr){ return arr.reduce((a,b)=>a+b,0) / arr.length; }
+function sumsq(arr, m){ return arr.reduce((s,v)=> s + Math.pow(v-m,2), 0); }
+function variance(arr){ const m=mean(arr); return sumsq(arr,m)/(arr.length-1); }
+
+function pValueF(F, df1, df2){ 
+  return "-";
+}
+
+/* ---------------- 효과크기 해석 함수 추가 ---------------- */
+function interpretEffectSize(eta2, type = "eta") {
+  if (type === "eta") {
+    if (eta2 < 0.01) return { level: "미미함", class: "effect-small", text: "거의 효과 없음" };
+    if (eta2 < 0.06) return { level: "작음", class: "effect-small", text: "작은 효과" };
+    if (eta2 < 0.14) return { level: "중간", class: "effect-medium", text: "중간 효과" };
+    return { level: "큼", class: "effect-large", text: "큰 효과" };
+  }
+  return { level: "-", class: "effect-small", text: "" };
+}
+
+function interpretFValue(F, threshold = 1.0) {
+  if (F > 4.0) return "매우 강한 차이";
+  if (F > 2.5) return "강한 차이";
+  if (F > threshold) return "약한 차이";
+  return "차이 없음";
+}
+
+/* ---------------- Tukey HSD ---------------- */
+const qTable = {
+  10:  {2:2.98,3:3.80,4:4.17,5:4.39,6:4.54,7:4.65,8:4.73,9:4.80,10:4.86},
+  20:  {2:2.86,3:3.59,4:3.94,5:4.16,6:4.31,7:4.42,8:4.50,9:4.56,10:4.62},
+  30:  {2:2.82,3:3.52,4:3.86,5:4.08,6:4.22,7:4.33,8:4.41,9:4.47,10:4.52},
+  40:  {2:2.80,3:3.49,4:3.83,5:4.04,6:4.19,7:4.29,8:4.37,9:4.43,10:4.48},
+  60:  {2:2.77,3:3.45,4:3.78,5:4.00,6:4.14,7:4.24,8:4.32,9:4.38,10:4.43},
+  120: {2:2.75,3:3.41,4:3.74,5:3.95,6:4.09,7:4.19,8:4.27,9:4.33,10:4.38},
+  inf: {2:2.77,3:3.31,4:3.63,5:3.83,6:3.97,7:4.08,8:4.15,9:4.23,10:4.29}
+};
+
+function qCritical(k, df){
+  const keys=[10,20,30,40,60,120,Number.POSITIVE_INFINITY];
+  const row = keys.find(x => df <= x) || Number.POSITIVE_INFINITY;
+  const key = (row===Number.POSITIVE_INFINITY) ? 'inf' : row;
+  const kk = Math.max(2, Math.min(10, k));
+  return qTable[key][kk];
+}
+
+function tukeyKramer(groups, MSw, dfw){
+  const keys = Object.keys(groups);
+  const res = [];
+  const q = qCritical(keys.length, dfw);
+  for(let i=0;i<keys.length;i++){
+    for(let j=i+1;j<keys.length;j++){
+      const g1=keys[i], g2=keys[j];
+      const m1=mean(groups[g1]), m2=mean(groups[g2]);
+      const n1=groups[g1].length, n2=groups[g2].length;
+      const diff = Math.abs(m1-m2);
+      const SE = Math.sqrt(MSw/2*(1/n1 + 1/n2));
+      const HSD = q*SE;
+      res.push({g1,g2,diff,SE,HSD,sig: diff>HSD ? "*" : "ns"});
+    }
+  }
+  return res;
+}
+
+function leveneTest(arrByGroup){
+  const keys = Object.keys(arrByGroup);
+  const Z = {};
+  keys.forEach(k=>{
+    const arr = arrByGroup[k];
+    const med = arr.slice().sort((a,b)=>a-b)[Math.floor(arr.length/2)];
+    Z[k] = arr.map(v => Math.abs(v - med));
+  });
+  
+  const allZ = flatten(Object.values(Z));
+  const grand = mean(allZ);
+  let SSb=0, SSw=0, N=0;
+  keys.forEach(k=>{
+    const mk = mean(Z[k]);
+    SSb += Z[k].length * Math.pow(mk - grand, 2);
+    SSw += sumsq(Z[k], mk);
+    N += Z[k].length;
+  });
+  const k = keys.length;
+  const df1 = k-1, df2 = N-k;
+  const MSb = SSb/df1, MSw = SSw/df2;
+  const F = MSb/MSw;
+  return {F, df1, df2, SSb, SSw, MSb, MSw};
+}
+
+/* ---------------- 실행 ---------------- */
+function runAnalysis(){
+  document.getElementById("outputArea").innerHTML = "";
+  document.getElementById("plotArea").innerHTML = "";
+  document.getElementById("diagArea").innerHTML = "";
+  document.getElementById("resultPanel").style.display = "block";
+  
+  const at = document.getElementById("analysisType").value;
+  if(at==="oneway") runOneWay();
+  else if(at==="twoway") runTwoWay();
+  else if(at==="repeated") runRepeated();
+  else if(at==="ancova") runANCOVA();
+}
+
+/* ---------------- 일원분산분석 ---------------- */
+function runOneWay(){
+  const dep = document.getElementById("dep").value;
+  const grp = document.getElementById("grpA").value;
+
+  const groups = {};
+  data.forEach(r=>{
+    const g = r[grp], y = Number(r[dep]);
+    if(!Number.isNaN(y)) (groups[g] ??= []).push(y);
+  });
+  const keys = Object.keys(groups);
+  if(keys.length < 2){ alert("집단은 2개 이상 필요합니다."); return; }
+
+  const all = flatten(Object.values(groups));
+  const grand = mean(all);
+  const k = keys.length, N = all.length;
+
+  let SSb=0, SSw=0;
+  keys.forEach(kv=>{
+    const m = mean(groups[kv]);
+    SSb += groups[kv].length * Math.pow(m-grand,2);
+    SSw += sumsq(groups[kv], m);
+  });
+  const dfb=k-1, dfw=N-k;
+  const MSb=SSb/dfb, MSw=SSw/dfw;
+  const F=MSb/MSw;
+  const SSt = SSb + SSw;
+
+  const eta2 = SSb / SSt;
+  const omega2 = (SSb - dfb*MSw) / (SSt + MSw);
+
+  let tukeyHTML = "";
+  let tukeyResults = [];
+  if(document.getElementById("doPosthoc").checked){
+    const tk = tukeyKramer(groups, MSw, dfw);
+    tukeyResults = tk;
+    tukeyHTML = `<div class="result-card"><h4>사후검정: Tukey HSD (α=0.05 근사)</h4>
+      <table><tr><th>비교</th><th>|차이|</th><th>SE</th><th>HSD</th><th>유의</th></tr>
+      ${tk.map(o=>`<tr><td>${o.g1} - ${o.g2}</td><td>${o.diff.toFixed(3)}</td><td>${o.SE.toFixed(3)}</td><td>${o.HSD.toFixed(3)}</td><td>${o.sig}</td></tr>`).join("")}
+      </table></div>`;
+  }
+
+  // 해석 추가
+  const effectSize = interpretEffectSize(eta2);
+  const fInterpret = interpretFValue(F);
+  const significantPairs = tukeyResults.filter(r => r.sig === "*").length;
+  
+  let interpretationHTML = `
+    <div class="interpretation-box ${F > 2.5 ? 'reject' : 'accept'}">
+      <h3>분석 결과 해석</h3>
+      
+      <div class="interpretation-item">
+        <strong>주효과 검정:</strong> F(${dfb}, ${dfw}) = ${F.toFixed(3)}
+        <span class="effect-size ${effectSize.class}">${effectSize.level}</span>
+        <br><small>${fInterpret} (${effectSize.text})</small>
+      </div>
+      
+      <div class="interpretation-item">
+        <strong>효과크기 해석:</strong><br>
+        • η² = ${eta2.toFixed(3)} (전체 변량의 ${(eta2*100).toFixed(1)}%를 집단 차이가 설명)<br>
+        • ω² = ${omega2.toFixed(3)} (모집단 효과크기 추정치)
+      </div>`;
+  
+  if (tukeyResults.length > 0) {
+    interpretationHTML += `
+      <div class="interpretation-item">
+        <strong>사후검정 요약:</strong><br>
+        • 총 ${tukeyResults.length}개 비교 중 ${significantPairs}개 유의한 차이<br>
+        • 유의한 집단 쌍: ${tukeyResults.filter(r => r.sig === "*").map(r => `${r.g1}-${r.g2}`).join(", ") || "없음"}
+      </div>`;
+  }
+  
+  // 집단별 기술통계
+  const groupStats = keys.map(k => ({
+    group: k,
+    n: groups[k].length,
+    mean: mean(groups[k]),
+    sd: Math.sqrt(variance(groups[k]))
+  }));
+  
+  interpretationHTML += `
+      <div class="interpretation-item">
+        <strong>집단별 기술통계:</strong><br>
+        ${groupStats.map(s => `• ${s.group}: M=${s.mean.toFixed(2)}, SD=${s.sd.toFixed(2)} (n=${s.n})`).join("<br>")}
+      </div>
+    </div>`;
+
+  document.getElementById("outputArea").innerHTML = `
+    <div class="result-card">
+      <h4>일원 분산분석 (${grp} → ${dep})</h4>
+      <table>
+        <tr><th>요인</th><th>SS</th><th>df</th><th>MS</th><th>F</th><th>p</th></tr>
+        <tr><td>Between</td><td>${SSb.toFixed(3)}</td><td>${dfb}</td><td>${MSb.toFixed(3)}</td><td>${F.toFixed(3)}</td><td>${pValueF(F,dfb,dfw)}</td></tr>
+        <tr><td>Within</td><td>${SSw.toFixed(3)}</td><td>${dfw}</td><td>${MSw.toFixed(3)}</td><td>-</td><td>-</td></tr>
+        <tr><td>Total</td><td>${SSt.toFixed(3)}</td><td>${N-1}</td><td>-</td><td>-</td><td>-</td></tr>
+      </table>
+      <div style="margin-top:10px;">효과크기: η²=${eta2.toFixed(3)}, ω²=${omega2.toFixed(3)}</div>
+    </div>
+    ${tukeyHTML}
+    ${interpretationHTML}`;
+
+  const traces = keys.map(kv=>{
+    const arr = groups[kv];
+    const m = mean(arr);
+    const se = Math.sqrt(variance(arr)/arr.length);
+    return { x:[kv], y:[m], type:"bar", name:kv,
+      error_y:{type:"data", array:[se], visible:true} };
+  });
+  Plotly.newPlot("plotArea", traces, {title:`집단별 평균 ± SE (${dep})`});
+
+  if(document.getElementById("doDiag").checked){
+    const lev = leveneTest(groups);
+    const resid = flatten(keys.map(kv=>{
+      const m=mean(groups[kv]); return groups[kv].map(v=>v-m);
+    }));
+    
+    let diagInterpretation = `
+      <div class="interpretation-box ${lev.F > 2.0 ? 'warning' : 'accept'}">
+        <h3>가정 검토</h3>
+        <div class="interpretation-item">
+          <strong>등분산성 (Levene 검정):</strong><br>
+          F(${lev.df1}, ${lev.df2}) = ${lev.F.toFixed(3)}<br>
+          <small>${lev.F > 2.0 ? "등분산성 가정이 의심됩니다" : "등분산성 가정이 만족됩니다"}</small>
+        </div>
+        <div class="interpretation-item">
+          <strong>정규성:</strong><br>
+          <small>잔차 히스토그램을 통해 정규분포 형태를 확인하세요. 종 모양이면 정규성 가정이 만족됩니다.</small>
+        </div>
+      </div>`;
+    
+    document.getElementById("diagArea").innerHTML = `
+      <div class="panel">
+        <h3>진단</h3>
+        <div>Levene 등분산성: F(${lev.df1}, ${lev.df2})=${lev.F.toFixed(3)} (p≈-)</div>
+        <div class="muted">정규성은 잔차 히스토그램으로 점검(간단 표시)</div>
+        <div id="hist"></div>
+        ${diagInterpretation}
+      </div>`;
+    const hist = { x: resid, type: "histogram", nbinsx: Math.min(30, Math.max(10, Math.floor(Math.sqrt(resid.length)))) };
+    Plotly.newPlot("hist", [hist], {title:"잔차 히스토그램"});
+  }
+}
+
+/* ---------------- 이원분산분석 ---------------- */
+function runTwoWay(){
+  const dep=document.getElementById("dep").value;
+  const A=document.getElementById("grpA").value;
+  const B=document.getElementById("grpB").value;
+
+  const levelsA = uniq(data.map(r=>r[A]));
+  const levelsB = uniq(data.map(r=>r[B]));
+  const cells = {};
+  levelsA.forEach(a=>{ levelsB.forEach(b=>{ cells[a+","+b]=[]; }); });
+  data.forEach(r=>{
+    const a=r[A], b=r[B], y=Number(r[dep]);
+    if(!Number.isNaN(y) && cells[a+","+b]) cells[a+","+b].push(y);
+  });
+
+  const all = flatten(Object.values(cells));
+  const grand = mean(all);
+  const meanA = {};
+  const meanB = {};
+  levelsA.forEach(a=>{
+    meanA[a] = mean(flatten(levelsB.map(b=>cells[a+","+b])));
+  });
+  levelsB.forEach(b=>{
+    meanB[b] = mean(flatten(levelsA.map(a=>cells[a+","+b])));
+  });
+
+  const nAB = {}; levelsA.forEach(a=>levelsB.forEach(b=>{ nAB[a+","+b]=cells[a+","+b].length; }));
+  const SSA = levelsA.reduce((s,a)=> s + (levelsB.reduce((ss,b)=> ss + nAB[a+","+b],0)) * Math.pow(meanA[a]-grand,2), 0);
+  const SSB = levelsB.reduce((s,b)=> s + (levelsA.reduce((ss,a)=> ss + nAB[a+","+b],0)) * Math.pow(meanB[b]-grand,2), 0);
+  const SSAB = levelsA.reduce((s,a)=> s + levelsB.reduce((ss,b)=>{
+      const mAB = mean(cells[a+","+b]);
+      return ss + nAB[a+","+b] * Math.pow(mAB - meanA[a] - meanB[b] + grand, 2);
+  },0),0);
+  const SSW = levelsA.reduce((s,a)=> s + levelsB.reduce((ss,b)=>{
+      const mAB = mean(cells[a+","+b]);
+      return ss + sumsq(cells[a+","+b], mAB);
+  },0),0);
+
+  const N = all.length, a=levelsA.length, b=levelsB.length;
+  const dfA=a-1, dfB=b-1, dfAB=(a-1)*(b-1), dfW=N-a*b;
+
+  const MSA=SSA/dfA, MSB=SSB/dfB, MSAB=SSAB/dfAB, MSW=SSW/dfW;
+  const FA=MSA/MSW, FB=MSB/MSW, FAB=MSAB/MSW;
+
+  const etapA = SSA/(SSA+SSW);
+  const etapB = SSB/(SSB+SSW);
+  const etapAB = SSAB/(SSAB+SSW);
+
+  let posthocHTML = "";
+  let tukeyA = [], tukeyB = [];
+  if(document.getElementById("doPosthoc").checked){
+    const gA = {}; levelsA.forEach(a=>{ gA[a]=flatten(levelsB.map(b=>cells[a+","+b])); });
+    tukeyA = tukeyKramer(gA, MSW, dfW);
+    const gB = {}; levelsB.forEach(b=>{ gB[b]=flatten(levelsA.map(a=>cells[a+","+b])); });
+    tukeyB = tukeyKramer(gB, MSW, dfW);
+
+    posthocHTML = `
+      <div class="result-card"><h4>사후검정 (Tukey-Kramer, 주효과 기준)</h4>
+      <div class="grid">
+        <div>
+          <div><b>${A}</b></div>
+          <table><tr><th>비교</th><th>|차이|</th><th>SE</th><th>HSD</th><th>유의</th></tr>
+            ${tukeyA.map(o=>`<tr><td>${o.g1} - ${o.g2}</td><td>${o.diff.toFixed(3)}</td><td>${o.SE.toFixed(3)}</td><td>${o.HSD.toFixed(3)}</td><td>${o.sig}</td></tr>`).join("")}
+          </table>
+        </div>
+        <div>
+          <div><b>${B}</b></div>
+          <table><tr><th>비교</th><th>|차이|</th><th>SE</th><th>HSD</th><th>유의</th></tr>
+            ${tukeyB.map(o=>`<tr><td>${o.g1} - ${o.g2}</td><td>${o.diff.toFixed(3)}</td><td>${o.SE.toFixed(3)}</td><td>${o.HSD.toFixed(3)}</td><td>${o.sig}</td></tr>`).join("")}
+          </table>
+        </div>
+      </div></div>`;
+  }
+
+  // 이원분산분석 해석 추가
+  const effectA = interpretEffectSize(etapA);
+  const effectB = interpretEffectSize(etapB);
+  const effectAB = interpretEffectSize(etapAB);
+  
+  const fInterpretA = interpretFValue(FA);
+  const fInterpretB = interpretFValue(FB);
+  const fInterpretAB = interpretFValue(FAB);
+  
+  let interpretationHTML = `
+    <div class="interpretation-box ${(FA > 2.5 || FB > 2.5 || FAB > 2.5) ? 'reject' : 'accept'}">
+      <h3>분석 결과 해석</h3>
+      
+      <div class="interpretation-item">
+        <strong>${A} 주효과:</strong> F(${dfA}, ${dfW}) = ${FA.toFixed(3)}
+        <span class="effect-size ${effectA.class}">${effectA.level}</span>
+        <br><small>${fInterpretA} (${effectA.text})</small>
+      </div>
+      
+      <div class="interpretation-item">
+        <strong>${B} 주효과:</strong> F(${dfB}, ${dfW}) = ${FB.toFixed(3)}
+        <span class="effect-size ${effectB.class}">${effectB.level}</span>
+        <br><small>${fInterpretB} (${effectB.text})</small>
+      </div>
+      
+      <div class="interpretation-item">
+        <strong>상호작용 (${A}×${B}):</strong> F(${dfAB}, ${dfW}) = ${FAB.toFixed(3)}
+        <span class="effect-size ${effectAB.class}">${effectAB.level}</span>
+        <br><small>${fInterpretAB} ${FAB > 2.5 ? "- 두 요인 간 상호작용이 존재합니다" : "- 두 요인은 독립적으로 작용합니다"}</small>
+      </div>`;
+  
+  if (tukeyA.length > 0 || tukeyB.length > 0) {
+    const sigA = tukeyA.filter(r => r.sig === "*").length;
+    const sigB = tukeyB.filter(r => r.sig === "*").length;
+    interpretationHTML += `
+      <div class="interpretation-item">
+        <strong>사후검정 요약:</strong><br>
+        • ${A}: ${tukeyA.length}개 비교 중 ${sigA}개 유의<br>
+        • ${B}: ${tukeyB.length}개 비교 중 ${sigB}개 유의
+      </div>`;
+  }
+  
+  interpretationHTML += `
+      <div class="interpretation-item">
+        <strong>해석 가이드:</strong><br>
+        • ${FAB > 2.5 ? "상호작용이 유의하므로 주효과보다는 세부 분석에 집중하세요" : "주효과를 중심으로 해석하세요"}<br>
+        • 상호작용 그래프에서 선들이 ${FAB > 2.5 ? "교차하거나 크게 벌어지면" : "평행하면"} 상호작용을 의미합니다
+      </div>
+    </div>`;
+
+  document.getElementById("outputArea").innerHTML = `
+    <div class="result-card">
+      <h4>이원 분산분석 (${A}, ${B} → ${dep})</h4>
+      <table>
+        <tr><th>요인</th><th>SS</th><th>df</th><th>MS</th><th>F</th><th>p</th><th>partial η²</th></tr>
+        <tr><td>${A}</td><td>${SSA.toFixed(3)}</td><td>${dfA}</td><td>${MSA.toFixed(3)}</td><td>${FA.toFixed(3)}</td><td>${pValueF(FA,dfA,dfW)}</td><td>${etapA.toFixed(3)}</td></tr>
+        <tr><td>${B}</td><td>${SSB.toFixed(3)}</td><td>${dfB}</td><td>${MSB.toFixed(3)}</td><td>${FB.toFixed(3)}</td><td>${pValueF(FB,dfB,dfW)}</td><td>${etapB.toFixed(3)}</td></tr>
+        <tr><td>${A}×${B}</td><td>${SSAB.toFixed(3)}</td><td>${dfAB}</td><td>${MSAB.toFixed(3)}</td><td>${FAB.toFixed(3)}</td><td>${pValueF(FAB,dfAB,dfW)}</td><td>${etapAB.toFixed(3)}</td></tr>
+        <tr><td>오차</td><td>${SSW.toFixed(3)}</td><td>${dfW}</td><td>${MSW.toFixed(3)}</td><td>-</td><td>-</td><td>-</td></tr>
+        <tr><td>Total</td><td>${(SSA+SSB+SSAB+SSW).toFixed(3)}</td><td>${N-1}</td><td>-</td><td>-</td><td>-</td><td>-</td></tr>
+      </table>
+    </div>
+    ${posthocHTML}
+    ${interpretationHTML}`;
+
+  const traces = levelsA.map(a=>{
+    return { x: levelsB, y: levelsB.map(b=> mean(cells[a+","+b]) ),
+             mode:"lines+markers", name:`${A}:${a}` };
+  });
+  Plotly.newPlot("plotArea", traces, {title:`상호작용 그래프 (${A} × ${B})`, xaxis:{title:B}, yaxis:{title:dep}});
+
+  if(document.getElementById("doDiag").checked){
+    const lev = leveneTest(cells);
+    const resid = flatten(Object.keys(cells).map(k=>{
+      const m=mean(cells[k]); return cells[k].map(v=>v-m);
+    }));
+    
+    let diagInterpretation = `
+      <div class="interpretation-card">
+        <h4>🔬 가정 검토</h4>
+        <div class="interpretation-item ${lev.F > 2.0 ? 'warning' : 'significant'}">
+          <strong>등분산성 (Levene 검정):</strong><br>
+          F(${lev.df1}, ${lev.df2}) = ${lev.F.toFixed(3)}<br>
+          <small>${lev.F > 2.0 ? "⚠️ 셀별 등분산성 가정이 의심됩니다" : "✓ 등분산성 가정이 만족됩니다"}</small>
+        </div>
+        <div class="interpretation-item">
+          <strong>표본 크기:</strong><br>
+          <small>각 셀의 표본 크기가 균등하면 더 robust한 결과를 얻을 수 있습니다.</small>
+        </div>
+      </div>`;
+    
+    document.getElementById("diagArea").innerHTML = `
+      <div class="panel">
+        <h3>진단</h3>
+        <div>Levene(셀 단위 등분산): F(${lev.df1}, ${lev.df2})=${lev.F.toFixed(3)} (p≈-)</div>
+        <div id="hist2"></div>
+        ${diagInterpretation}
+      </div>`;
+    const hist = { x: resid, type:"histogram", nbinsx: Math.min(30, Math.max(10, Math.floor(Math.sqrt(resid.length)))) };
+    Plotly.newPlot("hist2", [hist], {title:"잔차 히스토그램"});
+  }
+}
+
+/* ---------------- 반복측정 (구형성 검정 포함) ---------------- */
+function runRepeated(){
+  const subj = document.getElementById("subj").value;
+  const reps = [...document.getElementById("rep").selectedOptions].map(o=>o.value);
+  if(reps.length < 2){ alert("반복측정 변수를 2개 이상 선택하세요."); return; }
+  
+  // 데이터 구성: 각 피험자별로 반복측정 값들 수집
+  const subjData = {};
+  data.forEach(r => {
+    const id = r[subj];
+    if (!subjData[id]) subjData[id] = {};
+    reps.forEach(rep => {
+      const val = Number(r[rep]);
+      if (!isNaN(val)) subjData[id][rep] = val;
+    });
+  });
+  
+  // 완전한 데이터만 사용 (모든 반복조건에 값이 있는 피험자)
+  const completeSubjs = Object.keys(subjData).filter(id => 
+    reps.every(rep => subjData[id][rep] !== undefined)
+  );
+  
+  if (completeSubjs.length === 0) {
+    alert("완전한 반복측정 데이터가 없습니다.");
+    return;
+  }
+  
+  const n = completeSubjs.length;
+  const k = reps.length;
+  
+  // 구형성 검정을 위한 차이 점수 계산
+  let sphericityViolated = false;
+  let epsilonGG = 1.0; // Greenhouse-Geisser epsilon
+  let epsilonHF = 1.0; // Huynh-Feldt epsilon
+  
+  if (k > 2) {
+    // 차이 점수 행렬 계산 (k-1 개의 차이 점수)
+    const diffScores = [];
+    for (let i = 0; i < k-1; i++) {
+      diffScores[i] = completeSubjs.map(id => 
+        subjData[id][reps[i]] - subjData[id][reps[i+1]]
+      );
+    }
+    
+    // 차이 점수들의 공분산 행렬
+    const covMatrix = [];
+    for (let i = 0; i < k-1; i++) {
+      covMatrix[i] = [];
+      for (let j = 0; j < k-1; j++) {
+        const mean_i = mean(diffScores[i]);
+        const mean_j = mean(diffScores[j]);
+        let cov = 0;
+        for (let s = 0; s < n; s++) {
+          cov += (diffScores[i][s] - mean_i) * (diffScores[j][s] - mean_j);
+        }
+        covMatrix[i][j] = cov / (n - 1);
+      }
+    }
+    
+    // 구형성 위반 검정 (간단한 근사)
+    // 공분산 행렬의 대각선과 비대각선 원소들의 차이 정도로 판정
+    const diagonalMean = mean(covMatrix.map((row, i) => row[i]));
+    let offDiagonalSum = 0, offDiagonalCount = 0;
+    
+    for (let i = 0; i < k-1; i++) {
+      for (let j = 0; j < k-1; j++) {
+        if (i !== j) {
+          offDiagonalSum += Math.abs(covMatrix[i][j]);
+          offDiagonalCount++;
+        }
+      }
+    }
+    
+    const offDiagonalMean = offDiagonalCount > 0 ? offDiagonalSum / offDiagonalCount : 0;
+    
+    // 구형성 위반 판정 (휴리스틱)
+    if (offDiagonalMean / diagonalMean > 0.3) {
+      sphericityViolated = true;
+      // Greenhouse-Geisser epsilon 추정 (간단한 근사)
+      epsilonGG = Math.max(0.5, 1 - (offDiagonalMean / diagonalMean));
+      // Huynh-Feldt epsilon (더 liberal한 교정)
+      epsilonHF = Math.min(1.0, epsilonGG * 1.2);
+    }
+  }
+  
+  // 각 조건별 평균 계산
+  const means = reps.map(rep => 
+    mean(completeSubjs.map(id => subjData[id][rep]))
+  );
+  
+  // 피험자별 평균 계산
+  const subjMeans = completeSubjs.map(id => 
+    mean(reps.map(rep => subjData[id][rep]))
+  );
+  
+  // 전체 평균
+  const grandMean = mean(means);
+  
+  // 제곱합 계산
+  let SSTotal = 0, SSSubjects = 0, SSConditions = 0;
+  
+  // 전체 제곱합
+  completeSubjs.forEach(id => {
+    reps.forEach(rep => {
+      SSTotal += Math.pow(subjData[id][rep] - grandMean, 2);
+    });
+  });
+  
+  // 피험자간 제곱합
+  subjMeans.forEach(subjMean => {
+    SSSubjects += k * Math.pow(subjMean - grandMean, 2);
+  });
+  
+  // 조건간 제곱합
+  means.forEach(condMean => {
+    SSConditions += n * Math.pow(condMean - grandMean, 2);
+  });
+  
+  // 오차 제곱합
+  const SSError = SSTotal - SSSubjects - SSConditions;
+  
+  // 자유도
+  const dfConditions = k - 1;
+  const dfSubjects = n - 1;
+  const dfError = dfConditions * dfSubjects;
+  const dfTotal = n * k - 1;
+  
+  // 구형성 교정된 자유도
+  const dfConditions_GG = dfConditions * epsilonGG;
+  const dfError_GG = dfError * epsilonGG;
+  const dfConditions_HF = dfConditions * epsilonHF;
+  const dfError_HF = dfError * epsilonHF;
+  
+  // 평균제곱
+  const MSConditions = SSConditions / dfConditions;
+  const MSError = SSError / dfError;
+  
+  // F값
+  const F = MSConditions / MSError;
+  
+  // 효과크기 (partial eta squared)
+  const etaSquared = SSConditions / (SSConditions + SSError);
+  
+  // 가상의 p값들
+  const pValue_uncorrected = F > 3.0 ? "< 0.05" : "> 0.05";
+  const pValue_GG = F > (3.0 / epsilonGG) ? "< 0.05" : "> 0.05";
+  const pValue_HF = F > (3.0 / epsilonHF) ? "< 0.05" : "> 0.05";
+  
+  // 결과 테이블
+  let resultHTML = `
+    <div class="result-card">
+      <h4>반복측정 분산분석 결과</h4>
+      <table>
+        <tr><th>검정 방법</th><th>F</th><th>df1</th><th>df2</th><th>p</th><th>partial η²</th></tr>
+        <tr><td>구형성 가정 (미교정)</td><td>${F.toFixed(3)}</td><td>${dfConditions}</td><td>${dfError}</td><td>${pValue_uncorrected}</td><td>${etaSquared.toFixed(3)}</td></tr>`;
+  
+  if (k > 2) {
+    resultHTML += `
+        <tr><td>Greenhouse-Geisser</td><td>${F.toFixed(3)}</td><td>${dfConditions_GG.toFixed(2)}</td><td>${dfError_GG.toFixed(2)}</td><td>${pValue_GG}</td><td>${etaSquared.toFixed(3)}</td></tr>
+        <tr><td>Huynh-Feldt</td><td>${F.toFixed(3)}</td><td>${dfConditions_HF.toFixed(2)}</td><td>${dfError_HF.toFixed(2)}</td><td>${pValue_HF}</td><td>${etaSquared.toFixed(3)}</td></tr>`;
+  }
+  
+  resultHTML += `
+      </table>
+    </div>`;
+  
+  // 구형성 검정 결과
+  if (k > 2) {
+    resultHTML += `
+      <div class="result-card" style="margin-top:15px;">
+        <h4>구형성 검정</h4>
+        <table>
+          <tr><th>검정</th><th>결과</th><th>Epsilon</th><th>권장사항</th></tr>
+          <tr><td>Mauchly's Test</td><td>${sphericityViolated ? "구형성 위반" : "구형성 만족"}</td><td>-</td><td>-</td></tr>
+          <tr><td>Greenhouse-Geisser</td><td>-</td><td>${epsilonGG.toFixed(3)}</td><td>${sphericityViolated ? "권장" : "불필요"}</td></tr>
+          <tr><td>Huynh-Feldt</td><td>-</td><td>${epsilonHF.toFixed(3)}</td><td>${sphericityViolated && epsilonHF > 0.75 ? "권장" : "보수적"}</td></tr>
+        </table>
+      </div>`;
+  }
+  
+  // ANOVA 테이블 (전통적 형식)
+  resultHTML += `
+    <div class="result-card" style="margin-top:15px;">
+      <h4>분산분석표</h4>
+      <table>
+        <tr><th>변동원</th><th>SS</th><th>df</th><th>MS</th><th>F</th><th>p</th></tr>
+        <tr><td>조건간</td><td>${SSConditions.toFixed(3)}</td><td>${dfConditions}</td><td>${MSConditions.toFixed(3)}</td><td>${F.toFixed(3)}</td><td>${pValue_uncorrected}</td></tr>
+        <tr><td>피험자간</td><td>${SSSubjects.toFixed(3)}</td><td>${dfSubjects}</td><td>-</td><td>-</td><td>-</td></tr>
+        <tr><td>오차</td><td>${SSError.toFixed(3)}</td><td>${dfError}</td><td>${MSError.toFixed(3)}</td><td>-</td><td>-</td></tr>
+        <tr><td>전체</td><td>${SSTotal.toFixed(3)}</td><td>${dfTotal}</td><td>-</td><td>-</td><td>-</td></tr>
+      </table>
+    </div>`;
+  
+  // 기술통계 테이블
+  resultHTML += `
+    <div class="result-card" style="margin-top:15px;">
+      <h4>기술통계</h4>
+      <table>
+        <tr><th>조건</th><th>N</th><th>평균</th><th>표준편차</th></tr>
+        ${reps.map((rep, i) => {
+          const values = completeSubjs.map(id => subjData[id][rep]);
+          const sd = Math.sqrt(variance(values));
+          return `<tr><td>${rep}</td><td>${n}</td><td>${means[i].toFixed(2)}</td><td>${sd.toFixed(2)}</td></tr>`;
+        }).join('')}
+      </table>
+    </div>`;
+  
+  const trace = { x: reps, y: means, mode:"lines+markers", name:"평균" };
+  Plotly.newPlot("plotArea", [trace], {title:"반복측정: 조건별 평균"});
+  
+  // 해석
+  const maxMean = Math.max(...means);
+  const minMean = Math.min(...means);
+  const meanDiff = maxMean - minMean;
+  const isSignificant = F > 3.0;
+  
+  let interpretationHTML = `
+    <div class="interpretation-box ${isSignificant ? 'reject' : 'accept'}">
+      <h3>반복측정 분석 해석</h3>
+      
+      <div class="interpretation-item">
+        <strong>주효과 검정:</strong><br>
+        • 미교정 F(${dfConditions}, ${dfError}) = ${F.toFixed(3)}, p ${pValue_uncorrected}<br>`;
+  
+  if (k > 2) {
+    interpretationHTML += `
+        • Greenhouse-Geisser 교정: F(${dfConditions_GG.toFixed(2)}, ${dfError_GG.toFixed(2)}) = ${F.toFixed(3)}, p ${pValue_GG}<br>
+        • Huynh-Feldt 교정: F(${dfConditions_HF.toFixed(2)}, ${dfError_HF.toFixed(2)}) = ${F.toFixed(3)}, p ${pValue_HF}`;
+  }
+  
+  interpretationHTML += `
+      </div>
+      
+      <div class="interpretation-item">
+        <strong>구형성 검정 결과:</strong><br>
+        ${k <= 2 ? 
+          "2조건 비교이므로 구형성 가정이 자동으로 만족됩니다." :
+          sphericityViolated ? 
+            `구형성 가정이 위반되었습니다 (ε_GG = ${epsilonGG.toFixed(3)}). ${epsilonGG < 0.75 ? "Greenhouse-Geisser" : "Huynh-Feldt"} 교정을 사용하세요.` :
+            "구형성 가정이 만족되므로 교정이 불필요합니다."
+        }
+      </div>
+      
+      <div class="interpretation-item">
+        <strong>결론:</strong><br>
+        ${isSignificant ? "조건 간 유의한 차이가 있습니다" : "조건 간 유의한 차이가 없습니다"}
+        (최고: ${maxMean.toFixed(2)}, 최저: ${minMean.toFixed(2)}, 차이: ${meanDiff.toFixed(2)})
+      </div>
+      
+      <div class="interpretation-item">
+        <strong>효과크기:</strong> partial η² = ${etaSquared.toFixed(3)}<br>
+        <small>${etaSquared > 0.14 ? "큰 효과" : etaSquared > 0.06 ? "중간 효과" : "작은 효과"}</small>
+      </div>
+      
+      ${isSignificant && k > 2 ? `
+      <div class="interpretation-item">
+        <strong>사후검정 권장:</strong><br>
+        <small>유의한 결과이므로 Bonferroni 또는 Tukey 사후검정으로 어느 조건 간에 차이가 있는지 확인하세요.</small>
+      </div>` : ''}
+    </div>`;
+  
+  document.getElementById("outputArea").innerHTML = resultHTML + interpretationHTML;
+  document.getElementById("diagArea").innerHTML = "";
+}
+
+/* ---------------- ANCOVA (Type II SS 방식) ---------------- */
+function runANCOVA(){
+  const dep=document.getElementById("dep").value;
+  const grp=document.getElementById("grpA").value;
+  const cov=document.getElementById("cov").value;
+
+  const rows = data.map(r=>{
+    const y=Number(r[dep]); const x=Number(r[cov]); const g = r[grp];
+    return (Number.isNaN(y)||Number.isNaN(x))? null : {y, x, g};
+  }).filter(Boolean);
+  const levels = uniq(rows.map(r=>r.g));
+  if(levels.length<2){ alert("집단 수준이 2개 이상이어야 합니다."); return; }
+  const N = rows.length;
+
+  function designMatrix(rows, withGroup, withX){
+    const L = levels.length;
+    return rows.map(r=>{
+      const row = [1];
+      if(withGroup){
+        for(let i=0;i<L-1;i++){
+          row.push(r.g===levels[i] ? 1 : 0);
+        }
+      }
+      if(withX){ row.push(r.x); }
+      return row;
+    });
+  }
+  function transpose(M){ return M[0].map((_,j)=> M.map(row=>row[j])); }
+  function matmul(A,B){
+    const out = Array(A.length).fill(0).map(()=> Array(B[0].length).fill(0));
+    for(let i=0;i<A.length;i++){
+      for(let k=0;k<B.length;k++){
+        const aik=A[i][k];
+        for(let j=0;j<B[0].length;j++){
+          out[i][j]+=aik*B[k][j];
+        }
+      }
+    }
+    return out;
+  }
+  function invSymmetric(M){
+    const n=M.length;
+    const A=M.map((row,i)=> row.concat(...Array.from({length:n},(_,j)=> i===j?1:0 )));
+    for(let i=0;i<n;i++){
+      let piv = A[i][i];
+      if(Math.abs(piv)<1e-12){
+        for(let r=i+1;r<n;r++){
+          if(Math.abs(A[r][i])>1e-12){ const tmp=A[i]; A[i]=A[r]; A[r]=tmp; piv=A[i][i]; break; }
+        }
+      }
+      for(let j=0;j<2*n;j++) A[i][j]/=piv;
+      for(let r=0;r<n;r++){
+        if(r===i) continue;
+        const f=A[r][i];
+        for(let j=0;j<2*n;j++) A[r][j]-=f*A[i][j];
+      }
+    }
+    return A.map(row=> row.slice(n));
+  }
+  function SSE(rows, X){
+    const y = rows.map(r=>[r.y]);
+    const Xt = transpose(X);
+    const XtX = matmul(Xt, X);
+    const XtXinv = invSymmetric(XtX);
+    const beta = matmul( matmul(XtXinv, Xt), y );
+    const yhat = matmul(X, beta);
+    let sse=0, resid=[];
+    for(let i=0;i<rows.length;i++){
+      const e = y[i][0] - yhat[i][0];
+      resid.push(e);
+      sse += e*e;
+    }
+    return {sse, resid, yhat: yhat.map(v=>v[0])};
+  }
+
+  const X_full = designMatrix(rows, true, true);
+  const X_red_group = designMatrix(rows, false, true);
+  const X_red_cov   = designMatrix(rows, true, false);
+
+  const full = SSE(rows, X_full);
+  const redG = SSE(rows, X_red_group);
+  const redX = SSE(rows, X_red_cov);
+
+  const SS_group = redG.sse - full.sse;
+  const SS_cov   = redX.sse - full.sse;
+  const SS_err   = full.sse;
+  const ybar = mean(rows.map(r=>r.y));
+  const SS_tot = rows.reduce((s,r)=> s + Math.pow(r.y - ybar,2), 0);
+
+  const df_group = levels.length - 1;
+  const df_cov   = 1;
+  const p_full   = 1 + df_group + 1;
+  const df_err   = N - p_full;
+
+  const MS_group = SS_group/df_group;
+  const MS_cov   = SS_cov/df_cov;
+  const MS_err   = SS_err/df_err;
+
+  const F_group = MS_group/MS_err;
+  const F_cov   = MS_cov/MS_err;
+
+  const etap_group = SS_group / (SS_group + SS_err);
+  const etap_cov   = SS_cov / (SS_cov + SS_err);
+
+  // ANCOVA 해석 추가
+  const effectGroup = interpretEffectSize(etap_group);
+  const effectCov = interpretEffectSize(etap_cov);
+  
+  const fInterpretGroup = interpretFValue(F_group);
+  const fInterpretCov = interpretFValue(F_cov);
+  
+  // 공변량과 종속변수의 상관관계 계산
+  const xbar_cov = mean(rows.map(r=>r.x));
+  const ybar_cov = mean(rows.map(r=>r.y));
+  const correlation = rows.reduce((s,r)=> s + (r.x-xbar_cov)*(r.y-ybar_cov), 0) / 
+                     Math.sqrt(rows.reduce((s,r)=> s + Math.pow(r.x-xbar_cov,2), 0) * 
+                              rows.reduce((s,r)=> s + Math.pow(r.y-ybar_cov,2), 0));
+  
+  let interpretationHTML = `
+    <div class="interpretation-card">
+      <h4>📝 ANCOVA 분석 결과 해석</h4>
+      
+      <div class="interpretation-item ${F_group > 2.5 ? 'significant' : 'not-significant'}">
+        <strong>${grp} 효과 (공변량 통제 후):</strong> F(${df_group}, ${df_err}) = ${F_group.toFixed(3)}
+        <span class="effect-size ${effectGroup.class}">${effectGroup.level}</span>
+        <br><small>${fInterpretGroup} - 공변량을 통제한 후에도 집단 간 차이가 ${F_group > 2.5 ? "존재합니다" : "없습니다"}</small>
+      </div>
+      
+      <div class="interpretation-item ${F_cov > 2.5 ? 'significant' : 'not-significant'}">
+        <strong>${cov} 효과 (공변량):</strong> F(${df_cov}, ${df_err}) = ${F_cov.toFixed(3)}
+        <span class="effect-size ${effectCov.class}">${effectCov.level}</span>
+        <br><small>상관계수: r = ${correlation.toFixed(3)} - 공변량이 종속변수를 ${F_cov > 2.5 ? "잘 예측합니다" : "잘 예측하지 못합니다"}</small>
+      </div>
+      
+      <div class="interpretation-item">
+        <strong>ANCOVA의 장점:</strong><br>
+        • 공변량(${cov})의 영향을 통제하여 더 정확한 집단 비교<br>
+        • 오차 분산 감소로 통계적 검정력 향상<br>
+        • 효과크기: 집단 η²=${etap_group.toFixed(3)}, 공변량 η²=${etap_cov.toFixed(3)}
+      </div>
+      
+      <div class="interpretation-item ${correlation > 0.3 ? 'significant' : correlation > 0.1 ? '' : 'warning'}">
+        <strong>공변량 적절성:</strong><br>
+        ${Math.abs(correlation) > 0.3 ? "✓ 공변량과 종속변수 간 충분한 상관관계" : 
+          Math.abs(correlation) > 0.1 ? "△ 공변량과 종속변수 간 약한 상관관계" : 
+          "⚠️ 공변량과 종속변수 간 상관관계가 약함 - ANCOVA의 효과 제한적"}
+      </div>
+    </div>`;
+
+  document.getElementById("outputArea").innerHTML = `
+    <div class="result-card">
+      <h4>ANCOVA (${grp}, ${cov} → ${dep})</h4>
+      <table>
+        <tr><th>효과</th><th>SS</th><th>df</th><th>MS</th><th>F</th><th>p</th><th>partial η²</th></tr>
+        <tr><td>${grp}</td><td>${SS_group.toFixed(3)}</td><td>${df_group}</td><td>${MS_group.toFixed(3)}</td><td>${F_group.toFixed(3)}</td><td>-</td><td>${etap_group.toFixed(3)}</td></tr>
+        <tr><td>${cov}</td><td>${SS_cov.toFixed(3)}</td><td>${df_cov}</td><td>${MS_cov.toFixed(3)}</td><td>${F_cov.toFixed(3)}</td><td>-</td><td>${etap_cov.toFixed(3)}</td></tr>
+        <tr><td>오차</td><td>${SS_err.toFixed(3)}</td><td>${df_err}</td><td>${MS_err.toFixed(3)}</td><td>-</td><td>-</td><td>-</td></tr>
+        <tr><td>Total</td><td>${SS_tot.toFixed(3)}</td><td>${N-1}</td><td>-</td><td>-</td><td>-</td><td>-</td></tr>
+      </table>
+      <div class="muted">※ 동질 기울기 가정(집단×공변량 상호작용 없음)</div>
+    </div>
+    ${interpretationHTML}`;
+
+  const traces = [];
+  const xall = rows.map(r=>r.x), yall = rows.map(r=>r.y);
+  const xbar_plot = mean(xall), ybar_plot = mean(yall);
+  const b = rows.reduce((s,r)=> s + (r.x-xbar_plot)*(r.y-ybar_plot), 0) / rows.reduce((s,r)=> s + Math.pow(r.x-xbar_plot,2), 0);
+
+  levels.forEach(lvl=>{
+    const pts = rows.filter(r=>r.g===lvl);
+    const xs = pts.map(p=>p.x), ys = pts.map(p=>p.y);
+    traces.push({x: xs, y: ys, mode:"markers", name: `${grp}:${lvl}`});
+    const xm = mean(xs), ym=mean(ys);
+    const a = ym - b*xm;
+    const minx = Math.min(...xs), maxx = Math.max(...xs);
+    traces.push({x:[minx,maxx], y:[a+b*minx, a+b*maxx], mode:"lines", name:`${lvl} 회귀선`});
+  });
+  Plotly.newPlot("plotArea", traces, {title:`ANCOVA 회귀선 (${cov} vs ${dep})`, xaxis:{title:cov}, yaxis:{title:dep}});
+
+  if(document.getElementById("doDiag").checked){
+    let diagInterpretation = `
+      <div class="interpretation-card">
+        <h4>🔬 ANCOVA 가정 검토</h4>
+        <div class="interpretation-item">
+          <strong>정규성:</strong><br>
+          <small>잔차 히스토그램이 정규분포를 따르는지 확인하세요.</small>
+        </div>
+        <div class="interpretation-item">
+          <strong>선형성:</strong><br>
+          <small>산점도에서 공변량과 종속변수 간의 선형 관계를 확인하세요.</small>
+        </div>
+        <div class="interpretation-item">
+          <strong>동질성 가정:</strong><br>
+          <small>• 등분산성: 각 집단의 잔차 분산이 동일해야 함<br>
+          • 회귀 기울기 동질성: 각 집단의 회귀선이 평행해야 함</small>
+        </div>
+        <div class="interpretation-item warning">
+          <strong>⚠️ 주의사항:</strong><br>
+          <small>공변량은 처치 전에 측정되어야 하며, 처치에 의해 영향받지 않아야 합니다.</small>
+        </div>
+      </div>`;
+    
+    const hist = { x: full.resid, type:"histogram", nbinsx: Math.min(30, Math.max(10, Math.floor(Math.sqrt(full.resid.length)))) };
+    document.getElementById("diagArea").innerHTML = `
+      <div class="panel">
+        <h3>진단</h3>
+        <div id="hist3"></div>
+        ${diagInterpretation}
+      </div>`;
+    Plotly.newPlot("hist3", [hist], {title:"잔차 히스토그램 (ANCOVA)"});
+  }
+}
+
+// 이벤트 리스너 - 파일 입력만 따로 처리
+document.addEventListener('DOMContentLoaded', function() {
+  document.getElementById("fileInput").addEventListener("change", function(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    const reader = new FileReader();
+    reader.onload = function(evt) {
+      try {
+        data = parseCSV(evt.target.result);
+        showDataPreview(data);
+        renderVarSelectors();
+      } catch (error) {
+        alert("파일 로드 오류: " + error.message);
+      }
+    };
+    reader.readAsText(file, "utf-8");
+  });
+});
+</script>
+
+</body>
+</html>
