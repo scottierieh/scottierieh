@@ -315,32 +315,7 @@ const menuConfig = {
 };
 
 // 메뉴 이벤트 처리
-document.querySelectorAll('.menu-item').forEach(item => {
-  item.addEventListener('click', function() {
-    const section = this.dataset.section;
-    if (!section) return;
-    
-    // 메뉴 활성화 상태 변경
-    document.querySelectorAll('.menu-item').forEach(i => i.classList.remove('active'));
-    this.classList.add('active');
-    
-    // 섹션 변경
-    document.querySelectorAll('.analysis-section').forEach(s => s.classList.remove('active'));
-    document.getElementById(section + 'Section').classList.add('active');
-    
-    // 제목과 설명 변경
-    const config = menuConfig[section];
-    document.getElementById('mainTitle').textContent = config.title;
-    document.getElementById('mainDescription').textContent = config.desc;
-    
-    currentAnalysis = section;
-    
-    // 데이터가 있으면 해당 섹션의 변수 선택 패널 표시
-    if (parsedData) {
-      showVariableSelection(section);
-    }
-  });
-});
+
 
 // 공통 함수들
 function parseCSV(text) {
