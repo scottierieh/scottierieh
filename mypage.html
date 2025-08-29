@@ -710,17 +710,16 @@ function openTool(tool) {
    window.location.href = './survey_builder.html';
    return;
  }
- 
+ if (tool === 'statistics') {
+   window.location.href = './statistics_main.html';
+   return;
+ }
  if (tool === 'survey') {
    const choice = confirm('Open IPA (Importance-Performance Analysis) tool?');
    if (choice) {
      window.location.href = './ipa.html';
      return;
    }
-    if (tool === 'statistics') {
-   window.location.href = './statistics_main.html';
-   return;
- }
  }
  
  alert(`Opening ${tool} tool... (To be implemented)`);
