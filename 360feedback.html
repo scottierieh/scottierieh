@@ -165,9 +165,9 @@
     </div>
     
     <div class="nav-tabs">
-      <button class="nav-tab active" onclick="switchTab('setup')">⚙️ Setup</button>
-      <button class="nav-tab" onclick="switchTab('collect')">📝 Collect Feedback</button>
-      <button class="nav-tab" onclick="switchTab('analysis')">📊 Analysis</button>
+      <button class="nav-tab active" onclick="switchTab('setup')">Setup</button>
+      <button class="nav-tab" onclick="switchTab('collect')">Collect Feedback</button>
+      <button class="nav-tab" onclick="switchTab('analysis')">Analysis</button>
     </div>
     
     <div class="header-actions">
@@ -1261,4 +1261,215 @@ function generateSampleFeedback() {
       });
       
       if (Math.random() > 0.5) {
-        feedback.overallComments = 'A valuable team member who contributes significantly to
+        feedback.overallComments = 'A valuable team member who contributes significantly to our success.';
+      }
+      
+      feedbackData.responses.push(feedback);
+    });
+  });
+  
+  updateStats();
+  displayRecentFeedback();
+  saveToLocal();
+  showNotification('Generated', 'Sample feedback generated successfully', 'success');
+}
+
+function clearAllResponses() {
+  if (confirm('Delete all feedback responses? This cannot be undone.')) {
+    feedbackData.responses = [];
+    updateStats();
+    displayRecentFeedback();
+    saveToLocal();
+    showNotification('Cleared', 'All responses deleted', 'warning');
+  }
+}
+
+// Export report
+function exportReport() {
+  const revieweeId = parseInt(document.getElementById('analysis-reviewee-select').value);
+  if (!revieweeId) {
+    showNotification('Error', 'Please select a reviewee first', 'error');
+    return;
+  }
+  
+  const reviewee = feedbackData.reviewees.find(r => r.id === revieweeId);
+  const responses = feedbackData.responses.filter(r => r.revieweeId === revieweeId);
+  
+  if (responses.length === 0) {
+    showNotification('Error', 'No feedback to export', 'error');
+    return;
+  }
+  
+  // Build CSV content
+  let csvContent = '360-Degree Feedback Report\n';
+  csvContent += `Reviewee:,${reviewee.name}\n`;
+  csvContent += `Role:,${reviewee.role}\n`;
+  csvContent += `Department:,${reviewee.department || 'N/A'}\n`;
+  csvContent += `Report Date:,${new Date().toLocaleDateString()}\n`;
+  csvContent += `Total Responses:,${responses.length}\n\n`;
+  
+  // Headers
+  csvContent += 'Competency,Self,Manager,Peers Avg,Reports Avg,Overall Avg\n';
+  
+  // Data rows
+  feedbackData.competencies.forEach(comp => {
+    const selfRating = getAverageByRelationship(responses, comp.id, 'self');
+    const managerRating = getAverageByRelationship(responses, comp.id, 'manager');
+    const peerRating = getAverageByRelationship(responses, comp.id, 'peer');
+    const reportRating = getAverageByRelationship(responses, comp.id, 'report');
+    
+    let total = 0;
+    let count = 0;
+    responses.forEach(response => {
+      if (response.ratings[comp.id]) {
+        total += response.ratings[comp.id];
+        count++;
+      }
+    });
+    const overall = count > 0 ? total / count : 0;
+    
+    csvContent += `"${comp.name}",`;
+    csvContent += `${selfRating > 0 ? selfRating.toFixed(1) : 'N/A'},`;
+    csvContent += `${managerRating > 0 ? managerRating.toFixed(1) : 'N/A'},`;
+    csvContent += `${peerRating > 0 ? peerRating.toFixed(1) : 'N/A'},`;
+    csvContent += `${reportRating > 0 ? reportRating.toFixed(1) : 'N/A'},`;
+    csvContent += `${overall.toFixed(1)}\n`;
+  });
+  
+  // Add comments section
+  csvContent += '\n\nFeedback Comments\n';
+  csvContent += 'Relationship,Reviewer,Date,Comments\n';
+  
+  responses.forEach(response => {
+    if (response.overallComments || (response.comments && Object.keys(response.comments).length > 0)) {
+      let allComments = [];
+      
+      if (response.comments) {
+        Object.entries(response.comments).forEach(([compId, comment]) => {
+          const comp = feedbackData.competencies.find(c => c.id === parseInt(compId));
+          if (comp && comment) {
+            allComments.push(`${comp.name}: ${comment}`);
+          }
+        });
+      }
+      
+      if (response.overallComments) {
+        allComments.push(`Overall: ${response.overallComments}`);
+      }
+      
+      csvContent += `"${response.relationship}","${response.reviewerName}","${new Date(response.timestamp).toLocaleDateString()}","${allComments.join('; ')}"\n`;
+    }
+  });
+  
+  // Download file
+  const BOM = '\uFEFF';
+  const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8' });
+  const url = window.URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.setAttribute('download', `360_feedback_${reviewee.name.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.csv`);
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  window.URL.revokeObjectURL(url);
+  
+  showNotification('Exported', 'Report downloaded successfully', 'success');
+}
+
+// Update statistics
+function updateStats() {
+  // Total reviewees
+  document.getElementById('total-reviewees').textContent = feedbackData.reviewees.length;
+  
+  // Total competencies
+  document.getElementById('total-competencies').textContent = feedbackData.competencies.length;
+  
+  // Total responses
+  document.getElementById('total-responses').textContent = feedbackData.responses.length;
+  
+  // Completion rate
+  let completedReviewees = 0;
+  feedbackData.reviewees.forEach(reviewee => {
+    const responses = feedbackData.responses.filter(r => r.revieweeId === reviewee.id);
+    if (responses.length >= 3) { // Consider "complete" if at least 3 responses
+      completedReviewees++;
+    }
+  });
+  
+  const completionRate = feedbackData.reviewees.length > 0 ? 
+    Math.round((completedReviewees / feedbackData.reviewees.length) * 100) : 0;
+  document.getElementById('completion-rate').textContent = completionRate + '%';
+}
+
+// Save and load functions
+function saveToLocal() {
+  localStorage.setItem('360feedbackData', JSON.stringify(feedbackData));
+  showNotification('Saved', 'Data saved to browser', 'success');
+}
+
+function loadFromLocal() {
+  const saved = localStorage.getItem('360feedbackData');
+  if (saved) {
+    try {
+      const parsed = JSON.parse(saved);
+      feedbackData = {
+        reviewees: parsed.reviewees || [],
+        competencies: parsed.competencies || [],
+        responses: parsed.responses || []
+      };
+    } catch (e) {
+      console.error('Error loading saved data:', e);
+      feedbackData = {
+        reviewees: [],
+        competencies: [],
+        responses: []
+      };
+    }
+  }
+}
+
+// Notification system
+function showNotification(title, message, type = 'info') {
+  const container = document.getElementById('notification-container');
+  const notification = document.createElement('div');
+  notification.className = 'notification';
+  
+  const colors = {
+    success: '#10b981',
+    warning: '#f59e0b',
+    error: '#ef4444',
+    info: '#3b82f6'
+  };
+  
+  notification.style.borderLeftColor = colors[type] || colors.info;
+  
+  notification.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center;">
+      <div>
+        <div style="font-weight:600;margin-bottom:4px;">${title}</div>
+        <div style="font-size:14px;color:var(--muted);">${message}</div>
+      </div>
+      <span style="margin-left:16px;cursor:pointer;color:var(--muted);" onclick="this.parentElement.parentElement.remove()">✕</span>
+    </div>
+  `;
+  
+  container.appendChild(notification);
+  setTimeout(() => notification.classList.add('show'), 10);
+  
+  setTimeout(() => {
+    notification.classList.remove('show');
+    setTimeout(() => notification.remove(), 300);
+  }, 5000);
+}
+
+// Close modal when clicking outside
+window.onclick = function(event) {
+  const modal = document.getElementById('add-reviewee-modal');
+  if (event.target == modal) {
+    modal.style.display = 'none';
+  }
+}
+</script>
+
+</body>
+</html>
