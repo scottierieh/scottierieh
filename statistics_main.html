@@ -554,6 +554,15 @@
 
 <script>
 function openAnalysis(type) {
+  const analysisNames = {
+    'descriptive': 'Descriptive Statistics',
+    'assumption': 'Assumption Checks',
+    'difference': 'Difference Tests',
+    'relationship': 'Relationship Analysis',
+    'multivariate': 'Multivariate Analysis',
+    'specialized': 'Specialized Methods'
+  };
+  
  const analysisData = {
     'descriptive': {
       title: 'Descriptive Statistics',
@@ -602,20 +611,12 @@ function openAnalysis(type) {
 
 
   
-  const analysisNames = {
-    'descriptive': 'Descriptive Statistics',
-    'assumption': 'Assumption Checks',
-    'difference': 'Difference Tests',
-    'relationship': 'Relationship Analysis',
-    'multivariate': 'Multivariate Analysis',
-    'specialized': 'Specialized Methods'
-  };
+  
   
   // In production, you would navigate to the specific page
   // window.location.href = `${type}-analysis.html`;
   
   // For demonstration
-  alert(`Opening ${analysisNames[type]} analysis tools...`);
 }
 
 // Add hover effect for cards
