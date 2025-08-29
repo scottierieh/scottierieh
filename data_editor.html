@@ -1,0 +1,1268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>📊 Data Editor (Fixed)</title>
+
+<!-- Papa Parse for robust CSV parsing -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+
+<style>
+  :root{
+    --bg:#f4f5f7; --card:#ffffff; --muted:#6b7280; --accent:#2563eb; --success:#059669;
+    --fail:#9ca3af; --shadow:0 8px 30px rgba(16,24,40,0.06); --warning:#f59e0b;
+    --info:#0ea5e9; --danger:#dc2626;
+  }
+  
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+  
+  body {
+    font-family:"Inter","Segoe UI",Roboto,Arial,sans-serif;
+    background:var(--bg);
+    color:#111827;
+    height:100vh;
+    overflow:hidden;
+  }
+  
+  .app-container {
+    height:100vh;
+    display:flex;
+    flex-direction:column;
+  }
+  
+  .header-bar {
+    background:var(--card);
+    box-shadow:var(--shadow);
+    padding:16px 24px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    border-bottom:1px solid #e5e7eb;
+  }
+  
+  .header-bar h1 {
+    font-size:20px;
+    color:black;
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  
+  .header-controls {
+    display:flex;
+    gap:12px;
+    align-items:center;
+  }
+  
+  .main-content {
+    flex:1;
+    display:flex;
+    overflow:hidden;
+    min-height:0;
+  }
+  
+  .table-section {
+    flex:1;
+    display:flex;
+    flex-direction:column;
+    overflow:hidden;
+    background:var(--card);
+    margin:16px;
+    border-radius:12px;
+    box-shadow:var(--shadow);
+    min-width:0;
+  }
+  
+  .table-header {
+    padding:16px;
+    border-bottom:1px solid #e5e7eb;
+  }
+  
+  .table-container {
+    flex:1;
+    overflow:auto;
+    position:relative;
+    padding:0 16px 16px 16px;
+  }
+  
+  /* Table Styles */
+  table {
+    width:100%;
+    border-collapse:collapse;
+    background:white;
+  }
+  
+  th, td {
+    border:1px solid #e5e7eb;
+    padding:8px 12px;
+    text-align:left;
+    min-width:100px;
+    position:relative;
+    font-size:13px;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+  
+  th:first-child, td:first-child {
+    min-width:40px;
+    width:40px;
+    position:sticky;
+    left:0;
+    background:#f8fafc;
+    z-index:10;
+    text-align:center;
+  }
+  
+  thead th {
+    background:#f8fafc;
+    font-weight:600;
+    position:sticky;
+    top:0;
+    z-index:20;
+  }
+  
+  thead th:first-child {
+    z-index:30;
+  }
+  
+  td[contenteditable]:hover {
+    background:#f9fafb;
+    z-index:5;
+  }
+  
+  td[contenteditable]:focus, th[contenteditable]:focus {
+    background:#f0f9ff;
+    outline:2px solid var(--info);
+    border-radius:4px;
+    z-index:100;
+  }
+  
+  /* Sidebar */
+  .sidebar {
+    width:320px;
+    background:var(--card);
+    margin:16px;
+    border-radius:12px;
+    box-shadow:var(--shadow);
+    display:flex;
+    flex-direction:column;
+    overflow-y:auto;
+    flex-shrink:0;
+  }
+  
+  .sidebar-section {
+    padding:16px;
+    border-bottom:1px solid #e5e7eb;
+  }
+  
+  .sidebar-section:last-child {
+    border-bottom:none;
+  }
+  
+  .section-title {
+    font-size:14px;
+    font-weight:600;
+    color:#374151;
+    margin-bottom:12px;
+    display:flex;
+    align-items:center;
+    gap:6px;
+  }
+  
+  /* Controls */
+  .btn {
+    border:0;
+    padding:8px 12px;
+    border-radius:8px;
+    cursor:pointer;
+    font-weight:500;
+    font-size:12px;
+    transition:all 0.2s;
+  }
+  
+  .btn:hover {
+    transform:translateY(-1px);
+    box-shadow:0 2px 8px rgba(0,0,0,0.15);
+  }
+  
+  .btn:disabled {
+    background:var(--fail) !important;
+    cursor:not-allowed;
+    transform:none;
+    box-shadow:none;
+    opacity:0.6;
+  }
+  
+  .btn.primary{background:var(--accent);color:#fff}
+  .btn.success{background:var(--success);color:#fff}
+  .btn.warning{background:var(--warning);color:#fff}
+  .btn.danger{background:var(--danger);color:#fff}
+  .btn.ghost{background:#f3f4f6;color:#111827}
+  
+  .btn-group {
+    display:flex;
+    gap:6px;
+    margin-bottom:8px;
+  }
+  
+  .btn-group .btn {
+    flex:1;
+    font-size:11px;
+    padding:6px 8px;
+  }
+  
+  /* Form Controls */
+  .control-row {
+    display:flex;
+    gap:8px;
+    align-items:center;
+    margin-bottom:12px;
+  }
+  
+  .control-row label {
+    font-size:12px;
+    color:var(--muted);
+    min-width:80px;
+  }
+  
+  .control-row select,
+  .control-row input[type="text"],
+  .control-row input[type="number"] {
+    flex:1;
+    padding:6px 8px;
+    border:1px solid #e5e7eb;
+    border-radius:6px;
+    font-size:12px;
+  }
+  
+  .file-input {
+    padding:6px;
+    border:1px solid #e5e7eb;
+    border-radius:6px;
+    background:white;
+    font-size:12px;
+    width:100%;
+  }
+  
+  .search-input {
+    flex:1;
+    padding:6px 10px;
+    border:1px solid #e5e7eb;
+    border-radius:6px;
+    font-size:13px;
+  }
+  
+  /* Selection States */
+  .selected-col {
+    background:#e0f2fe !important;
+  }
+  
+  .selected-row {
+    background:#fef3c7 !important;
+  }
+  
+  .selected-row td {
+    background:#fef3c7 !important;
+  }
+  
+  /* Missing value indicators */
+  .missing-cell {
+    background:#fecaca !important;
+    color:var(--danger);
+  }
+  
+  /* Status */
+  .status-bar {
+    padding:8px 16px;
+    background:#f9fafb;
+    border-top:1px solid #e5e7eb;
+    font-size:12px;
+    color:var(--muted);
+    display:flex;
+    gap:16px;
+  }
+  
+  .status-item {
+    display:flex;
+    gap:4px;
+  }
+  
+  .status-label {
+    font-weight:600;
+  }
+  
+  .status-indicator {
+    display:inline-block;
+    padding:2px 6px;
+    border-radius:4px;
+    font-weight:500;
+    color:white;
+    font-size:10px;
+    margin-left:8px;
+  }
+  
+  .status-modified{background:var(--warning);}
+  .status-saved{background:var(--success);}
+  .status-error{background:var(--danger);}
+  
+  /* Info Box */
+  .info-box {
+    background:#f0f9ff;
+    border:1px solid var(--info);
+    border-radius:6px;
+    padding:8px;
+    font-size:11px;
+    color:#0369a1;
+    margin-top:8px;
+  }
+  
+  .warning-box {
+    background:#fef3c7;
+    border:1px solid var(--warning);
+    border-radius:6px;
+    padding:8px;
+    font-size:11px;
+    color:#92400e;
+    margin-top:8px;
+  }
+  
+  .error-box {
+    background:#fef2f2;
+    border:1px solid var(--danger);
+    border-radius:6px;
+    padding:8px;
+    font-size:11px;
+    color:#991b1b;
+    margin-top:8px;
+  }
+  
+  /* Modal for CSV import options */
+  .modal {
+    display:none;
+    position:fixed;
+    z-index:1000;
+    left:0;
+    top:0;
+    width:100%;
+    height:100%;
+    background:rgba(0,0,0,0.5);
+    align-items:center;
+    justify-content:center;
+  }
+  
+  .modal.active {
+    display:flex;
+  }
+  
+  .modal-content {
+    background:white;
+    border-radius:12px;
+    padding:24px;
+    width:500px;
+    max-width:90%;
+    max-height:80vh;
+    overflow-y:auto;
+  }
+  
+  .modal-header {
+    font-size:18px;
+    font-weight:600;
+    margin-bottom:16px;
+    color:#111827;
+  }
+  
+  .modal-body {
+    margin-bottom:16px;
+  }
+  
+  .modal-footer {
+    display:flex;
+    gap:8px;
+    justify-content:flex-end;
+  }
+  
+  .preview-table {
+    width:100%;
+    font-size:11px;
+    margin-top:12px;
+    border:1px solid #e5e7eb;
+    border-radius:6px;
+    overflow:hidden;
+  }
+  
+  .preview-table th,
+  .preview-table td {
+    padding:6px;
+    border:1px solid #e5e7eb;
+    min-width:60px;
+  }
+  
+  .preview-table th {
+    background:#f8fafc;
+    font-weight:600;
+  }
+  
+  /* Progress bar */
+  .progress-bar {
+    width:100%;
+    height:20px;
+    background:#e5e7eb;
+    border-radius:10px;
+    overflow:hidden;
+    margin:12px 0;
+  }
+  
+  .progress-fill {
+    width:0%;
+    height:100%;
+    background:var(--accent);
+    transition:width 0.3s;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    color:white;
+    font-size:11px;
+    font-weight:600;
+  }
+</style>
+</head>
+<body>
+  <div class="app-container">
+    <!-- Header -->
+    <div class="header-bar">
+      <h1>📊 Data Editor</h1>
+      <div class="header-controls">
+        <input id="searchInput" type="text" placeholder="Search data..." class="search-input">
+        <div id="fileStatus"></div>
+      </div>
+    </div>
+    
+    <!-- Main Content -->
+    <div class="main-content">
+      <!-- Table Section -->
+      <div class="table-section">
+        <div class="table-header">
+          <div class="status-bar">
+            <div class="status-item">
+              <span class="status-label">Rows:</span>
+              <span id="rowCount">0</span>
+            </div>
+            <div class="status-item">
+              <span class="status-label">Columns:</span>
+              <span id="colCount">0</span>
+            </div>
+            <div class="status-item">
+              <span class="status-label">Selected:</span>
+              <span id="selectedCount">0 rows, 0 cols</span>
+            </div>
+            <div class="status-item">
+              <span class="status-label">Missing:</span>
+              <span id="missingCount">0</span>
+            </div>
+          </div>
+        </div>
+        <div class="table-container">
+          <table id="dataTable">
+            <tr><td style="padding:40px;text-align:center;color:var(--muted)">No data loaded. Use the controls on the right to get started.</td></tr>
+          </table>
+        </div>
+      </div>
+      
+      <!-- Sidebar -->
+      <div class="sidebar">
+        <!-- File Operations -->
+        <div class="sidebar-section">
+          <div class="section-title">📁 File Operations</div>
+          <input id="fileInput" type="file" accept=".csv,.txt,.tsv" class="file-input" style="margin-bottom:8px">
+          
+          <!-- CSV Import Options -->
+          <div class="control-row">
+            <label>Delimiter:</label>
+            <select id="delimiterSelect">
+              <option value="auto">Auto Detect</option>
+              <option value=",">Comma (,)</option>
+              <option value="\t">Tab</option>
+              <option value=";">Semicolon (;)</option>
+              <option value="|">Pipe (|)</option>
+            </select>
+          </div>
+          
+          <div class="btn-group">
+            <button id="createSampleBtn" class="btn ghost">Sample Data</button>
+            <button id="downloadCSVBtn" class="btn warning">Export CSV</button>
+          </div>
+          
+          <div id="importInfo"></div>
+        </div>
+        
+        <!-- Row Operations -->
+        <div class="sidebar-section">
+          <div class="section-title">📋 Row Operations</div>
+          <div class="btn-group">
+            <button id="addRowAboveBtn" class="btn success" disabled>Add Above</button>
+            <button id="addRowBelowBtn" class="btn success" disabled>Add Below</button>
+          </div>
+          <button id="deleteRowBtn" class="btn danger" style="width:100%" disabled>Delete Selected Rows</button>
+        </div>
+        
+        <!-- Column Operations -->
+        <div class="sidebar-section">
+          <div class="section-title">📊 Column Operations</div>
+          <div class="btn-group">
+            <button id="addColLeftBtn" class="btn primary" disabled>Add Left</button>
+            <button id="addColRightBtn" class="btn primary" disabled>Add Right</button>
+          </div>
+          <button id="deleteColBtn" class="btn danger" style="width:100%" disabled>Delete Selected Columns</button>
+        </div>
+        
+        <!-- Clear -->
+        <div class="sidebar-section">
+          <button id="clearAllBtn" class="btn ghost" style="width:100%">Clear All Data</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- CSV Preview Modal -->
+  <div id="csvPreviewModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">📄 CSV Import Preview</div>
+      <div class="modal-body">
+        <div id="parseInfo"></div>
+        <div id="previewContent"></div>
+      </div>
+      <div class="modal-footer">
+        <button id="cancelImportBtn" class="btn ghost">Cancel</button>
+        <button id="confirmImportBtn" class="btn primary">Import</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+(function() {
+  'use strict';
+  
+  let tableData = { headers: [], rows: [] };
+  let selectedCols = new Set();
+  let selectedRows = new Set();
+  let isModified = false;
+  let currentFileName = '';
+  let pendingFileData = null;
+
+  function init() {
+    console.log('Initializing Data Editor...');
+    setupEventListeners();
+    updateStats();
+  }
+
+  function setupEventListeners() {
+    console.log('Setting up event listeners...');
+    
+    document.getElementById('fileInput').addEventListener('change', handleFileUpload);
+    document.getElementById('createSampleBtn').addEventListener('click', createSampleData);
+    
+    // Row operations with debug logging
+    document.getElementById('addRowAboveBtn').addEventListener('click', function(e) {
+      console.log('Add row above button clicked');
+      e.preventDefault();
+      addRowAbove();
+    });
+    
+    document.getElementById('addRowBelowBtn').addEventListener('click', function(e) {
+      console.log('Add row below button clicked');
+      e.preventDefault();
+      addRowBelow();
+    });
+    
+    document.getElementById('deleteRowBtn').addEventListener('click', function(e) {
+      console.log('Delete row button clicked');
+      e.preventDefault();
+      deleteSelectedRows();
+    });
+    
+    // Column operations
+    document.getElementById('addColLeftBtn').addEventListener('click', function(e) {
+      console.log('Add column left button clicked');
+      e.preventDefault();
+      addColLeft();
+    });
+    
+    document.getElementById('addColRightBtn').addEventListener('click', function(e) {
+      console.log('Add column right button clicked');
+      e.preventDefault();
+      addColRight();
+    });
+    
+    document.getElementById('deleteColBtn').addEventListener('click', function(e) {
+      console.log('Delete column button clicked');
+      e.preventDefault();
+      deleteSelectedCols();
+    });
+    
+    document.getElementById('downloadCSVBtn').addEventListener('click', downloadCSV);
+    document.getElementById('clearAllBtn').addEventListener('click', clearAll);
+    document.getElementById('searchInput').addEventListener('input', applyFilter);
+    
+    // Modal buttons
+    document.getElementById('cancelImportBtn').addEventListener('click', closePreviewModal);
+    document.getElementById('confirmImportBtn').addEventListener('click', confirmImport);
+    
+    console.log('Event listeners setup complete');
+  }
+
+  function createSampleData() {
+    console.log('Creating sample data...');
+    tableData.headers = ['ID', 'Name', 'Age', 'City', 'Score', 'Status'];
+    tableData.rows = [
+      ['001', 'John Doe', '25', 'New York', '85.5', 'Active'],
+      ['002', 'Jane Smith', '30', 'Los Angeles', '92.3', 'Active'],
+      ['003', 'Bob Johnson', '35', 'Chicago', '78.1', 'Inactive'],
+      ['004', 'Alice Brown', '28', 'Houston', '88.7', 'Active'],
+      ['005', 'Charlie Wilson', '32', 'Phoenix', '95.2', 'Active'],
+      ['006', '김철수', '27', '서울', '89.3', 'Active'],
+      ['007', '이영희', '33', '부산', '93.8', 'Active']
+    ];
+    
+    renderTable();
+    updateFileStatus('loaded');
+    
+    document.getElementById('importInfo').innerHTML = 
+      '<div class="info-box">✅ Sample data loaded successfully</div>';
+  }
+
+  function handleFileUpload(e) {
+    console.log('File upload started...');
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    currentFileName = file.name;
+    
+    document.getElementById('importInfo').innerHTML = 
+      '<div class="info-box">📤 Processing file...</div>';
+    
+    const reader = new FileReader();
+    
+    reader.onload = function(e) {
+      try {
+        const content = e.target.result;
+        console.log('File content loaded, length:', content.length);
+        
+        if (!content || content.length === 0) {
+          document.getElementById('importInfo').innerHTML = 
+            '<div class="error-box">⚠️ File appears to be empty</div>';
+          return;
+        }
+        
+        parseCSVWithPapa(content);
+      } catch (error) {
+        console.error('File read error:', error);
+        document.getElementById('importInfo').innerHTML = 
+          '<div class="error-box">⚠️ Error reading file: ' + error.message + '</div>';
+      }
+    };
+    
+    reader.onerror = function(e) {
+      console.error('FileReader error:', e);
+      document.getElementById('importInfo').innerHTML = 
+        '<div class="error-box">⚠️ Error reading file</div>';
+    };
+    
+    reader.readAsText(file, 'UTF-8');
+  }
+
+  function parseCSVWithPapa(content) {
+    console.log('Parsing CSV with Papa Parse...');
+    const delimiter = document.getElementById('delimiterSelect').value;
+    
+    try {
+      const config = {
+        delimiter: delimiter === 'auto' ? '' : delimiter,
+        header: false,
+        dynamicTyping: false,
+        preview: 10, // Preview first 10 rows
+        skipEmptyLines: 'greedy',
+        delimitersToGuess: [',', '\t', '|', ';'],
+        complete: function(results) {
+          console.log('Papa Parse complete:', results);
+          if (results.data && results.data.length > 0) {
+            showPreviewModal(results);
+          } else {
+            document.getElementById('importInfo').innerHTML = 
+              '<div class="error-box">⚠️ No valid data found in file</div>';
+          }
+        },
+        error: function(error) {
+          console.error('Papa Parse error:', error);
+          document.getElementById('importInfo').innerHTML = 
+            `<div class="error-box">⚠️ Parse error: ${error.message}</div>`;
+        }
+      };
+      
+      pendingFileData = content;
+      Papa.parse(content, config);
+      
+    } catch (error) {
+      console.error('Parse setup error:', error);
+      document.getElementById('importInfo').innerHTML = 
+        '<div class="error-box">⚠️ Error setting up parser: ' + error.message + '</div>';
+    }
+  }
+
+  function showPreviewModal(results) {
+    console.log('Showing preview modal...');
+    const modal = document.getElementById('csvPreviewModal');
+    const parseInfo = document.getElementById('parseInfo');
+    const previewContent = document.getElementById('previewContent');
+    
+    try {
+      let infoHTML = '<div class="info-box">';
+      infoHTML += `<strong>File:</strong> ${currentFileName}<br>`;
+      infoHTML += `<strong>Detected Delimiter:</strong> "${results.meta.delimiter || ','}"<br>`;
+      infoHTML += `<strong>Preview Rows:</strong> ${results.data.length}<br>`;
+      if (results.errors && results.errors.length > 0) {
+        infoHTML += `<strong>⚠️ Warnings:</strong> ${results.errors.length} issues<br>`;
+      }
+      infoHTML += '</div>';
+      
+      parseInfo.innerHTML = infoHTML;
+      
+      // Create preview table
+      let tableHTML = '<table class="preview-table"><thead><tr>';
+      
+      if (results.data.length > 0) {
+        const headers = results.data[0];
+        headers.forEach((h, idx) => {
+          tableHTML += `<th>${h || `Column ${idx + 1}`}</th>`;
+        });
+        tableHTML += '</tr></thead><tbody>';
+        
+        const maxPreviewRows = Math.min(6, results.data.length);
+        for (let i = 1; i < maxPreviewRows; i++) {
+          tableHTML += '<tr>';
+          const row = results.data[i];
+          headers.forEach((_, idx) => {
+            const cellValue = (row && row[idx]) ? row[idx] : '';
+            tableHTML += `<td>${cellValue}</td>`;
+          });
+          tableHTML += '</tr>';
+        }
+        
+        tableHTML += '</tbody></table>';
+      }
+      
+      previewContent.innerHTML = tableHTML;
+      
+      // Show warnings if any
+      if (results.errors && results.errors.length > 0) {
+        let errorHTML = '<div class="warning-box"><strong>Issues:</strong><br>';
+        results.errors.slice(0, 3).forEach(err => {
+          errorHTML += `Row ${err.row || '?'}: ${err.message}<br>`;
+        });
+        if (results.errors.length > 3) {
+          errorHTML += `... and ${results.errors.length - 3} more`;
+        }
+        errorHTML += '</div>';
+        previewContent.innerHTML += errorHTML;
+      }
+      
+      modal.classList.add('active');
+      
+    } catch (error) {
+      console.error('Error showing preview:', error);
+      document.getElementById('importInfo').innerHTML = 
+        '<div class="error-box">⚠️ Error showing preview</div>';
+    }
+  }
+
+  function closePreviewModal() {
+    document.getElementById('csvPreviewModal').classList.remove('active');
+    pendingFileData = null;
+  }
+
+  function confirmImport() {
+    console.log('Confirming import...');
+    if (!pendingFileData) return;
+    
+    const delimiter = document.getElementById('delimiterSelect').value;
+    
+    try {
+      Papa.parse(pendingFileData, {
+        delimiter: delimiter === 'auto' ? '' : delimiter,
+        header: false,
+        dynamicTyping: false,
+        skipEmptyLines: 'greedy',
+        delimitersToGuess: [',', '\t', '|', ';'],
+        complete: function(results) {
+          console.log('Full import complete:', results);
+          
+          if (results.data && results.data.length > 0) {
+            // First row as headers
+            tableData.headers = results.data[0].map((h, idx) => h || `Column${idx + 1}`);
+            
+            // Rest as data rows
+            tableData.rows = results.data.slice(1).filter(row => 
+              row && row.some(cell => cell !== undefined && cell !== '')
+            );
+            
+            // Ensure consistent column count
+            const colCount = tableData.headers.length;
+            tableData.rows = tableData.rows.map(row => {
+              while (row.length < colCount) {
+                row.push('');
+              }
+              return row.slice(0, colCount);
+            });
+            
+            console.log('Final table data:', tableData);
+            
+            renderTable();
+            updateFileStatus('loaded');
+            closePreviewModal();
+            
+            document.getElementById('importInfo').innerHTML = 
+              `<div class="info-box">✅ Imported ${tableData.rows.length} rows successfully</div>`;
+          } else {
+            document.getElementById('importInfo').innerHTML = 
+              '<div class="error-box">⚠️ No data to import</div>';
+            closePreviewModal();
+          }
+        },
+        error: function(error) {
+          console.error('Import error:', error);
+          document.getElementById('importInfo').innerHTML = 
+            `<div class="error-box">⚠️ Import failed: ${error.message}</div>`;
+          closePreviewModal();
+        }
+      });
+    } catch (error) {
+      console.error('Import setup error:', error);
+      document.getElementById('importInfo').innerHTML = 
+        '<div class="error-box">⚠️ Error during import</div>';
+      closePreviewModal();
+    }
+  }
+
+  function renderTable() {
+    console.log('Rendering table...');
+    const table = document.getElementById('dataTable');
+    table.innerHTML = '';
+    
+    if (!tableData.headers || tableData.headers.length === 0) {
+      table.innerHTML = '<tr><td style="padding:40px;text-align:center;color:var(--muted)">No data loaded. Use the controls on the right to get started.</td></tr>';
+      updateStats();
+      return;
+    }
+    
+    // Create header
+    const thead = document.createElement('thead');
+    const headerRow = document.createElement('tr');
+    
+    // Corner cell
+    const cornerCell = document.createElement('th');
+    cornerCell.innerHTML = '☑';
+    cornerCell.style.cursor = 'pointer';
+    cornerCell.addEventListener('click', toggleAllSelection);
+    headerRow.appendChild(cornerCell);
+    
+    // Header cells
+    tableData.headers.forEach((header, i) => {
+      const th = document.createElement('th');
+      
+      const checkbox = document.createElement('input');
+      checkbox.type = 'checkbox';
+      checkbox.checked = selectedCols.has(i);
+      checkbox.style.marginRight = '6px';
+      checkbox.addEventListener('change', function() {
+        if (this.checked) {
+          selectedCols.add(i);
+        } else {
+          selectedCols.delete(i);
+        }
+        updateSelection();
+      });
+      
+      const headerSpan = document.createElement('span');
+      headerSpan.contentEditable = true;
+      headerSpan.textContent = header;
+      headerSpan.addEventListener('input', function() {
+        tableData.headers[i] = this.textContent;
+        markModified();
+      });
+      
+      th.appendChild(checkbox);
+      th.appendChild(headerSpan);
+      
+      if (selectedCols.has(i)) {
+        th.classList.add('selected-col');
+      }
+      
+      headerRow.appendChild(th);
+    });
+    
+    thead.appendChild(headerRow);
+    table.appendChild(thead);
+    
+    // Create body
+    const tbody = document.createElement('tbody');
+    
+    tableData.rows.forEach((row, rowIdx) => {
+      const tr = document.createElement('tr');
+      
+      // Row checkbox
+      const tdCheck = document.createElement('td');
+      const rowCheckbox = document.createElement('input');
+      rowCheckbox.type = 'checkbox';
+      rowCheckbox.checked = selectedRows.has(rowIdx);
+      rowCheckbox.addEventListener('change', function() {
+        if (this.checked) {
+          selectedRows.add(rowIdx);
+        } else {
+          selectedRows.delete(rowIdx);
+        }
+        updateSelection();
+      });
+      tdCheck.appendChild(rowCheckbox);
+      tr.appendChild(tdCheck);
+      
+      // Data cells
+      tableData.headers.forEach((_, colIdx) => {
+        const td = document.createElement('td');
+        td.contentEditable = true;
+        const cellValue = (row && row[colIdx] !== undefined) ? row[colIdx] : '';
+        td.textContent = cellValue;
+        
+        td.addEventListener('input', function() {
+          while (row.length <= colIdx) {
+            row.push('');
+          }
+          row[colIdx] = this.textContent;
+          markModified();
+        });
+        
+        if (selectedCols.has(colIdx)) {
+          td.classList.add('selected-col');
+        }
+        
+        if (!cellValue || cellValue.toString().trim() === '') {
+          td.classList.add('missing-cell');
+        }
+        
+        tr.appendChild(td);
+      });
+      
+      if (selectedRows.has(rowIdx)) {
+        tr.classList.add('selected-row');
+      }
+      
+      tbody.appendChild(tr);
+    });
+    
+    table.appendChild(tbody);
+    
+    updateStats();
+    updateButtonStates();
+  }
+
+  function toggleAllSelection() {
+    if (selectedRows.size === tableData.rows.length && selectedCols.size === tableData.headers.length) {
+      selectedRows.clear();
+      selectedCols.clear();
+    } else {
+      tableData.rows.forEach((_, i) => selectedRows.add(i));
+      tableData.headers.forEach((_, i) => selectedCols.add(i));
+    }
+    updateSelection();
+  }
+
+  function updateSelection() {
+    document.querySelectorAll('#dataTable th').forEach((th, i) => {
+      if (i > 0 && selectedCols.has(i - 1)) {
+        th.classList.add('selected-col');
+      } else {
+        th.classList.remove('selected-col');
+      }
+    });
+    
+    document.querySelectorAll('#dataTable tbody tr').forEach((tr, rowIdx) => {
+      if (selectedRows.has(rowIdx)) {
+        tr.classList.add('selected-row');
+      } else {
+        tr.classList.remove('selected-row');
+      }
+      
+      tr.querySelectorAll('td').forEach((td, i) => {
+        if (i > 0 && selectedCols.has(i - 1)) {
+          td.classList.add('selected-col');
+        } else {
+          td.classList.remove('selected-col');
+        }
+      });
+    });
+    
+    updateStats();
+    updateButtonStates();
+  }
+
+  function updateStats() {
+    document.getElementById('rowCount').textContent = tableData.rows.length;
+    document.getElementById('colCount').textContent = tableData.headers.length;
+    document.getElementById('selectedCount').textContent = `${selectedRows.size} rows, ${selectedCols.size} cols`;
+    
+    // Count missing values
+    let missingCount = 0;
+    tableData.rows.forEach(row => {
+      tableData.headers.forEach((_, colIdx) => {
+        const value = row && row[colIdx];
+        if (!value || value.toString().trim() === '') {
+          missingCount++;
+        }
+      });
+    });
+    document.getElementById('missingCount').textContent = missingCount;
+  }
+
+  function updateButtonStates() {
+    const hasData = tableData.headers.length > 0;
+    const hasRows = tableData.rows.length > 0;
+    
+    // Row operation buttons
+    const addRowAboveBtn = document.getElementById('addRowAboveBtn');
+    const addRowBelowBtn = document.getElementById('addRowBelowBtn');
+    const deleteRowBtn = document.getElementById('deleteRowBtn');
+    
+    if (hasData && hasRows) {
+      addRowAboveBtn.disabled = selectedRows.size === 0;
+      addRowBelowBtn.disabled = selectedRows.size === 0;
+      deleteRowBtn.disabled = selectedRows.size === 0;
+    } else if (hasData) {
+      // Has headers but no rows - allow adding rows
+      addRowAboveBtn.disabled = false;
+      addRowBelowBtn.disabled = false;
+      deleteRowBtn.disabled = true;
+    } else {
+      // No data at all
+      addRowAboveBtn.disabled = true;
+      addRowBelowBtn.disabled = true;
+      deleteRowBtn.disabled = true;
+    }
+    
+    // Column operation buttons
+    document.getElementById('addColLeftBtn').disabled = !hasData || selectedCols.size === 0;
+    document.getElementById('addColRightBtn').disabled = !hasData || selectedCols.size === 0;
+    document.getElementById('deleteColBtn').disabled = selectedCols.size === 0;
+    
+    console.log('Button states updated:', {
+      hasData,
+      hasRows,
+      selectedRows: selectedRows.size,
+      selectedCols: selectedCols.size
+    });
+  }
+
+  function markModified() {
+    isModified = true;
+    updateFileStatus('modified');
+  }
+
+  function updateFileStatus(status = 'none') {
+    const statusEl = document.getElementById('fileStatus');
+    let statusText = '';
+    let statusClass = '';
+    
+    switch (status) {
+      case 'loaded':
+        statusText = currentFileName ? `Loaded: ${currentFileName}` : 'Data Loaded';
+        statusClass = 'status-saved';
+        isModified = false;
+        break;
+      case 'modified':
+        statusText = 'Modified';
+        statusClass = 'status-modified';
+        break;
+      case 'error':
+        statusText = 'Error';
+        statusClass = 'status-error';
+        break;
+    }
+    
+    statusEl.innerHTML = statusText ? `<span class="status-indicator ${statusClass}">${statusText}</span>` : '';
+  }
+
+  // Row operations
+  function addRowAbove() {
+    console.log('Add row above clicked');
+    
+    if (tableData.headers.length === 0) {
+      alert('Please load data first or create sample data');
+      return;
+    }
+    
+    let insertIndex = 0;
+    if (selectedRows.size > 0) {
+      insertIndex = Math.min(...Array.from(selectedRows));
+    }
+    
+    const newRow = new Array(tableData.headers.length).fill('');
+    tableData.rows.splice(insertIndex, 0, newRow);
+    
+    selectedRows.clear();
+    renderTable();
+    markModified();
+    
+    console.log('Row added above at index:', insertIndex);
+  }
+
+  function addRowBelow() {
+    console.log('Add row below clicked');
+    
+    if (tableData.headers.length === 0) {
+      alert('Please load data first or create sample data');
+      return;
+    }
+    
+    let insertIndex = tableData.rows.length;
+    if (selectedRows.size > 0) {
+      insertIndex = Math.max(...Array.from(selectedRows)) + 1;
+    }
+    
+    const newRow = new Array(tableData.headers.length).fill('');
+    tableData.rows.splice(insertIndex, 0, newRow);
+    
+    selectedRows.clear();
+    renderTable();
+    markModified();
+    
+    console.log('Row added below at index:', insertIndex);
+  }
+
+  function deleteSelectedRows() {
+    if (selectedRows.size === 0) return;
+    
+    if (!confirm(`Delete ${selectedRows.size} selected row(s)?`)) return;
+    
+    const indices = Array.from(selectedRows).sort((a, b) => b - a);
+    indices.forEach(idx => {
+      tableData.rows.splice(idx, 1);
+    });
+    
+    selectedRows.clear();
+    renderTable();
+    markModified();
+  }
+
+  // Column operations
+  function addColLeft() {
+    if (selectedCols.size === 0) return;
+    
+    const name = prompt('Enter column name:');
+    if (!name) return;
+    
+    const minIdx = Math.min(...Array.from(selectedCols));
+    
+    tableData.headers.splice(minIdx, 0, name);
+    tableData.rows.forEach(row => {
+      row.splice(minIdx, 0, '');
+    });
+    
+    renderTable();
+    markModified();
+  }
+
+  function addColRight() {
+    if (selectedCols.size === 0) return;
+    
+    const name = prompt('Enter column name:');
+    if (!name) return;
+    
+    const maxIdx = Math.max(...Array.from(selectedCols));
+    
+    tableData.headers.splice(maxIdx + 1, 0, name);
+    tableData.rows.forEach(row => {
+      row.splice(maxIdx + 1, 0, '');
+    });
+    
+    renderTable();
+    markModified();
+  }
+
+  function deleteSelectedCols() {
+    if (selectedCols.size === 0) return;
+    
+    if (!confirm(`Delete ${selectedCols.size} selected column(s)?`)) return;
+    
+    const indices = Array.from(selectedCols).sort((a, b) => b - a);
+    indices.forEach(idx => {
+      tableData.headers.splice(idx, 1);
+      tableData.rows.forEach(row => {
+        row.splice(idx, 1);
+      });
+    });
+    
+    selectedCols.clear();
+    renderTable();
+    markModified();
+  }
+
+  function downloadCSV() {
+    const rows = [tableData.headers, ...tableData.rows];
+    const csv = rows.map(row => 
+      row.map(cell => {
+        const str = String(cell || '');
+        if (str.includes(',') || str.includes('"') || str.includes('\n')) {
+          return '"' + str.replace(/"/g, '""') + '"';
+        }
+        return str;
+      }).join(',')
+    ).join('\n');
+    
+    const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = currentFileName || 'data_edited.csv';
+    link.click();
+    updateFileStatus('loaded');
+  }
+
+  function clearAll() {
+    if (tableData.headers.length === 0) return;
+    
+    if (confirm('Clear all data? This cannot be undone.')) {
+      tableData.headers = [];
+      tableData.rows = [];
+      selectedCols.clear();
+      selectedRows.clear();
+      renderTable();
+      updateFileStatus();
+      document.getElementById('importInfo').innerHTML = '';
+    }
+  }
+
+  function applyFilter() {
+    const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+    const tbody = document.querySelector('#dataTable tbody');
+    
+    if (!tbody) return;
+    
+    Array.from(tbody.rows).forEach(row => {
+      const text = Array.from(row.cells).slice(1).map(td => td.textContent.toLowerCase()).join(' ');
+      row.style.display = text.includes(searchTerm) ? '' : 'none';
+    });
+  }
+
+  // Initialize
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+
+})();
+</script>
+</body>
+</html>
