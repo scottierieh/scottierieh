@@ -593,8 +593,13 @@ function openAnalysis(type) {
     });
     container.style.display = 'block';
     container.scrollIntoView({behavior: 'smooth'});
+     } else {
+    // 여기에 추가
+    alert(`${analysisNames[type]} - Coming Soon!`);
+    return;
   }
 }
+
 
   
   const analysisNames = {
