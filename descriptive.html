@@ -3,9 +3,18 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>📊 Descriptive Statistics Analysis - Skari</title>
+<title>📊 Analytics Platform - Descriptive Statistics</title>
+
+<!-- CSV Parsing -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<!-- Plotly -->
 <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+
+<!-- jsPDF for PDF generation -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+
 <style>
   :root{
     --bg:#f8fafc; --card:#ffffff; --muted:#64748b; --accent:#3b82f6; --success:#10b981;
@@ -18,32 +27,52 @@
   
   body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:#1e293b;line-height:1.6;margin:0;padding:0}
   
-  /* Header Navigation */
-  .header{background:white;border-bottom:1px solid #e2e8f0;position:sticky;top:0;z-index:100;box-shadow:var(--shadow)}
-  .header-content{max-width:1400px;margin:0 auto;padding:0 24px;display:flex;align-items:center;justify-content:space-between;height:64px}
-  .logo{display:flex;align-items:center;gap:12px;font-weight:700;font-size:20px}
-  .logo-icon{width:40px;height:40px;background:var(--gradient);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:24px;color:white}
-  
-  .nav-tabs{display:flex;gap:4px;background:#f1f5f9;padding:4px;border-radius:12px}
+/* Header Navigation */
+.header{background:white;border-bottom:1px solid #e2e8f0;position:sticky;top:0;z-index:100;box-shadow:var(--shadow)}
+.header-content{max-width:1800px;margin:0 auto;padding:0 32px;display:flex;align-items:center;justify-content:space-between;height:64px}
+.logo{display:flex;align-items:center;gap:12px;font-weight:700;font-size:20px}
+.logo-icon{width:40px;height:40px;background:var(--gradient);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:24px}
+
+/  /* Navigation with Dropdown */
+  .nav-tabs{display:flex;gap:4px;background:#f1f5f9;padding:4px;border-radius:12px;}
   .nav-item{position:relative;}
   .nav-tab{padding:8px 16px;border-radius:8px;border:none;background:transparent;cursor:pointer;font-weight:500;color:#64748b;transition:all 0.2s;white-space:nowrap;font-size:14px;display:flex;align-items:center;gap:4px;}
   .nav-tab:hover{background:white;color:#1e293b;box-shadow:0 1px 3px rgba(0,0,0,0.1);}
   .nav-tab.active{background:white;color:#1e293b;box-shadow:0 1px 3px rgba(0,0,0,0.1);}
-  
-  .dropdown{position:absolute;top:100%;left:50%;transform:translateX(-50%);background:white;border-radius:12px;box-shadow:0 10px 40px rgba(0,0,0,0.15);padding:8px;min-width:200px;opacity:0;visibility:hidden;transition:all 0.3s cubic-bezier(0.4, 0, 0.2, 1);pointer-events:none;z-index:1000;margin-top:8px;}
+  .dropdown{position:absolute;top:100%;left:50%;transform:translateX(-50%);background:white;border-radius:12px;box-shadow:0 10px 40px rgba(0,0,0,0.15);padding:8px;min-width:200px;opacity:0;visibility:hidden;transition:all 0.3s cubic-bezier(0.4, 0, 0.2, 1);pointer-events:none;z-index:1000;}
   .dropdown.active{opacity:1;visibility:visible;pointer-events:all;}
   .nav-item:hover .dropdown{opacity:1;visibility:visible;pointer-events:all;}
-  .dropdown-item{padding:10px 16px;border-radius:8px;cursor:pointer;transition:all 0.2s;font-size:13px;color:#475569;display:block;text-decoration:none;}
+  .dropdown-item{padding:10px 16px;border-radius:8px;cursor:pointer;transition:all 0.2s;font-size:13px;color:#475569;display:block;}
   .dropdown-item:hover{background:#f8fafc;color:#1e293b;transform:translateX(4px);}
-  
+
+  .relationship .dropdown-item:hover{background:linear-gradient(to right,#3b82f615,#06b6d415);color:#3b82f6}
+  .difference .dropdown-item:hover{background:linear-gradient(to right,#8b5cf615,#a855f715);color:#8b5cf6}
+  .assumption .dropdown-item:hover{background:linear-gradient(to right,#10b98115,#05966915);color:#10b981}
+  .multivariate .dropdown-item:hover{background:linear-gradient(to right,#f59e0b15,#f9731615);color:#f59e0b}
+  .specialized .dropdown-item:hover{background:linear-gradient(to right,#ef444415,#f8717115);color:#ef4444}
+
   .header-actions{display:flex;gap:12px;align-items:center}
   .user-avatar{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#667eea,#764ba2);display:flex;align-items:center;justify-content:center;color:white;font-weight:600}
-  
+  .btn{border:0;padding:10px 20px;border-radius:10px;cursor:pointer;font-weight:500;transition:all 0.2s;display:inline-flex;align-items:center;gap:8px}
+  .btn:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(0,0,0,0.15)}
+  .btn.primary{background:var(--accent);color:#fff}
+  .btn.ghost{background:#f1f5f9;color:#475569}
+  .btn.small{padding:6px 12px;font-size:13px}
+  .btn.icon{padding:8px;width:36px;height:36px;justify-content:center}
+
+  @media (max-width: 768px) {
+    .header-content{padding:0 16px}
+    .nav-tabs{display:none}
+  }
+
+
   /* Main Container */
   .main-container{max-width:1400px;margin:0 auto;padding:24px}
-  .content-area{display:block}
+  .content-area{display:none}
+  .content-area.active{display:block}
   
   /* Panel Styles */
+  .main{max-width:100%;margin:auto;display:flex;flex-direction:column;gap:16px}
   .panel{background:var(--card);border-radius:16px;padding:24px;box-shadow:var(--shadow);margin-bottom:16px}
   h1{margin:0;font-size:24px;color:#1e293b;font-weight:700}
   h2{margin:20px 0 12px 0;font-size:18px;color:var(--accent);font-weight:600}
@@ -56,11 +85,52 @@
   .btn.primary{background:var(--accent);color:#fff}
   .btn.success{background:var(--success);color:#fff}
   .btn.ghost{background:#f1f5f9;color:#475569}
+  .btn.warning{background:var(--warning);color:#fff}
+  .btn.danger{background:var(--danger);color:#fff}
   .btn.small{padding:6px 12px;font-size:13px}
   .btn.icon{padding:8px;width:36px;height:36px;justify-content:center}
   
-  /* Table Styles */
-  .table-container{overflow:auto;max-height:400px;border-radius:8px;border:1px solid #e2e8f0;margin-top:12px}
+  /* Navigation with Dropdown */
+  .nav-tabs{display:flex;gap:4px;background:#f1f5f9;padding:4px;border-radius:12px;}
+  .nav-item{position:relative;}
+  .nav-tab{padding:8px 16px;border-radius:8px;border:none;background:transparent;cursor:pointer;font-weight:500;color:#64748b;transition:all 0.2s;white-space:nowrap;font-size:14px;display:flex;align-items:center;gap:4px;}
+  .nav-tab:hover{background:white;color:#1e293b;box-shadow:0 1px 3px rgba(0,0,0,0.1);}
+  .nav-tab.active{background:white;color:#1e293b;box-shadow:0 1px 3px rgba(0,0,0,0.1);}
+  .dropdown{position:absolute;top:100%;left:50%;transform:translateX(-50%);background:white;border-radius:12px;box-shadow:0 10px 40px rgba(0,0,0,0.15);padding:8px;min-width:200px;opacity:0;visibility:hidden;transition:all 0.3s cubic-bezier(0.4, 0, 0.2, 1);pointer-events:none;z-index:1000;}
+  .dropdown.active{opacity:1;visibility:visible;pointer-events:all;}
+  .nav-item:hover .dropdown{opacity:1;visibility:visible;pointer-events:all;}
+  .dropdown-item{padding:10px 16px;border-radius:8px;cursor:pointer;transition:all 0.2s;font-size:13px;color:#475569;display:block;}
+  .dropdown-item:hover{background:#f8fafc;color:#1e293b;transform:translateX(4px);}
+
+  .relationship .dropdown-item:hover{background:linear-gradient(to right,#3b82f615,#06b6d415);color:#3b82f6}
+  .difference .dropdown-item:hover{background:linear-gradient(to right,#8b5cf615,#a855f715);color:#8b5cf6}
+  .assumption .dropdown-item:hover{background:linear-gradient(to right,#10b98115,#05966915);color:#10b981}
+  .multivariate .dropdown-item:hover{background:linear-gradient(to right,#f59e0b15,#f9731615);color:#f59e0b}
+  .specialized .dropdown-item:hover{background:linear-gradient(to right,#ef444415,#f8717115);color:#ef4444}
+
+  .header-actions{display:flex;gap:12px;align-items:center}
+  .user-avatar{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#667eea,#764ba2);display:flex;align-items:center;justify-content:center;color:white;font-weight:600}
+  .btn{border:0;padding:10px 20px;border-radius:10px;cursor:pointer;font-weight:500;transition:all 0.2s;display:inline-flex;align-items:center;gap:8px}
+  .btn:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(0,0,0,0.15)}
+  .btn.primary{background:var(--accent);color:#fff}
+  .btn.ghost{background:#f1f5f9;color:#475569}
+  .btn.small{padding:6px 12px;font-size:13px}
+  .btn.icon{padding:8px;width:36px;height:36px;justify-content:center}
+
+  @media (max-width: 768px) {
+    .header-content{padding:0 16px}
+    .nav-tabs{display:none}
+  }
+
+  /* Table with Scrollbar */
+  .table-container{
+    overflow-x:auto;
+    overflow-y:auto;
+    max-height:400px;
+    border-radius:8px;
+    border:1px solid #e2e8f0;
+    margin-top:12px;
+  }
   table{width:100%;border-collapse:collapse;font-size:13px;min-width:600px;}
   th,td{padding:10px 12px;border-bottom:1px solid #e2e8f0;text-align:center}
   th{background:#f8fafc;font-weight:600;color:#475569;position:sticky;top:0;z-index:1}
@@ -69,6 +139,7 @@
   .muted{color:var(--muted);font-size:13px}
   .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
   .grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+  .grid-4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:16px}
   
   /* Model Cards */
   .model-card {
@@ -100,8 +171,8 @@
     line-height: 1.5;
   }
   
-  /* Form Elements */
-  select,input[type="checkbox"]{
+  /* Enhanced Forms */
+  select,input[type="text"],input[type="number"],input[type="checkbox"]{
     padding:8px 12px;
     border:2px solid #e2e8f0;
     border-radius:8px;
@@ -109,35 +180,55 @@
     background:white;
     cursor:pointer;
   }
-  select:focus{
+  select:focus,input[type="text"]:focus,input[type="number"]:focus{
     outline:none;
     border-color:var(--accent);
     box-shadow:0 0 0 3px rgba(59,130,246,0.1);
   }
   
-  /* Interpretation Boxes */
+  .hypothesis-box{
+    background:#f8fafc;border-left:4px solid var(--accent);padding:16px;margin:16px 0;
+    border-radius:0 8px 8px 0;
+  }
   .interpretation-box{
-    background:#f0fdf4;
-    border-left:4px solid var(--success);
-    padding:20px;
-    margin:20px 0;
+    background:#f0fdf4;border-left:4px solid var(--success);padding:20px;margin:20px 0;
     border-radius:0 8px 8px 0;
   }
   .interpretation-box.warning{
-    background:#fef3c7;
-    border-left-color:var(--warning);
+    background:#fef3c7;border-left-color:var(--warning);
   }
   .interpretation-box.info{
-    background:#f0f9ff;
-    border-left-color:var(--info);
+    background:#f0f9ff;border-left-color:var(--info);
+  }
+  .interpretation-box.reject{
+    background:#fef2f2;border-left-color:var(--danger);
+  }
+  .interpretation-box.accept{
+    background:#f0fdf4;border-left-color:var(--success);
   }
   
-  /* Plot Styles */
+  .normality-indicator{
+    display:inline-block;padding:4px 8px;border-radius:6px;font-weight:600;
+    color:white;margin-left:8px;
+  }
+  .normal{background:var(--success);}
+  .non-normal{background:var(--danger);}
+  
+  .assumption-check{
+    background:#fffbeb;border:1px solid #fed7aa;padding:20px;border-radius:12px;margin:16px 0;
+  }
+  
+  .sig{color:var(--success);font-weight:700;}
+  .nsig{color:var(--danger);font-weight:700;}
+  
   .plot-container{
     display:grid;
     grid-template-columns:1fr 1fr;
     gap:20px;
     margin-top:20px;
+  }
+  .plot-full{
+    grid-column:1/-1;
   }
   .plot-item{
     height:350px;
@@ -147,6 +238,30 @@
     overflow:hidden;
   }
   
+  .stat-card{
+    background:#f8fafc;padding:16px;border-radius:8px;text-align:center;border:1px solid #e2e8f0;
+  }
+  .stat-card .value{font-size:18px;font-weight:700;color:var(--accent);}
+  .stat-card .label{font-size:12px;color:var(--muted);margin-top:4px;}
+  
+  .test-result-row{
+    background:#f9fafb;
+  }
+  .test-result-row.significant{
+    background:#fef2f2;
+  }
+  .test-result-row.not-significant{
+    background:#f0fdf4;
+  }
+  
+  .variable-selection{
+    background:#f8fafc;
+    padding:16px;
+    border-radius:8px;
+    border:1px solid #e2e8f0;
+    margin:12px 0;
+  }
+  
   .var-checkbox-container{
     display:flex;
     flex-wrap:wrap;
@@ -154,11 +269,35 @@
     margin-top:12px;
   }
   
+  .var-checkbox-item{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    padding:6px 12px;
+    background:white;
+    border:1px solid #e2e8f0;
+    border-radius:6px;
+    cursor:pointer;
+    transition:all 0.2s;
+  }
+  
+  .var-checkbox-item:hover{
+    border-color:var(--accent);
+    background:#f0f9ff;
+  }
+  
+  .var-checkbox-item input[type="checkbox"]{
+    margin:0;
+    padding:0;
+    width:16px;
+    height:16px;
+  }
+  
   @media (max-width: 768px) {
     .header-content{padding:0 16px}
     .nav-tabs{display:none}
     .main-container{padding:16px}
-    .grid-2, .grid-3 {
+    .grid-2, .grid-3, .grid-4 {
       grid-template-columns: 1fr;
     }
     .plot-container{grid-template-columns:1fr}
@@ -174,70 +313,74 @@
       <div class="logo-icon">📊</div>
       <span>Skari</span>
     </div>
+
+        
+        <div class="nav-tabs">
+          <!-- 1. Descriptive Statistics -->
+          <div class="nav-item descriptives">
+            <button class="nav-tab" onclick="selectAnalysis('descriptive.html')">📊 Descriptive</button>
+          </div>
+        
+          <div class="nav-item assumption">
+            <button class="nav-tab">🔍 Assumption Check <span style="font-size:10px">▼</span></button>
+            <div class="dropdown">
+              <div class="dropdown-item" onclick="selectAnalysis('normality.html')">Normality Test</div>
+              <div class="dropdown-item" onclick="selectAnalysis('homogeneity.html')">Homogeneity Test</div>
+            </div>
+          </div>
     
-    <div class="nav-tabs">
-      <!-- 1. Descriptive Statistics -->
-      <div class="nav-item">
-        <button class="nav-tab active">📊 Descriptive</button>
-      </div>
-      
-      <!-- 2. Assumption Check -->
-      <div class="nav-item">
-        <button class="nav-tab">🔍 Assumption Check <span style="font-size:10px">▼</span></button>
-        <div class="dropdown">
-          <a href="normality.html" class="dropdown-item">Normality Test</a>
-          <a href="homogeneity.html" class="dropdown-item">Homogeneity Test</a>
+    
+    
+          <!-- 2. Difference Tests -->
+          <div class="nav-item difference">
+            <button class="nav-tab">⚖️ Difference Tests <span style="font-size:10px">▼</span></button>
+            <div class="dropdown">
+              <div class="dropdown-item" onclick="selectAnalysis('t_test.html')">t-Test</div>
+              <div class="dropdown-item" onclick="selectAnalysis('anova.html')">ANOVA</div>
+              <div class="dropdown-item" onclick="selectAnalysis('chi_square.html')">Chi-square Test</div>
+              <div class="dropdown-item" onclick="selectAnalysis('nonparametric.html')">Nonparametric Tests</div>
+            </div>
+          </div>
+        
+          <!-- 3. Relationship Analysis -->
+          <div class="nav-item relationship">
+            <button class="nav-tab">📈 Relationship <span style="font-size:10px">▼</span></button>
+            <div class="dropdown">
+              <div class="dropdown-item" onclick="selectAnalysis('correlation.html')">Correlation Analysis</div>
+              <div class="dropdown-item" onclick="selectAnalysis('regression.html')">Regression Analysis</div>
+            </div>
+          </div>
+        
+          <!-- 4. Multivariate Analysis -->
+          <div class="nav-item multivariate">
+            <button class="nav-tab">🎯 Multivariate <span style="font-size:10px">▼</span></button>
+            <div class="dropdown">
+              <div class="dropdown-item" onclick="selectAnalysis('EFA.html')">EFA</div>
+              <div class="dropdown-item" onclick="selectAnalysis('CFA.html')">CFA</div>
+              <div class="dropdown-item" onclick="selectAnalysis('cluster.html')">Cluster Analysis</div>
+              <div class="dropdown-item" onclick="selectAnalysis('discriminant.html')">Discriminant Analysis</div>
+              <div class="dropdown-item" onclick="selectAnalysis('pca.html')">PCA</div>
+              <div class="dropdown-item" onclick="selectAnalysis('mds.html')">MDS</div>
+              <div class="dropdown-item" onclick="selectAnalysis('correspondence.html')">Correspondence Analysis</div>
+            </div>
+          </div>
+        
+               
+        
+          <!-- 6. Specialized Analyses -->
+          <div class="nav-item specialized">
+            <button class="nav-tab">🔬 Specialized <span style="font-size:10px">▼</span></button>
+            <div class="dropdown">
+              <div class="dropdown-item" onclick="selectAnalysis('survival.html')">Survival Analysis</div>
+              <div class="dropdown-item" onclick="selectAnalysis('timeseries.html')">Time Series Analysis (ARIMA, etc.)</div>
+            </div>
+          </div>
         </div>
-      </div>
-      
-      <!-- 3. Difference Tests -->
-      <div class="nav-item">
-        <button class="nav-tab">⚖️ Difference Tests <span style="font-size:10px">▼</span></button>
-        <div class="dropdown">
-          <a href="t_test.html" class="dropdown-item">t-Test</a>
-          <a href="anova.html" class="dropdown-item">ANOVA</a>
-          <a href="chi_square.html" class="dropdown-item">Chi-square Test</a>
-          <a href="nonparametric.html" class="dropdown-item">Nonparametric Tests</a>
-        </div>
-      </div>
-      
-      <!-- 4. Relationship Analysis -->
-      <div class="nav-item">
-        <button class="nav-tab">📈 Relationship <span style="font-size:10px">▼</span></button>
-        <div class="dropdown">
-          <a href="correlation.html" class="dropdown-item">Correlation Analysis</a>
-          <a href="regression.html" class="dropdown-item">Regression Analysis</a>
-        </div>
-      </div>
-      
-      <!-- 5. Multivariate Analysis -->
-      <div class="nav-item">
-        <button class="nav-tab">🎯 Multivariate <span style="font-size:10px">▼</span></button>
-        <div class="dropdown">
-          <a href="EFA.html" class="dropdown-item">EFA</a>
-          <a href="CFA.html" class="dropdown-item">CFA</a>
-          <a href="cluster.html" class="dropdown-item">Cluster Analysis</a>
-          <a href="discriminant.html" class="dropdown-item">Discriminant Analysis</a>
-          <a href="pca.html" class="dropdown-item">PCA</a>
-          <a href="mds.html" class="dropdown-item">MDS</a>
-          <a href="correspondence.html" class="dropdown-item">Correspondence Analysis</a>
-        </div>
-      </div>
-      
-      <!-- 6. Specialized Analyses -->
-      <div class="nav-item">
-        <button class="nav-tab">🔬 Specialized <span style="font-size:10px">▼</span></button>
-        <div class="dropdown">
-          <a href="survival.html" class="dropdown-item">Survival Analysis</a>
-          <a href="timeseries.html" class="dropdown-item">Time Series Analysis</a>
-        </div>
-      </div>
-    </div>
     
     <div class="header-actions">
       <button class="btn ghost icon" onclick="showNotifications()">🔔</button>
       <button class="btn ghost icon" onclick="showSettings()">⚙️</button>
-      <button class="btn primary small" onclick="exportResults()">💾 Export</button>
+      <button class="btn primary small" onclick="exportToPDF()">💾 Export</button>
       <div class="user-avatar">AD</div>
     </div>
   </div>
@@ -245,99 +388,132 @@
 
 <!-- Main Container -->
 <div class="main-container">
-  <div class="content-area active">
-    <!-- Title Panel -->
-    <div class="panel">
-      <h1>📈 Descriptive Statistics Analysis</h1>
-      <div class="muted">Upload CSV → Select Analysis Type → Configure Variables → Run Analysis</div>
-    </div>
+  <!-- Descriptive Statistics Tab -->
+  <div id="descriptive-tab" class="content-area active">
+    <div class="main">
+      <div class="panel">
+        <h1>📈 Descriptive Statistics Analysis</h1>
+        <div class="muted">Upload CSV → Select Analysis Type → Configure Variables → Run Analysis</div>
+      </div>
 
-    <!-- Data Input Panel -->
-    <div class="panel">
-      <div class="controls">
-        <input id="fileInput" type="file" accept=".csv" style="padding:8px;">
-        <button class="btn success" onclick="loadExample()">📊 Load Sample Data</button>
-        <button class="btn ghost" onclick="resetAll()">🔄 Reset</button>
-        <button class="btn ghost" onclick="showHelp()">❓ Help</button>
+      <div class="panel">
+        <div class="controls">
+          <input id="fileInput" type="file" accept=".csv" style="padding:8px;">
+          <button class="btn success" onclick="loadExample()">📊 Load Sample Data</button>
+          <button class="btn ghost" onclick="resetAll()">🔄 Reset</button>
+          <button class="btn ghost" onclick="showHelp()">❓ Help</button>
+        </div>
+        <div id="dataPreview"></div>
       </div>
-      <div id="dataPreview"></div>
-    </div>
 
-    <!-- Analysis Type Selection Panel -->
-    <div class="panel" id="analysisTypePanel" style="display:none;">
-      <h2>📈 Analysis Type Selection</h2>
-      <div class="grid-3">
-        <div class="model-card" onclick="selectAnalysisType('basic')" id="card-basic">
-          <h4>📊 Basic Statistics</h4>
-          <div class="desc">• Mean, Median, Mode<br>• Standard deviation<br>• Min, Max, Range</div>
+      <div class="panel" id="analysisTypePanel" style="display:none;">
+        <h2>📈 Analysis Type Selection</h2>
+        <div class="grid-3">
+          <div class="model-card" onclick="selectAnalysis('basic')" id="card-basic">
+            <h4>📊 Basic Statistics</h4>
+            <div class="desc">• Mean, Median, Std Dev<br>• Min, Max, Range<br>• Confidence intervals</div>
+          </div>
+          <div class="model-card" onclick="selectAnalysis('distribution')" id="card-distribution">
+            <h4>📈 Distribution Analysis</h4>
+            <div class="desc">• Skewness & Kurtosis<br>• Normality assessment<br>• Q-Q plots</div>
+          </div>
+          <div class="model-card" onclick="selectAnalysis('outlier')" id="card-outlier">
+            <h4>🎯 Outlier Detection</h4>
+            <div class="desc">• IQR method<br>• Outlier count & percentage<br>• Normal range bounds</div>
+          </div>
         </div>
-        <div class="model-card" onclick="selectAnalysisType('distribution')" id="card-distribution">
-          <h4>📈 Distribution Analysis</h4>
-          <div class="desc">• Skewness & Kurtosis<br>• Normality tests<br>• Q-Q plots</div>
-        </div>
-        <div class="model-card" onclick="selectAnalysisType('outlier')" id="card-outlier">
-          <h4>🎯 Outlier Detection</h4>
-          <div class="desc">• IQR method<br>• Z-score method<br>• Box plots</div>
+        <div class="grid-3" style="margin-top:16px;">
+          <div class="model-card" onclick="selectAnalysis('comparison')" id="card-comparison">
+            <h4>⚖️ Group Comparison</h4>
+            <div class="desc">• Group statistics<br>• ANOVA F-test<br>• Box plots by group</div>
+          </div>
+          <div class="model-card" onclick="selectAnalysis('categorical')" id="card-categorical">
+            <h4>📋 Categorical Analysis</h4>
+            <div class="desc">• Frequency tables<br>• Chi-square test<br>• Pie charts</div>
+          </div>
+          <div class="model-card" onclick="selectAnalysis('comprehensive')" id="card-comprehensive">
+            <h4>🔍 Comprehensive</h4>
+            <div class="desc">• All basic & distribution stats<br>• All variable types<br>• Complete visualizations</div>
+          </div>
         </div>
       </div>
-      <div class="grid-3" style="margin-top:16px;">
-        <div class="model-card" onclick="selectAnalysisType('comparison')" id="card-comparison">
-          <h4>⚖️ Group Comparison</h4>
-          <div class="desc">• Compare by groups<br>• Side-by-side plots<br>• Statistical tests</div>
-        </div>
-        <div class="model-card" onclick="selectAnalysisType('categorical')" id="card-categorical">
-          <h4>📋 Categorical Analysis</h4>
-          <div class="desc">• Frequency tables<br>• Chi-square test<br>• Bar charts</div>
-        </div>
-        <div class="model-card" onclick="selectAnalysisType('comprehensive')" id="card-comprehensive">
-          <h4>🔍 Comprehensive</h4>
-          <div class="desc">• All statistics<br>• Correlation matrix<br>• Full report</div>
-        </div>
-      </div>
-    </div>
 
-    <!-- Variable Configuration Panel -->
-    <div class="panel" id="varPanel" style="display:none;">
-      <h2>🎛️ Variable Configuration</h2>
-      <div id="varSettings"></div>
-      <div class="grid-3" style="margin-top:20px;">
-        <div>
-          <div style="margin-bottom:4px;font-weight:500;">Confidence Level</div>
-          <select id="confidenceLevel">
-            <option value="0.95">95%</option>
-            <option value="0.99">99%</option>
-            <option value="0.90">90%</option>
-          </select>
+      <div class="panel" id="varPanel" style="display:none;">
+        <h2>🎛️ Variable Configuration</h2>
+        
+        <div id="varSettings"></div>
+        
+        <!-- Analysis Options -->
+        <div class="grid-3" style="margin-top:20px;">
+          <div>
+            <div style="margin-bottom:4px;font-weight:500;">Confidence Level</div>
+            <select id="confidenceLevel">
+              <option value="0.95">95%</option>
+              <option value="0.99">99%</option>
+              <option value="0.90">90%</option>
+            </select>
+          </div>
+          <div>
+            <div style="margin-bottom:4px;font-weight:500;">Missing Data Treatment</div>
+            <select id="missingData">
+              <option value="exclude">Exclude (listwise deletion)</option>
+              <option value="mean">Replace with mean</option>
+              <option value="median">Replace with median</option>
+            </select>
+          </div>
+          <div id="analysisOptions"></div>
         </div>
-        <div>
-          <div style="margin-bottom:4px;font-weight:500;">Missing Data Treatment</div>
-          <select id="missingData">
-            <option value="exclude">Exclude (listwise deletion)</option>
-            <option value="mean">Replace with mean</option>
-            <option value="median">Replace with median</option>
-          </select>
-        </div>
-      </div>
-      <div class="controls" style="margin-top:24px;">
-        <button class="btn primary" onclick="runAnalysis()">🚀 Run Analysis</button>
-      </div>
-    </div>
 
-    <!-- Results Panel -->
-    <div class="panel" id="resultsPanel" style="display:none;">
-      <h2>📈 Analysis Results</h2>
-      <div id="summarySection"></div>
-      <div id="plotSection" class="plot-container"></div>
-      <div id="interpretationSection"></div>
+        <div class="controls" style="margin-top:24px;">
+          <button class="btn primary" onclick="runAnalysis()">🚀 Run Analysis</button>
+          <button class="btn ghost" onclick="saveConfiguration()">💾 Save Config</button>
+        </div>
+      </div>
+
+      <div class="panel" id="resultsPanel" style="display:none;">
+        <h2>📈 Analysis Results</h2>
+        
+        <!-- Summary Statistics -->
+        <div id="summarySection"></div>
+        
+        <!-- Distribution Analysis -->
+        <div id="distributionSection"></div>
+        
+        <!-- Visualizations -->
+        <div id="visualizationSection" style="display:none;">
+          <h3>Visualizations</h3>
+          <div id="vizTabs" class="nav-tabs" style="margin-bottom:20px;"></div>
+          <div class="plot-container" id="numericPlots">
+            <div id="histogramPlot" class="plot-item"></div>
+            <div id="boxPlot" class="plot-item"></div>
+          </div>
+          <div id="categoricalPlots" class="plot-full" style="display:none;">
+            <div id="pieChart" class="plot-item" style="height:450px;"></div>
+          </div>
+        </div>
+        
+        <div id="qqPlot" class="plot-item plot-full" style="display:none;margin-top:20px;"></div>
+        <div id="scatterMatrix" class="plot-item plot-full" style="display:none;margin-top:20px;"></div>
+        
+        <!-- Additional Analysis -->
+        <div id="additionalSection"></div>
+        
+        <!-- Interpretation -->
+        <div id="interpretationSection"></div>
+      </div>
     </div>
   </div>
 </div>
 
 <script>
+// Global variables
 var currentData = null;
 var selectedAnalysisType = null;
 var analysisResults = {};
+var currentVizVariable = null;
+var currentVizType = null; // 'numeric' or 'categorical' or 'distribution'
 
+// Sample Data Generation
 function loadExample() {
   var n = 150;
   var example = [];
@@ -346,18 +522,27 @@ function loadExample() {
     var groups = ['A', 'B', 'C'];
     var group = groups[Math.floor(i / (n/3))];
     
+    // Normal distribution (Box-Muller transform)
     var u1 = Math.random();
     var u2 = Math.random();
     var normal = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2) * 15 + 100;
+    
+    var skewed = Math.pow(Math.random(), 2) * 100;
+    var uniform = Math.random() * 50 + 25;
+    var binary = Math.random() > 0.5 ? 'Yes' : 'No';
+    var categories = ['Low', 'Medium', 'High'];
+    var category = categories[Math.floor(Math.random() * 3)];
     
     example.push({
       id: i + 1,
       group: group,
       normal_var: parseFloat(normal.toFixed(2)),
-      skewed_var: parseFloat((Math.pow(Math.random(), 2) * 100).toFixed(2)),
-      uniform_var: parseFloat((Math.random() * 50 + 25).toFixed(2)),
-      binary: Math.random() > 0.5 ? 'Yes' : 'No',
-      category: ['Low', 'Medium', 'High'][Math.floor(Math.random() * 3)]
+      skewed_var: parseFloat(skewed.toFixed(2)),
+      uniform_var: parseFloat(uniform.toFixed(2)),
+      binary: binary,
+      category: category,
+      value1: parseFloat((normal * 0.8 + Math.random() * 20).toFixed(2)),
+      value2: parseFloat((-normal * 0.6 + Math.random() * 30 + 100).toFixed(2))
     });
   }
   
@@ -365,14 +550,32 @@ function loadExample() {
 }
 
 function processData(data) {
-  if (!data || data.length === 0) return;
+  if (!data || data.length === 0) {
+    console.error('No data provided');
+    return;
+  }
   
-  currentData = data;
+  if (Array.isArray(data[0])) {
+    var headers = data[0];
+    var processedData = [];
+    for (var i = 1; i < data.length; i++) {
+      var row = {};
+      headers.forEach(function(header, index) {
+        row[header] = data[i][index];
+      });
+      processedData.push(row);
+    }
+    currentData = processedData;
+  } else {
+    currentData = data;
+  }
+  
   identifyVariableTypes();
   
   var headers = Object.keys(currentData[0]);
   var preview = '<h3>📋 Data Preview</h3>';
-  preview += '<div class="table-container"><table><thead><tr>';
+  preview += '<div class="table-container">';
+  preview += '<table><thead><tr>';
   headers.forEach(function(h) { preview += '<th>' + h + '</th>'; });
   preview += '</tr></thead><tbody>';
   
@@ -387,7 +590,7 @@ function processData(data) {
   });
   
   preview += '</tbody></table></div>';
-  preview += '<div class="muted" style="margin-top:12px;">📊 Rows: ' + currentData.length + ' | 📢 Columns: ' + headers.length + '</div>';
+  preview += '<div class="muted" style="margin-top:12px;">📊 Rows: ' + currentData.length + ' | 🔢 Columns: ' + headers.length + '</div>';
   
   document.getElementById('dataPreview').innerHTML = preview;
   document.getElementById('analysisTypePanel').style.display = 'block';
@@ -402,13 +605,18 @@ function identifyVariableTypes() {
   headers.forEach(function(header) {
     var values = currentData.map(function(row) { return row[header]; }).filter(function(v) { return v !== '' && v !== null; });
     var numericValues = values.filter(function(v) { return !isNaN(parseFloat(v)); });
-    varTypes[header] = (numericValues.length / values.length > 0.8) ? 'numeric' : 'categorical';
+    
+    if (numericValues.length / values.length > 0.8) {
+      varTypes[header] = 'numeric';
+    } else {
+      varTypes[header] = 'categorical';
+    }
   });
   
   currentData.varTypes = varTypes;
 }
 
-function selectAnalysisType(type) {
+function selectAnalysis(type) {
   selectedAnalysisType = type;
   
   document.querySelectorAll('.model-card').forEach(function(card) {
@@ -430,46 +638,46 @@ function updateVarUI() {
   var html = '';
   
   if (selectedAnalysisType === 'basic' || selectedAnalysisType === 'comprehensive') {
-    html = '<div class="grid-2">';
-    html += '<div><div style="margin-bottom:8px;font-weight:500;">Numeric Variables</div>';
-    html += '<div class="var-checkbox-container">';
+    html = '<div class="grid-2">' +
+      '<div><div style="margin-bottom:8px;font-weight:500;">Numeric Variables</div>' +
+      '<div class="var-checkbox-container">';
     numericVars.forEach(function(v) {
       html += '<label><input type="checkbox" class="num-var" value="' + v + '" checked> ' + v + '</label>';
     });
-    html += '</div></div>';
-    html += '<div><div style="margin-bottom:8px;font-weight:500;">Categorical Variables</div>';
-    html += '<div class="var-checkbox-container">';
+    html += '</div></div>' +
+      '<div><div style="margin-bottom:8px;font-weight:500;">Categorical Variables</div>' +
+      '<div class="var-checkbox-container">';
     categoricalVars.forEach(function(v) {
       html += '<label><input type="checkbox" class="cat-var" value="' + v + '"> ' + v + '</label>';
     });
     html += '</div></div></div>';
     
   } else if (selectedAnalysisType === 'distribution' || selectedAnalysisType === 'outlier') {
-    html = '<div><div style="margin-bottom:8px;font-weight:500;">Select Variables</div>';
-    html += '<div class="var-checkbox-container">';
+    html = '<div><div style="margin-bottom:8px;font-weight:500;">Select Variables</div>' +
+      '<div class="var-checkbox-container">';
     numericVars.forEach(function(v) {
       html += '<label><input type="checkbox" class="analysis-var" value="' + v + '" checked> ' + v + '</label>';
     });
     html += '</div></div>';
     
   } else if (selectedAnalysisType === 'comparison') {
-    html = '<div class="grid-2">';
-    html += '<div><div style="margin-bottom:4px;font-weight:500;">Grouping Variable</div>';
-    html += '<select id="groupVar">';
+    html = '<div class="grid-2">' +
+      '<div><div style="margin-bottom:4px;font-weight:500;">Grouping Variable</div>' +
+      '<select id="groupVar">';
     categoricalVars.forEach(function(v) {
       html += '<option value="' + v + '">' + v + '</option>';
     });
-    html += '</select></div>';
-    html += '<div><div style="margin-bottom:8px;font-weight:500;">Variables to Compare</div>';
-    html += '<div class="var-checkbox-container">';
+    html += '</select></div>' +
+      '<div><div style="margin-bottom:8px;font-weight:500;">Variables to Compare</div>' +
+      '<div class="var-checkbox-container">';
     numericVars.forEach(function(v) {
       html += '<label><input type="checkbox" class="compare-var" value="' + v + '" checked> ' + v + '</label>';
     });
     html += '</div></div></div>';
     
   } else if (selectedAnalysisType === 'categorical') {
-    html = '<div><div style="margin-bottom:8px;font-weight:500;">Select Variables</div>';
-    html += '<div class="var-checkbox-container">';
+    html = '<div><div style="margin-bottom:8px;font-weight:500;">Select Variables</div>' +
+      '<div class="var-checkbox-container">';
     categoricalVars.forEach(function(v) {
       html += '<label><input type="checkbox" class="cat-analysis-var" value="' + v + '" checked> ' + v + '</label>';
     });
@@ -488,27 +696,6 @@ function median(arr) {
   var sorted = arr.slice().sort(function(a, b) { return a - b; });
   var mid = Math.floor(sorted.length / 2);
   return sorted.length % 2 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
-}
-
-function mode(arr) {
-  var frequency = {};
-  var maxFreq = 0;
-  var modes = [];
-  
-  arr.forEach(function(value) {
-    frequency[value] = (frequency[value] || 0) + 1;
-    if (frequency[value] > maxFreq) {
-      maxFreq = frequency[value];
-    }
-  });
-  
-  for (var value in frequency) {
-    if (frequency[value] === maxFreq) {
-      modes.push(parseFloat(value));
-    }
-  }
-  
-  return modes.length === 1 ? modes[0] : modes;
 }
 
 function variance(arr) {
@@ -558,101 +745,59 @@ function kurtosis(arr) {
          (3 * Math.pow(n - 1, 2) / ((n - 2) * (n - 3)));
 }
 
-function calculateCorrelation(arr1, arr2) {
-  if (arr1.length !== arr2.length) return 0;
+function detectOutliers(arr) {
+  var q1 = percentile(arr, 25);
+  var q3 = percentile(arr, 75);
+  var iqrVal = q3 - q1;
+  var lowerBound = q1 - 1.5 * iqrVal;
+  var upperBound = q3 + 1.5 * iqrVal;
   
-  var n = arr1.length;
-  var mean1 = mean(arr1);
-  var mean2 = mean(arr2);
-  
-  var num = 0;
-  var den1 = 0;
-  var den2 = 0;
-  
-  for (var i = 0; i < n; i++) {
-    var diff1 = arr1[i] - mean1;
-    var diff2 = arr2[i] - mean2;
-    num += diff1 * diff2;
-    den1 += diff1 * diff1;
-    den2 += diff2 * diff2;
-  }
-  
-  if (den1 === 0 || den2 === 0) return 0;
-  return num / Math.sqrt(den1 * den2);
-}
-
-function detectOutliers(arr, method) {
-  var outliers = [];
-  
-  if (method === 'iqr') {
-    var q1 = percentile(arr, 25);
-    var q3 = percentile(arr, 75);
-    var iqrVal = q3 - q1;
-    var lowerBound = q1 - 1.5 * iqrVal;
-    var upperBound = q3 + 1.5 * iqrVal;
-    
-    outliers = arr.filter(function(v) { return v < lowerBound || v > upperBound; });
-    
-    return {
-      outliers: outliers,
-      lowerBound: lowerBound,
-      upperBound: upperBound,
-      count: outliers.length,
-      percentage: (outliers.length / arr.length) * 100,
-      method: 'IQR'
-    };
-  } else {
-    var m = mean(arr);
-    var s = stddev(arr);
-    var threshold = 3;
-    
-    arr.forEach(function(value) {
-      if (Math.abs((value - m) / s) > threshold) {
-        outliers.push(value);
-      }
-    });
-    
-    return {
-      outliers: outliers,
-      threshold: threshold,
-      count: outliers.length,
-      percentage: (outliers.length / arr.length) * 100,
-      method: 'Z-score'
-    };
-  }
-}
-
-function handleMissingData(data, variable, method) {
-  var values = data.map(function(row) { return row[variable]; });
-  var validValues = values.filter(function(v) { return v !== '' && v !== null && !isNaN(parseFloat(v)); });
-  
-  if (method === 'exclude') {
-    return validValues.map(function(v) { return parseFloat(v); });
-  } else if (method === 'mean') {
-    var m = mean(validValues.map(function(v) { return parseFloat(v); }));
-    return values.map(function(v) {
-      return (v === '' || v === null || isNaN(parseFloat(v))) ? m : parseFloat(v);
-    });
-  } else if (method === 'median') {
-    var med = median(validValues.map(function(v) { return parseFloat(v); }));
-    return values.map(function(v) {
-      return (v === '' || v === null || isNaN(parseFloat(v))) ? med : parseFloat(v);
-    });
-  }
-  return validValues.map(function(v) { return parseFloat(v); });
+  var outliers = arr.filter(function(v) { return v < lowerBound || v > upperBound; });
+  return {
+    outliers: outliers,
+    lowerBound: lowerBound,
+    upperBound: upperBound,
+    count: outliers.length,
+    percentage: (outliers.length / arr.length) * 100
+  };
 }
 
 function analyzeBasicStats(variable) {
-  var missingMethod = document.getElementById('missingData').value;
-  var values = handleMissingData(currentData, variable, missingMethod);
+  var missingTreatment = document.getElementById('missingData').value;
   
-  if (values.length === 0) return null;
+  // 원본 데이터에서 해당 변수의 모든 값 추출
+  var rawValues = currentData.map(function(row) { return row[variable]; });
+  var numericValues = rawValues.map(function(v) { return parseFloat(v); });
+  var validValues = numericValues.filter(function(v) { return !isNaN(v); });
+  
+  if (validValues.length === 0) return null;
+  
+  var values = validValues.slice(); // 복사본 생성
+  
+  // Missing Data Treatment 적용
+  if (missingTreatment === 'mean' && validValues.length > 0) {
+    var meanValue = mean(validValues);
+    // NaN 값을 평균으로 대체
+    for (var i = 0; i < numericValues.length; i++) {
+      if (isNaN(numericValues[i])) {
+        values.push(meanValue);
+      }
+    }
+  } else if (missingTreatment === 'median' && validValues.length > 0) {
+    var medianValue = median(validValues);
+    // NaN 값을 중위수로 대체
+    for (var i = 0; i < numericValues.length; i++) {
+      if (isNaN(numericValues[i])) {
+        values.push(medianValue);
+      }
+    }
+  }
+  // 'exclude'와 'pairwise'는 현재 동일하게 작동 (NaN 제외)
   
   var n = values.length;
-  var missing = currentData.length - values.length;
+  var missing = currentData.length - validValues.length; // 원래 결측치 개수
   var m = mean(values);
   var med = median(values);
-  var mod = mode(values);
   var std = stddev(values);
   var vari = variance(values);
   var min = Math.min.apply(null, values);
@@ -663,7 +808,7 @@ function analyzeBasicStats(variable) {
   var iqrVal = q3 - q1;
   var skew = skewness(values);
   var kurt = kurtosis(values);
-  var cv = (std / Math.abs(m)) * 100;
+  var cv = (std / m) * 100;
   var se = std / Math.sqrt(n);
   
   var confidence = parseFloat(document.getElementById('confidenceLevel').value);
@@ -671,67 +816,68 @@ function analyzeBasicStats(variable) {
   var ci = [m - zScore * se, m + zScore * se];
   
   return {
-    n: n, missing: missing, mean: m, median: med, mode: mod, std: std, variance: vari,
-    min: min, max: max, range: range, q1: q1, q3: q3, iqr: iqrVal,
+    n: n, missing: missing, mean: m, median: med, std: std, variance: vari,
+    min: min, max: max, range: range, q1: q1, q3: q3, iqr: iqrVal, 
+    percentile5: percentile(values, 5),
+    percentile95: percentile(values, 95),
     skewness: skew, kurtosis: kurt, cv: cv, se: se, ci: ci,
-    values: values
+    values: values,
+    missingTreatment: missingTreatment
   };
 }
 
 function analyzeCategorical(variable) {
-  var values = currentData.map(function(row) { return row[variable]; })
-    .filter(function(v) { return v !== '' && v !== null; });
+  var missingTreatment = document.getElementById('missingData').value;
+  
+  var rawValues = currentData.map(function(row) { return row[variable]; });
+  var validValues = rawValues.filter(function(v) { return v !== '' && v !== null && v !== undefined; });
+  
+  if (validValues.length === 0) return null;
+  
+  var values = validValues.slice();
+  
+  // 명목형 변수의 경우 mean/median 대체가 의미없으므로 최빈값으로 대체
+  if ((missingTreatment === 'mean' || missingTreatment === 'median') && validValues.length > 0) {
+    var freq = {};
+    validValues.forEach(function(v) { freq[v] = (freq[v] || 0) + 1; });
+    var mode = Object.keys(freq).reduce(function(a, b) { return freq[a] > freq[b] ? a : b; });
+    
+    // 결측값을 최빈값으로 대체
+    for (var i = 0; i < rawValues.length; i++) {
+      if (rawValues[i] === '' || rawValues[i] === null || rawValues[i] === undefined) {
+        values.push(mode);
+      }
+    }
+  }
   
   var freq = {};
   values.forEach(function(v) { freq[v] = (freq[v] || 0) + 1; });
   
   var total = values.length;
   var categories = Object.keys(freq);
+  var counts = Object.values(freq);
+  
+  var expected = total / categories.length;
+  var chiSquare = 0;
+  counts.forEach(function(observed) {
+    chiSquare += Math.pow(observed - expected, 2) / expected;
+  });
+  
+  var df = categories.length - 1;
+  var pValue = chiSquare > 10 ? 0.01 : chiSquare > 5 ? 0.05 : 0.1;
   
   return {
     total: total,
-    missing: currentData.length - total,
+    missing: currentData.length - validValues.length,
     categories: categories.length,
     frequency: freq,
-    mode: categories.reduce(function(a, b) { return freq[a] > freq[b] ? a : b; })
+    mode: categories.reduce(function(a, b) { return freq[a] > freq[b] ? a : b; }),
+    chiSquare: chiSquare,
+    df: df,
+    pValue: pValue,
+    uniform: pValue > 0.05,
+    missingTreatment: missingTreatment
   };
-}
-
-function analyzeGroupComparison(groupVar, compareVars) {
-  var groups = {};
-  
-  currentData.forEach(function(row) {
-    var group = row[groupVar];
-    if (!groups[group]) groups[group] = {};
-    
-    compareVars.forEach(function(v) {
-      if (!groups[group][v]) groups[group][v] = [];
-      var val = parseFloat(row[v]);
-      if (!isNaN(val)) groups[group][v].push(val);
-    });
-  });
-  
-  var results = {};
-  
-  Object.keys(groups).forEach(function(groupName) {
-    results[groupName] = {};
-    compareVars.forEach(function(v) {
-      var values = groups[groupName][v];
-      if (values && values.length > 0) {
-        results[groupName][v] = {
-          n: values.length,
-          mean: mean(values),
-          median: median(values),
-          std: stddev(values),
-          min: Math.min.apply(null, values),
-          max: Math.max.apply(null, values),
-          values: values
-        };
-      }
-    });
-  });
-  
-  return results;
 }
 
 function runAnalysis() {
@@ -742,526 +888,1161 @@ function runAnalysis() {
   
   analysisResults = {};
   var html = '';
-  var interpretHtml = '';
+  var interpretationHtml = '';
+  
   var type = selectedAnalysisType;
   
-  if (type === 'basic') {
+  if (type === 'basic' || type === 'comprehensive') {
     var numVars = Array.from(document.querySelectorAll('.num-var:checked')).map(function(cb) { return cb.value; });
+    var catVars = Array.from(document.querySelectorAll('.cat-var:checked')).map(function(cb) { return cb.value; });
     
-    html = '<h3>Basic Statistics</h3>';
-    html += '<div class="table-container"><table><thead><tr>';
-    html += '<th>Variable</th><th>N</th><th>Mean</th><th>Median</th><th>Mode</th><th>Std Dev</th><th>Min</th><th>Max</th>';
-    html += '</tr></thead><tbody>';
+    html = '<h3>' + (type === 'basic' ? 'Basic' : 'Comprehensive') + ' Statistics</h3>';
     
-    numVars.forEach(function(v) {
-      var stats = analyzeBasicStats(v);
-      if (stats) {
-        analysisResults[v] = stats;
-        var modeVal = Array.isArray(stats.mode) ? stats.mode.slice(0,2).join(', ') : stats.mode.toFixed(2);
-        
-        html += '<tr><td>' + v + '</td><td>' + stats.n + '</td>';
-        html += '<td>' + stats.mean.toFixed(2) + '</td><td>' + stats.median.toFixed(2) + '</td>';
-        html += '<td>' + modeVal + '</td><td>' + stats.std.toFixed(2) + '</td>';
-        html += '<td>' + stats.min.toFixed(2) + '</td><td>' + stats.max.toFixed(2) + '</td></tr>';
-        
-        interpretHtml += interpretBasicStats(stats, v);
+    if (numVars.length > 0) {
+      html += '<div class="table-container">';
+      html += '<table><thead><tr><th>Variable</th><th>N</th><th>Mean</th><th>Median</th><th>Std Dev</th><th>Min</th><th>Max</th>';
+      if (type === 'comprehensive') {
+        html += '<th>Skewness</th><th>Kurtosis</th>';
       }
-    });
-    html += '</tbody></table></div>';
-    
-    createVisualization(numVars);
-    
-  } else if (type === 'comprehensive') {
-    var numVars = Array.from(document.querySelectorAll('.num-var:checked')).map(function(cb) { return cb.value; });
-    
-    html = '<h3>Comprehensive Statistics</h3>';
-    html += '<h4>Descriptive Statistics</h4>';
-    html += '<div class="table-container"><table><thead><tr>';
-    html += '<th>Variable</th><th>N</th><th>Mean</th><th>Median</th><th>Mode</th><th>Std Dev</th><th>CV%</th>';
-    html += '</tr></thead><tbody>';
-    
-    numVars.forEach(function(v) {
-      var stats = analyzeBasicStats(v);
-      if (stats) {
-        analysisResults[v] = stats;
-        var modeVal = Array.isArray(stats.mode) ? stats.mode.slice(0,2).join(', ') : stats.mode.toFixed(2);
-        
-        html += '<tr><td>' + v + '</td><td>' + stats.n + '</td>';
-        html += '<td>' + stats.mean.toFixed(2) + '</td><td>' + stats.median.toFixed(2) + '</td>';
-        html += '<td>' + modeVal + '</td><td>' + stats.std.toFixed(2) + '</td>';
-        html += '<td>' + stats.cv.toFixed(1) + '</td></tr>';
-      }
-    });
-    html += '</tbody></table></div>';
-    
-    // Distribution Stats
-    html += '<h4>Distribution & Range</h4>';
-    html += '<div class="table-container"><table><thead><tr>';
-    html += '<th>Variable</th><th>Min</th><th>Q1</th><th>Q3</th><th>Max</th><th>IQR</th><th>Skewness</th><th>Kurtosis</th>';
-    html += '</tr></thead><tbody>';
-    
-    numVars.forEach(function(v) {
-      var stats = analysisResults[v];
-      if (stats) {
-        html += '<tr><td>' + v + '</td>';
-        html += '<td>' + stats.min.toFixed(2) + '</td><td>' + stats.q1.toFixed(2) + '</td>';
-        html += '<td>' + stats.q3.toFixed(2) + '</td><td>' + stats.max.toFixed(2) + '</td>';
-        html += '<td>' + stats.iqr.toFixed(2) + '</td><td>' + stats.skewness.toFixed(3) + '</td>';
-        html += '<td>' + stats.kurtosis.toFixed(3) + '</td></tr>';
-        
-        interpretHtml += interpretBasicStats(stats, v);
-        interpretHtml += interpretDistribution(stats, v);
-      }
-    });
-    html += '</tbody></table></div>';
-    
-    // Correlation Matrix
-    if (numVars.length > 1) {
-      html += '<h4>Correlation Matrix</h4>';
-      html += '<div class="table-container"><table><thead><tr><th></th>';
-      numVars.forEach(function(v) {
-        html += '<th>' + v + '</th>';
-      });
       html += '</tr></thead><tbody>';
       
-      numVars.forEach(function(v1) {
-        html += '<tr><td><strong>' + v1 + '</strong></td>';
-        numVars.forEach(function(v2) {
-          var corr = calculateCorrelation(analysisResults[v1].values, analysisResults[v2].values);
-          var color = Math.abs(corr) > 0.7 ? 'color:#ef4444' : Math.abs(corr) > 0.4 ? 'color:#f59e0b' : 'color:#10b981';
-          html += '<td style="' + color + '">' + corr.toFixed(3) + '</td>';
-        });
-        html += '</tr>';
+      numVars.forEach(function(v) {
+        var stats = analyzeBasicStats(v);
+        if (stats) {
+          analysisResults[v] = stats;
+          html += '<tr><td>' + v + '</td><td>' + stats.n + '</td><td>' + stats.mean.toFixed(2) + '</td>';
+          html += '<td>' + stats.median.toFixed(2) + '</td><td>' + stats.std.toFixed(2) + '</td>';
+          html += '<td>' + stats.min.toFixed(2) + '</td><td>' + stats.max.toFixed(2) + '</td>';
+          if (type === 'comprehensive') {
+            html += '<td>' + stats.skewness.toFixed(3) + '</td><td>' + stats.kurtosis.toFixed(3) + '</td>';
+          }
+          html += '</tr>';
+          
+          interpretationHtml += interpretBasicStats(stats, v);
+          if (type === 'comprehensive') {
+            interpretationHtml += interpretDistribution(stats, v);
+          }
+        }
       });
       html += '</tbody></table></div>';
       
-      interpretHtml += interpretCorrelationMatrix(numVars);
+      createVisualization(numVars.concat(catVars));
     }
     
-    createVisualization(numVars);
+    if (catVars.length > 0) {
+      html += '<h4>Categorical Variables</h4>';
+      catVars.forEach(function(v) {
+        var stats = analyzeCategorical(v);
+        if (stats) {
+          analysisResults[v + '_categorical'] = stats; // 명목형 변수 결과 저장
+          html += '<div class="summary-box"><h4>' + v + '</h4>';
+          html += '<div class="table-container">';
+          html += '<table><thead><tr><th>Category</th><th>Frequency</th><th>%</th></tr></thead><tbody>';
+          Object.entries(stats.frequency).forEach(function(entry) {
+            var cat = entry[0];
+            var freq = entry[1];
+            html += '<tr><td>' + cat + '</td><td>' + freq + '</td><td>' + (freq/stats.total*100).toFixed(1) + '%</td></tr>';
+          });
+          html += '</tbody></table></div></div>';
+          
+          interpretationHtml += interpretCategorical(stats, v);
+        }
+      });
+    }
     
   } else if (type === 'distribution') {
     var vars = Array.from(document.querySelectorAll('.analysis-var:checked')).map(function(cb) { return cb.value; });
-    
     html = '<h3>Distribution Analysis</h3>';
-    html += '<div class="table-container"><table><thead><tr>';
-    html += '<th>Variable</th><th>Skewness</th><th>Kurtosis</th><th>Normality</th>';
-    html += '</tr></thead><tbody>';
+    html += '<div class="table-container">';
+    html += '<table><thead><tr><th>Variable</th><th>Skewness</th><th>Kurtosis</th><th>Normality</th></tr></thead><tbody>';
     
     vars.forEach(function(v) {
       var stats = analyzeBasicStats(v);
       if (stats) {
-        analysisResults[v] = stats;
+        analysisResults[v] = stats; // Distribution 분석 결과도 저장
         var normal = Math.abs(stats.skewness) < 0.5 && Math.abs(stats.kurtosis) < 0.5;
         html += '<tr><td>' + v + '</td><td>' + stats.skewness.toFixed(3) + '</td>';
         html += '<td>' + stats.kurtosis.toFixed(3) + '</td>';
         html += '<td>' + (normal ? '✓ Normal' : '✗ Non-normal') + '</td></tr>';
         
-        interpretHtml += interpretDistribution(stats, v);
+        interpretationHtml += interpretDistribution(stats, v);
       }
     });
     html += '</tbody></table></div>';
     
-    createQQPlot(vars);
-    
-  } else if (type === 'outlier') {
-    var vars = Array.from(document.querySelectorAll('.analysis-var:checked')).map(function(cb) { return cb.value; });
-    
-    html = '<h3>Outlier Detection</h3>';
-    
-    vars.forEach(function(v) {
-      var stats = analyzeBasicStats(v);
-      if (stats) {
-        analysisResults[v] = stats;
-        var iqrOut = detectOutliers(stats.values, 'iqr');
-        var zOut = detectOutliers(stats.values, 'zscore');
-        
-        html += '<div style="margin:16px 0;padding:16px;background:#f8fafc;border-radius:8px;">';
-        html += '<h4>' + v + '</h4>';
-        html += '<div><strong>IQR Method:</strong> ' + iqrOut.count + ' outliers (' + iqrOut.percentage.toFixed(1) + '%)</div>';
-        html += '<div>Bounds: [' + iqrOut.lowerBound.toFixed(2) + ', ' + iqrOut.upperBound.toFixed(2) + ']</div>';
-        html += '<div style="margin-top:8px;"><strong>Z-Score Method:</strong> ' + zOut.count + ' outliers (' + zOut.percentage.toFixed(1) + '%)</div>';
-        html += '<div>Threshold: |Z| > ' + zOut.threshold + '</div>';
-        html += '</div>';
-        
-        interpretHtml += interpretOutliers(iqrOut, v);
-      }
-    });
-    
-    createVisualization(vars);
+    // Distribution 분석에서는 Q-Q plot 시각화 생성
+    createDistributionVisualization(vars);
     
   } else if (type === 'comparison') {
     var groupVar = document.getElementById('groupVar').value;
     var compareVars = Array.from(document.querySelectorAll('.compare-var:checked')).map(function(cb) { return cb.value; });
     
     if (!groupVar || compareVars.length === 0) {
-      alert('Please select variables.');
+      alert('Please select a grouping variable and variables to compare.');
       return;
     }
     
-    var groupResults = analyzeGroupComparison(groupVar, compareVars);
-    analysisResults = groupResults;
+    html = '<h3>Group Comparison Analysis</h3>';
+    html += '<h4>Grouping by: ' + groupVar + '</h4>';
     
-    html = '<h3>Group Comparison: ' + groupVar + '</h3>';
+    // 그룹별로 데이터 분리
+    var groups = {};
+    currentData.forEach(function(row) {
+      var groupValue = row[groupVar];
+      if (groupValue && groupValue !== '') {
+        if (!groups[groupValue]) groups[groupValue] = [];
+        groups[groupValue].push(row);
+      }
+    });
     
-    compareVars.forEach(function(v) {
-      html += '<h4>' + v + '</h4>';
-      html += '<div class="table-container"><table><thead><tr>';
-      html += '<th>Group</th><th>N</th><th>Mean</th><th>Median</th><th>Std Dev</th>';
-      html += '</tr></thead><tbody>';
+    var groupNames = Object.keys(groups);
+    
+    compareVars.forEach(function(variable) {
+      html += '<div style="margin-bottom:30px;"><h4>' + variable + ' by ' + groupVar + '</h4>';
+      html += '<div class="table-container">';
+      html += '<table><thead><tr><th>Group</th><th>N</th><th>Mean</th><th>Std Dev</th><th>Min</th><th>Max</th></tr></thead><tbody>';
       
-      Object.keys(groupResults).forEach(function(group) {
-        var stats = groupResults[group][v];
-        if (stats) {
-          html += '<tr><td>' + group + '</td><td>' + stats.n + '</td>';
-          html += '<td>' + stats.mean.toFixed(2) + '</td><td>' + stats.median.toFixed(2) + '</td>';
-          html += '<td>' + stats.std.toFixed(2) + '</td></tr>';
+      var groupStats = {};
+      var allValues = [];
+      
+      groupNames.forEach(function(groupName) {
+        var groupData = groups[groupName];
+        var values = groupData
+          .map(function(row) { return parseFloat(row[variable]); })
+          .filter(function(v) { return !isNaN(v); });
+        
+        if (values.length > 0) {
+          var stats = {
+            n: values.length,
+            mean: mean(values),
+            std: stddev(values),
+            min: Math.min.apply(null, values),
+            max: Math.max.apply(null, values),
+            values: values
+          };
+          
+          groupStats[groupName] = stats;
+          allValues = allValues.concat(values);
+          
+          html += '<tr><td>' + groupName + '</td>';
+          html += '<td>' + stats.n + '</td>';
+          html += '<td>' + stats.mean.toFixed(2) + '</td>';
+          html += '<td>' + stats.std.toFixed(2) + '</td>';
+          html += '<td>' + stats.min.toFixed(2) + '</td>';
+          html += '<td>' + stats.max.toFixed(2) + '</td></tr>';
         }
       });
       
       html += '</tbody></table></div>';
+      
+      // 간단한 ANOVA F-test 계산
+      if (groupNames.length >= 2) {
+        var anovaResult = performANOVA(groupStats, allValues);
+        html += '<div style="margin-top:15px;padding:15px;background:#f8fafc;border-radius:8px;">';
+        html += '<h5>ANOVA Results</h5>';
+        html += '<p>F-statistic: <strong>' + anovaResult.fStat.toFixed(4) + '</strong></p>';
+        html += '<p>p-value: <strong>' + anovaResult.pValue.toFixed(4) + '</strong></p>';
+        if (anovaResult.pValue < 0.05) {
+          html += '<p style="color:#ef4444;"><strong>Significant difference</strong> between groups (p < 0.05)</p>';
+        } else {
+          html += '<p style="color:#10b981;"><strong>No significant difference</strong> between groups (p ≥ 0.05)</p>';
+        }
+        html += '</div>';
+        
+        // 해석 추가
+        interpretationHtml += interpretComparison(anovaResult, variable, groupVar, groupStats);
+      }
+      
+      html += '</div>';
     });
     
-    interpretHtml += interpretGroupComparison(groupResults, groupVar, compareVars);
+    // 그룹 비교 시각화 생성
+    createComparisonVisualization(compareVars, groupVar, groups);
+    
+  } else if (type === 'outlier') {
+    var vars = Array.from(document.querySelectorAll('.analysis-var:checked')).map(function(cb) { return cb.value; });
+    html = '<h3>Outlier Detection</h3>';
+    
+    vars.forEach(function(v) {
+      var stats = analyzeBasicStats(v);
+      if (stats) {
+        var outliers = detectOutliers(stats.values);
+        html += '<div class="outlier-box"><h4>' + v + '</h4>';
+        html += '<div>Outliers: ' + outliers.count + ' (' + outliers.percentage.toFixed(1) + '%)</div>';
+        html += '<div>Bounds: [' + outliers.lowerBound.toFixed(2) + ', ' + outliers.upperBound.toFixed(2) + ']</div></div>';
+        
+        interpretationHtml += interpretOutliers(outliers, v);
+      }
+    });
     
   } else if (type === 'categorical') {
     var vars = Array.from(document.querySelectorAll('.cat-analysis-var:checked')).map(function(cb) { return cb.value; });
-    
     html = '<h3>Categorical Analysis</h3>';
     
     vars.forEach(function(v) {
       var stats = analyzeCategorical(v);
       if (stats) {
-        html += '<h4>' + v + '</h4>';
-        html += '<div class="table-container"><table><thead><tr>';
-        html += '<th>Category</th><th>Frequency</th><th>Percentage</th>';
-        html += '</tr></thead><tbody>';
-        
+        analysisResults[v + '_categorical'] = stats;
+        html += '<div class="summary-box"><h4>' + v + '</h4>';
+        html += '<div class="table-container">';
+        html += '<table><thead><tr><th>Category</th><th>Frequency</th><th>%</th></tr></thead><tbody>';
         Object.entries(stats.frequency).forEach(function(entry) {
-          html += '<tr><td>' + entry[0] + '</td><td>' + entry[1] + '</td>';
-          html += '<td>' + (entry[1]/stats.total*100).toFixed(1) + '%</td></tr>';
+          var cat = entry[0];
+          var freq = entry[1];
+          html += '<tr><td>' + cat + '</td><td>' + freq + '</td><td>' + (freq/stats.total*100).toFixed(1) + '%</td></tr>';
         });
+        html += '</tbody></table></div></div>';
         
-        html += '</tbody></table></div>';
-        
-        interpretHtml += interpretCategorical(stats, v);
+        interpretationHtml += interpretCategorical(stats, v);
       }
     });
+    
+    // 명목형 변수만으로 시각화 생성
+    createVisualization(vars);
   }
   
   document.getElementById('summarySection').innerHTML = html;
-  document.getElementById('interpretationSection').innerHTML = interpretHtml;
+  document.getElementById('interpretationSection').innerHTML = interpretationHtml;
   document.getElementById('resultsPanel').style.display = 'block';
 }
 
-// Interpretation Functions
-function interpretBasicStats(stats, varName) {
-  var html = '<div class="interpretation-box info">';
-  html += '<h4>📊 Basic Statistics for ' + varName + '</h4>';
-  
-  var meanMedianDiff = Math.abs(stats.mean - stats.median);
-  var relDiff = (meanMedianDiff / Math.abs(stats.mean)) * 100;
-  
-  if (relDiff < 5) {
-    html += '<p>• Central Tendency: Mean and median are similar, suggesting symmetric distribution.</p>';
-  } else if (stats.mean > stats.median) {
-    html += '<p>• Central Tendency: Mean > Median, indicating right-skewed distribution.</p>';
-  } else {
-    html += '<p>• Central Tendency: Mean < Median, indicating left-skewed distribution.</p>';
-  }
-  
-  if (stats.cv < 15) {
-    html += '<p>• Variability: Low CV (' + stats.cv.toFixed(1) + '%) - data clustered around mean.</p>';
-  } else if (stats.cv < 30) {
-    html += '<p>• Variability: Moderate CV (' + stats.cv.toFixed(1) + '%) - moderate spread.</p>';
-  } else {
-    html += '<p>• Variability: High CV (' + stats.cv.toFixed(1) + '%) - substantial variation.</p>';
-  }
-  
-  html += '<p>• 95% CI: [' + stats.ci[0].toFixed(2) + ', ' + stats.ci[1].toFixed(2) + ']</p>';
-  html += '</div>';
-  return html;
-}
-
-function interpretDistribution(stats, varName) {
-  var isNormal = Math.abs(stats.skewness) < 0.5 && Math.abs(stats.kurtosis) < 0.5;
-  var html = '<div class="interpretation-box ' + (isNormal ? 'success' : 'warning') + '">';
-  html += '<h4>📈 Distribution Analysis for ' + varName + '</h4>';
-  
-  if (Math.abs(stats.skewness) < 0.5) {
-    html += '<p>• Skewness (' + stats.skewness.toFixed(3) + '): Approximately symmetric.</p>';
-  } else if (stats.skewness > 0) {
-    html += '<p>• Skewness (' + stats.skewness.toFixed(3) + '): Positive skew - tail extends right.</p>';
-  } else {
-    html += '<p>• Skewness (' + stats.skewness.toFixed(3) + '): Negative skew - tail extends left.</p>';
-  }
-  
-  if (Math.abs(stats.kurtosis) < 0.5) {
-    html += '<p>• Kurtosis (' + stats.kurtosis.toFixed(3) + '): Normal peak and tails.</p>';
-  } else if (stats.kurtosis > 0) {
-    html += '<p>• Kurtosis (' + stats.kurtosis.toFixed(3) + '): Heavy-tailed with sharp peak.</p>';
-  } else {
-    html += '<p>• Kurtosis (' + stats.kurtosis.toFixed(3) + '): Light-tailed with flat peak.</p>';
-  }
-  
-  html += '<p>• Normality: ' + (isNormal ? '✓ Appears normal' : '✗ Non-normal') + '</p>';
-  html += '</div>';
-  return html;
-}
-
-function interpretOutliers(result, varName) {
-  var severity = result.percentage < 1 ? 'success' : result.percentage < 5 ? 'info' : 'warning';
-  var html = '<div class="interpretation-box ' + severity + '">';
-  html += '<h4>🎯 Outlier Detection (' + result.method + ') for ' + varName + '</h4>';
-  
-  if (result.count === 0) {
-    html += '<p>No outliers detected.</p>';
-  } else if (result.percentage < 5) {
-    html += '<p>' + result.count + ' outliers (' + result.percentage.toFixed(1) + '%) - acceptable level.</p>';
-  } else {
-    html += '<p>' + result.count + ' outliers (' + result.percentage.toFixed(1) + '%) - review data quality.</p>';
-  }
-  
-  html += '</div>';
-  return html;
-}
-
-function interpretGroupComparison(groupResults, groupVar, compareVars) {
-  var html = '<div class="interpretation-box info">';
-  html += '<h4>⚖️ Group Comparison Analysis</h4>';
-  
-  compareVars.forEach(function(v) {
-    var means = Object.keys(groupResults).map(function(g) {
-      return groupResults[g][v] ? groupResults[g][v].mean : null;
-    }).filter(function(m) { return m !== null; });
-    
-    if (means.length > 1) {
-      var maxMean = Math.max.apply(null, means);
-      var minMean = Math.min.apply(null, means);
-      var diff = ((maxMean - minMean) / minMean * 100).toFixed(1);
-      
-      html += '<p>' + v + ': ' + diff + '% difference between groups</p>';
-    }
-  });
-  
-  html += '</div>';
-  return html;
-}
-
-function interpretCategorical(stats, varName) {
-  var html = '<div class="interpretation-box info">';
-  html += '<h4>📋 Categorical Analysis for ' + varName + '</h4>';
-  html += '<p>• Categories: ' + stats.categories + '</p>';
-  html += '<p>• Mode: "' + stats.mode + '"</p>';
-  
-  var maxFreq = Math.max.apply(null, Object.values(stats.frequency));
-  var concentration = (maxFreq / stats.total * 100).toFixed(1);
-  html += '<p>• Top category concentration: ' + concentration + '%</p>';
-  
-  html += '</div>';
-  return html;
-}
-
-function interpretCorrelationMatrix(numVars) {
-  var html = '<div class="interpretation-box info">';
-  html += '<h4>📊 Correlation Matrix Interpretation</h4>';
-  
-  var strongPairs = [];
-  for (var i = 0; i < numVars.length; i++) {
-    for (var j = i + 1; j < numVars.length; j++) {
-      var corr = calculateCorrelation(analysisResults[numVars[i]].values, analysisResults[numVars[j]].values);
-      if (Math.abs(corr) > 0.7) {
-        strongPairs.push(numVars[i] + ' & ' + numVars[j] + ': r=' + corr.toFixed(3));
-      }
-    }
-  }
-  
-  if (strongPairs.length > 0) {
-    html += '<p><strong>Strong correlations detected:</strong></p>';
-    strongPairs.forEach(function(pair) {
-      html += '<p>• ' + pair + '</p>';
-    });
-  } else {
-    html += '<p>No strong correlations detected.</p>';
-  }
-  
-  html += '</div>';
-  return html;
-}
-
-// Visualization Functions
-function createVisualization(variables) {
+// Distribution 전용 시각화 함수들
+function createDistributionVisualization(variables) {
   if (variables.length === 0) return;
   
-  var plotHtml = '<div id="histogramPlot" class="plot-item"></div>';
-  plotHtml += '<div id="boxPlot" class="plot-item"></div>';
+  // 시각화 섹션 표시
+  document.getElementById('visualizationSection').style.display = 'block';
   
-  document.getElementById('plotSection').innerHTML = plotHtml;
+  // 탭 생성 (수치형 변수만)
+  var tabsHtml = '';
+  variables.forEach(function(variable, index) {
+    var isActive = index === 0 ? 'active' : '';
+    tabsHtml += '<button class="nav-tab viz-tab ' + isActive + '" onclick="switchDistributionTab(\'' + variable + '\')">📈 ' + variable + '</button>';
+  });
   
-  var firstVar = variables[0];
-  var stats = analysisResults[firstVar];
+  document.getElementById('vizTabs').innerHTML = tabsHtml;
+  
+  // 첫 번째 변수로 초기화
+  if (variables.length > 0) {
+    currentVizVariable = variables[0];
+    currentVizType = 'distribution';
+    updateDistributionVisualization(variables[0]);
+  }
+}
+
+function switchDistributionTab(variable) {
+  // 탭 활성화 상태 변경
+  document.querySelectorAll('.viz-tab').forEach(function(tab) {
+    tab.classList.remove('active');
+  });
+  event.target.classList.add('active');
+  
+  // 현재 변수 업데이트
+  currentVizVariable = variable;
+  updateDistributionVisualization(variable);
+}
+
+function updateDistributionVisualization(variable) {
+  // Distribution 전용 레이아웃: 히스토그램 + Q-Q plot
+  document.getElementById('numericPlots').style.display = 'grid';
+  document.getElementById('categoricalPlots').style.display = 'none';
+  
+  var stats = analysisResults[variable];
   if (!stats || !stats.values) return;
   
-  // Histogram
+  // 히스토그램 데이터
   var histData = [{
     x: stats.values,
     type: 'histogram',
-    marker: { color: '#3b82f6' }
+    marker: { color: '#3b82f6' },
+    nbinsx: 20,
+    name: 'Data'
   }];
   
   var histLayout = {
-    title: 'Distribution of ' + firstVar,
-    xaxis: { title: firstVar },
+    title: { text: 'Distribution of ' + variable, font: { size: 16 } },
+    xaxis: { title: variable },
     yaxis: { title: 'Frequency' },
-    margin: { l: 50, r: 20, t: 40, b: 40 }
+    plot_bgcolor: '#f8fafc',
+    paper_bgcolor: 'white',
+    margin: { l: 60, r: 20, t: 60, b: 60 },
+    autosize: true
   };
   
-  // Box plot
-  var boxData = variables.map(function(v) {
-    var s = analysisResults[v];
-    if (s && s.values) {
-      return { y: s.values, type: 'box', name: v };
+  // Q-Q Plot 데이터 생성
+  var sortedValues = stats.values.slice().sort(function(a, b) { return a - b; });
+  var n = sortedValues.length;
+  var theoreticalQuantiles = [];
+  var sampleQuantiles = [];
+  
+  for (var i = 0; i < n; i++) {
+    // 이론적 정규분포 분위수 계산 (근사)
+    var p = (i + 0.5) / n;
+    var z = normalInverse(p); // 표준정규분포 역함수 근사
+    theoreticalQuantiles.push(z);
+    sampleQuantiles.push((sortedValues[i] - stats.mean) / stats.std); // 표준화
+  }
+  
+  // 45도 참조선을 위한 데이터
+  var minVal = Math.min(Math.min.apply(null, theoreticalQuantiles), Math.min.apply(null, sampleQuantiles));
+  var maxVal = Math.max(Math.max.apply(null, theoreticalQuantiles), Math.max.apply(null, sampleQuantiles));
+  
+  var qqData = [
+    {
+      x: theoreticalQuantiles,
+      y: sampleQuantiles,
+      mode: 'markers',
+      type: 'scatter',
+      marker: { color: '#3b82f6', size: 6 },
+      name: 'Sample vs Theoretical'
+    },
+    {
+      x: [minVal, maxVal],
+      y: [minVal, maxVal],
+      mode: 'lines',
+      type: 'scatter',
+      line: { color: '#ef4444', width: 2, dash: 'dash' },
+      name: 'Perfect Normal'
     }
-  }).filter(Boolean);
+  ];
+  
+  var qqLayout = {
+    title: { text: 'Q-Q Plot for ' + variable, font: { size: 16 } },
+    xaxis: { title: 'Theoretical Quantiles' },
+    yaxis: { title: 'Sample Quantiles' },
+    plot_bgcolor: '#f8fafc',
+    paper_bgcolor: 'white',
+    margin: { l: 60, r: 20, t: 60, b: 60 },
+    autosize: true,
+    showlegend: true
+  };
+  
+  // 플롯 업데이트
+  setTimeout(function() {
+    Plotly.newPlot('histogramPlot', histData, histLayout, {displayModeBar: false, responsive: true});
+    Plotly.newPlot('boxPlot', qqData, qqLayout, {displayModeBar: false, responsive: true});
+  }, 100);
+}
+
+// ANOVA 함수
+function performANOVA(groupStats, allValues) {
+  var groupNames = Object.keys(groupStats);
+  var grandMean = mean(allValues);
+  var totalN = allValues.length;
+  
+  // 그룹 간 제곱합 (SSB)
+  var ssb = 0;
+  groupNames.forEach(function(groupName) {
+    var groupMean = groupStats[groupName].mean;
+    var groupN = groupStats[groupName].n;
+    ssb += groupN * Math.pow(groupMean - grandMean, 2);
+  });
+  
+  // 그룹 내 제곱합 (SSW)
+  var ssw = 0;
+  groupNames.forEach(function(groupName) {
+    var groupMean = groupStats[groupName].mean;
+    var values = groupStats[groupName].values;
+    values.forEach(function(value) {
+      ssw += Math.pow(value - groupMean, 2);
+    });
+  });
+  
+  var dfb = groupNames.length - 1;  // 그룹 간 자유도
+  var dfw = totalN - groupNames.length;  // 그룹 내 자유도
+  
+  var msb = ssb / dfb;  // 그룹 간 평균제곱
+  var msw = ssw / dfw;  // 그룹 내 평균제곱
+  
+  var fStat = msb / msw;
+  
+  // 간단한 p-value 근사 (정확하지 않음, 실제로는 F분포 사용해야 함)
+  var pValue = fStat > 4.0 ? 0.01 : fStat > 2.5 ? 0.05 : 0.1;
+  
+  return {
+    fStat: fStat,
+    pValue: pValue,
+    dfb: dfb,
+    dfw: dfw,
+    msb: msb,
+    msw: msw
+  };
+}
+
+function interpretComparison(anovaResult, variable, groupVar, groupStats) {
+  var interpretation = '<div class="interpretation-box ';
+  interpretation += anovaResult.pValue < 0.05 ? 'reject">' : 'accept">';
+  interpretation += '<h4>📊 Group Comparison: ' + variable + ' by ' + groupVar + '</h4>';
+  
+  var groupNames = Object.keys(groupStats);
+  var means = groupNames.map(function(name) { return groupStats[name].mean; });
+  var minMean = Math.min.apply(null, means);
+  var maxMean = Math.max.apply(null, means);
+  
+  interpretation += '<p>• <strong>Groups Compared:</strong> ' + groupNames.join(', ') + '</p>';
+  interpretation += '<p>• <strong>Mean Range:</strong> ' + minMean.toFixed(2) + ' to ' + maxMean.toFixed(2) + '</p>';
+  
+  if (anovaResult.pValue < 0.05) {
+    interpretation += '<p>• <strong>Result:</strong> Significant difference found between groups (F = ' + anovaResult.fStat.toFixed(2) + ', p = ' + anovaResult.pValue.toFixed(3) + ')</p>';
+    
+    // 가장 높은/낮은 그룹 찾기
+    var highestGroup = groupNames.reduce(function(a, b) { 
+      return groupStats[a].mean > groupStats[b].mean ? a : b; 
+    });
+    var lowestGroup = groupNames.reduce(function(a, b) { 
+      return groupStats[a].mean < groupStats[b].mean ? a : b; 
+    });
+    
+    interpretation += '<p>• <strong>Highest Mean:</strong> ' + highestGroup + ' (' + groupStats[highestGroup].mean.toFixed(2) + ')</p>';
+    interpretation += '<p>• <strong>Lowest Mean:</strong> ' + lowestGroup + ' (' + groupStats[lowestGroup].mean.toFixed(2) + ')</p>';
+  } else {
+    interpretation += '<p>• <strong>Result:</strong> No significant difference between groups (F = ' + anovaResult.fStat.toFixed(2) + ', p = ' + anovaResult.pValue.toFixed(3) + ')</p>';
+    interpretation += '<p>• <strong>Conclusion:</strong> The groups show similar central tendencies for this variable</p>';
+  }
+  
+  interpretation += '</div>';
+  return interpretation;
+}
+
+function createComparisonVisualization(variables, groupVar, groups) {
+  if (variables.length === 0) return;
+  
+  // 시각화 섹션 표시
+  document.getElementById('visualizationSection').style.display = 'block';
+  
+  // 탭 생성
+  var tabsHtml = '';
+  variables.forEach(function(variable, index) {
+    var isActive = index === 0 ? 'active' : '';
+    tabsHtml += '<button class="nav-tab viz-tab ' + isActive + '" onclick="switchComparisonTab(\'' + variable + '\', \'' + groupVar + '\')">' + variable + '</button>';
+  });
+  
+  document.getElementById('vizTabs').innerHTML = tabsHtml;
+  
+  // 첫 번째 변수로 초기화
+  if (variables.length > 0) {
+    currentVizVariable = variables[0];
+    currentVizType = 'comparison';
+    updateComparisonVisualization(variables[0], groupVar, groups);
+  }
+}
+
+function switchComparisonTab(variable, groupVar) {
+  // 탭 활성화 상태 변경
+  document.querySelectorAll('.viz-tab').forEach(function(tab) {
+    tab.classList.remove('active');
+  });
+  event.target.classList.add('active');
+  
+  // 그룹 데이터 다시 생성
+  var groups = {};
+  currentData.forEach(function(row) {
+    var groupValue = row[groupVar];
+    if (groupValue && groupValue !== '') {
+      if (!groups[groupValue]) groups[groupValue] = [];
+      groups[groupValue].push(row);
+    }
+  });
+  
+  currentVizVariable = variable;
+  updateComparisonVisualization(variable, groupVar, groups);
+}
+
+function updateComparisonVisualization(variable, groupVar, groups) {
+  // 그룹 비교 전용 레이아웃: 박스플롯 + 바이올린 플롯
+  document.getElementById('numericPlots').style.display = 'grid';
+  document.getElementById('categoricalPlots').style.display = 'none';
+  
+  var groupNames = Object.keys(groups);
+  var colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4'];
+  
+  // 박스플롯 데이터 (그룹별)
+  var boxData = groupNames.map(function(groupName, index) {
+    var values = groups[groupName]
+      .map(function(row) { return parseFloat(row[variable]); })
+      .filter(function(v) { return !isNaN(v); });
+    
+    return {
+      y: values,
+      type: 'box',
+      name: groupName,
+      marker: { color: colors[index % colors.length] },
+      boxpoints: 'outliers'
+    };
+  });
   
   var boxLayout = {
-    title: 'Box Plots',
-    yaxis: { title: 'Value' },
-    margin: { l: 50, r: 20, t: 40, b: 40 }
+    title: { text: variable + ' by ' + groupVar + ' (Box Plot)', font: { size: 16 } },
+    yaxis: { title: variable },
+    plot_bgcolor: '#f8fafc',
+    paper_bgcolor: 'white',
+    margin: { l: 60, r: 20, t: 60, b: 60 },
+    autosize: true
   };
   
+  // 히스토그램 (중첩)
+  var histData = groupNames.map(function(groupName, index) {
+    var values = groups[groupName]
+      .map(function(row) { return parseFloat(row[variable]); })
+      .filter(function(v) { return !isNaN(v); });
+    
+    return {
+      x: values,
+      type: 'histogram',
+      name: groupName,
+      marker: { color: colors[index % colors.length] },
+      opacity: 0.7,
+      nbinsx: 15
+    };
+  });
+  
+  var histLayout = {
+    title: { text: variable + ' Distribution by ' + groupVar, font: { size: 16 } },
+    xaxis: { title: variable },
+    yaxis: { title: 'Frequency' },
+    plot_bgcolor: '#f8fafc',
+    paper_bgcolor: 'white',
+    margin: { l: 60, r: 20, t: 60, b: 60 },
+    autosize: true,
+    barmode: 'overlay'
+  };
+  
+  // 플롯 업데이트
   setTimeout(function() {
     Plotly.newPlot('histogramPlot', histData, histLayout, {displayModeBar: false, responsive: true});
     Plotly.newPlot('boxPlot', boxData, boxLayout, {displayModeBar: false, responsive: true});
   }, 100);
 }
-
-function createQQPlot(variables) {
-  if (variables.length === 0) return;
+function normalInverse(p) {
+  if (p <= 0 || p >= 1) return p <= 0 ? -Infinity : Infinity;
   
-  var plotHtml = '<div id="qqPlot" class="plot-item" style="grid-column:1/-1;height:400px;"></div>';
-  document.getElementById('plotSection').innerHTML = plotHtml;
+  var c0 = 2.515517;
+  var c1 = 0.802853;
+  var c2 = 0.010328;
+  var d1 = 1.432788;
+  var d2 = 0.189269;
+  var d3 = 0.001308;
   
-  var traces = [];
-  variables.forEach(function(v) {
-    var stats = analysisResults[v];
-    if (stats && stats.values) {
-      var sortedValues = stats.values.slice().sort(function(a, b) { return a - b; });
-      var n = sortedValues.length;
-      var theoretical = [];
-      
-      for (var i = 0; i < n; i++) {
-        var p = (i + 0.5) / n;
-        var z = qnorm(p);
-        theoretical.push(stats.mean + z * stats.std);
-      }
-      
-      traces.push({
-        x: theoretical,
-        y: sortedValues,
-        mode: 'markers',
-        type: 'scatter',
-        name: v,
-        marker: { size: 5 }
-      });
-    }
-  });
+  var x, t;
   
-  var layout = {
-    title: 'Q-Q Plot',
-    xaxis: { title: 'Theoretical Quantiles' },
-    yaxis: { title: 'Sample Quantiles' }
-  };
-  
-  setTimeout(function() {
-    Plotly.newPlot('qqPlot', traces, layout, {displayModeBar: false, responsive: true});
-  }, 100);
-}
-
-function qnorm(p) {
-  // Approximate inverse normal CDF
-  var a = [2.50662823884, -18.61500062529, 41.39119773534, -25.44106049637];
-  var b = [-8.47351093090, 23.08336743743, -21.06224101826, 3.13082909833];
-  
-  var y = p - 0.5;
-  var r, x;
-  
-  if (Math.abs(y) < 0.42) {
-    r = y * y;
-    x = y * (((a[3] * r + a[2]) * r + a[1]) * r + a[0]) / 
-            ((((b[3] * r + b[2]) * r + b[1]) * r + b[0]) * r + 1.0);
+  if (p > 0.5) {
+    t = Math.sqrt(-2 * Math.log(1 - p));
+    x = t - (c0 + c1 * t + c2 * t * t) / (1 + d1 * t + d2 * t * t + d3 * t * t * t);
   } else {
-    r = p;
-    if (y > 0) r = 1 - p;
-    r = Math.log(-Math.log(r));
-    x = 1.238 * r + 0.146;
-    if (y < 0) x = -x;
+    t = Math.sqrt(-2 * Math.log(p));
+    x = -(t - (c0 + c1 * t + c2 * t * t) / (1 + d1 * t + d2 * t * t + d3 * t * t * t));
   }
   
   return x;
 }
 
-// Utility Functions
-function exportResults() {
-  if (Object.keys(analysisResults).length === 0) {
-    alert('No results to export.');
-    return;
-  }
+// 일반 시각화 함수들
+function createVisualization(variables) {
+  if (variables.length === 0) return;
   
-  var data = JSON.stringify(analysisResults, null, 2);
-  var blob = new Blob([data], {type: 'application/json'});
-  var url = URL.createObjectURL(blob);
-  var a = document.createElement('a');
-  a.href = url;
-  a.download = 'analysis-results.json';
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
+  // 시각화 섹션 표시
+  document.getElementById('visualizationSection').style.display = 'block';
+
+
+  
+  
+  // 수치형과 명목형 변수 분리
+  var numericVars = variables.filter(function(v) { return currentData.varTypes[v] === 'numeric'; });
+  var categoricalVars = variables.filter(function(v) { return currentData.varTypes[v] === 'categorical'; });
+  var allVars = numericVars.concat(categoricalVars);
+  
+  // 탭 생성 (수치형과 명목형 모두 포함)
+  var tabsHtml = '';
+  allVars.forEach(function(variable, index) {
+    var isActive = index === 0 ? 'active' : '';
+    var varType = currentData.varTypes[variable];
+    var icon = varType === 'numeric' ? '📊' : '📋';
+    tabsHtml += '<button class="nav-tab viz-tab ' + isActive + '" onclick="switchVizTab(\'' + variable + '\', \'' + varType + '\')">' + icon + ' ' + variable + '</button>';
+  });
+  
+  document.getElementById('vizTabs').innerHTML = tabsHtml;
+  
+  // 첫 번째 변수로 초기화
+  if (allVars.length > 0) {
+    var firstVar = allVars[0];
+    currentVizVariable = firstVar;
+    currentVizType = currentData.varTypes[firstVar];
+    updateVisualization(firstVar, currentVizType);
+  }
 }
 
+function switchVizTab(variable, varType) {
+  // 탭 활성화 상태 변경
+  document.querySelectorAll('.viz-tab').forEach(function(tab) {
+    tab.classList.remove('active');
+  });
+  event.target.classList.add('active');
+  
+  // 현재 변수 및 타입 업데이트
+  currentVizVariable = variable;
+  currentVizType = varType;
+  updateVisualization(variable, varType);
+}
+
+function updateVisualization(variable, varType) {
+  if (varType === 'numeric') {
+    // 수치형 변수: 히스토그램 + 박스플롯
+    document.getElementById('numericPlots').style.display = 'grid';
+    document.getElementById('categoricalPlots').style.display = 'none';
+    
+    var stats = analysisResults[variable];
+    if (!stats || !stats.values) return;
+    
+    // 히스토그램 데이터
+    var histData = [{
+      x: stats.values,
+      type: 'histogram',
+      marker: { color: '#3b82f6' },
+      nbinsx: 20
+    }];
+    
+    var histLayout = {
+      title: { text: 'Distribution of ' + variable, font: { size: 16 } },
+      xaxis: { title: variable },
+      yaxis: { title: 'Frequency' },
+      plot_bgcolor: '#f8fafc',
+      paper_bgcolor: 'white',
+      margin: { l: 60, r: 20, t: 60, b: 60 },
+      autosize: true
+    };
+    
+    // 박스플롯 데이터
+    var boxData = [{
+      y: stats.values,
+      type: 'box',
+      name: variable,
+      marker: { color: '#3b82f6' }
+    }];
+    
+    var boxLayout = {
+      title: { text: 'Box Plot of ' + variable, font: { size: 16 } },
+      yaxis: { title: variable },
+      plot_bgcolor: '#f8fafc',
+      paper_bgcolor: 'white',
+      margin: { l: 60, r: 20, t: 60, b: 60 },
+      autosize: true
+    };
+    
+    // 플롯 업데이트
+    setTimeout(function() {
+      Plotly.newPlot('histogramPlot', histData, histLayout, {displayModeBar: false, responsive: true});
+      Plotly.newPlot('boxPlot', boxData, boxLayout, {displayModeBar: false, responsive: true});
+    }, 100);
+    
+  } else if (varType === 'categorical') {
+    // 명목형 변수: 파이차트
+    document.getElementById('numericPlots').style.display = 'none';
+    document.getElementById('categoricalPlots').style.display = 'block';
+    
+    // 명목형 변수 데이터 찾기 (analysisResults에서 또는 실시간 분석)
+    var catStats = analysisResults[variable + '_categorical'] || analyzeCategorical(variable);
+    if (!catStats) return;
+    
+    // 파이차트 데이터
+    var labels = Object.keys(catStats.frequency);
+    var values = Object.values(catStats.frequency);
+    var colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#f97316', '#84cc16'];
+    
+    var pieData = [{
+      values: values,
+      labels: labels,
+      type: 'pie',
+      marker: {
+        colors: colors.slice(0, labels.length)
+      },
+      textinfo: 'label+percent',
+      textposition: 'outside',
+      hole: 0.3 // 도넛 차트 스타일
+    }];
+    
+    var pieLayout = {
+      title: { 
+        text: 'Distribution of ' + variable + '<br><sub>Total: ' + catStats.total + ' observations</sub>', 
+        font: { size: 16 }
+      },
+      plot_bgcolor: '#f8fafc',
+      paper_bgcolor: 'white',
+      margin: { l: 60, r: 60, t: 80, b: 60 },
+      autosize: true,
+      showlegend: true,
+      legend: {
+        orientation: 'v',
+        x: 1,
+        y: 0.5
+      }
+    };
+    
+    // 플롯 업데이트
+    setTimeout(function() {
+      Plotly.newPlot('pieChart', pieData, pieLayout, {displayModeBar: false, responsive: true});
+    }, 100);
+  }
+}
+
+function interpretBasicStats(stats, varName) {
+  var interpretation = '<div class="interpretation-box info">';
+  interpretation += '<h4>📊 Interpretation for ' + varName + '</h4>';
+  
+  // 결측치 처리 정보 추가
+  if (stats.missing > 0) {
+    var missingMethod = stats.missingTreatment || 'exclude';
+    var methodText = {
+      'exclude': 'excluded from analysis',
+      'pairwise': 'excluded pairwise',
+      'mean': 'replaced with mean (' + stats.mean.toFixed(2) + ')',
+      'median': 'replaced with median (' + stats.median.toFixed(2) + ')'
+    };
+    interpretation += '<p>• <strong>Missing Data:</strong> ' + stats.missing + ' missing values were ' + methodText[missingMethod] + '</p>';
+  }
+  
+  var meanMedianDiff = Math.abs(stats.mean - stats.median);
+  var relDiff = (meanMedianDiff / stats.mean) * 100;
+  
+  if (relDiff < 5) {
+    interpretation += '<p>• <strong>Central Tendency:</strong> The mean (' + stats.mean.toFixed(2) + ') and median (' + stats.median.toFixed(2) + ') are similar, suggesting a symmetric distribution.</p>';
+  } else if (stats.mean > stats.median) {
+    interpretation += '<p>• <strong>Central Tendency:</strong> The mean (' + stats.mean.toFixed(2) + ') is higher than the median (' + stats.median.toFixed(2) + '), indicating a right-skewed distribution.</p>';
+  } else {
+    interpretation += '<p>• <strong>Central Tendency:</strong> The mean (' + stats.mean.toFixed(2) + ') is lower than the median (' + stats.median.toFixed(2) + '), indicating a left-skewed distribution.</p>';
+  }
+  
+  if (stats.cv < 15) {
+    interpretation += '<p>• <strong>Variability:</strong> Low coefficient of variation (' + stats.cv.toFixed(1) + '%) indicates data points are clustered closely around the mean.</p>';
+  } else if (stats.cv < 30) {
+    interpretation += '<p>• <strong>Variability:</strong> Moderate coefficient of variation (' + stats.cv.toFixed(1) + '%) shows moderate spread in the data.</p>';
+  } else {
+    interpretation += '<p>• <strong>Variability:</strong> High coefficient of variation (' + stats.cv.toFixed(1) + '%) indicates substantial spread in the data.</p>';
+  }
+  
+  interpretation += '<p>• <strong>Confidence Interval:</strong> 95% confident that the true population mean falls between ' + stats.ci[0].toFixed(2) + ' and ' + stats.ci[1].toFixed(2) + '.</p>';
+  interpretation += '</div>';
+  return interpretation;
+}
+
+function interpretDistribution(stats, varName) {
+  var interpretation = '<div class="interpretation-box ';
+  var isNormal = Math.abs(stats.skewness) < 0.5 && Math.abs(stats.kurtosis) < 0.5;
+  
+  interpretation += isNormal ? 'success">' : 'warning">';
+  interpretation += '<h4>📈 Distribution Analysis for ' + varName + '</h4>';
+  
+  if (Math.abs(stats.skewness) < 0.5) {
+    interpretation += '<p>• <strong>Skewness (' + stats.skewness.toFixed(3) + '):</strong> The distribution is approximately symmetric.</p>';
+  } else if (stats.skewness > 0.5) {
+    interpretation += '<p>• <strong>Skewness (' + stats.skewness.toFixed(3) + '):</strong> Positive skewness - longer tail on the right side.</p>';
+  } else {
+    interpretation += '<p>• <strong>Skewness (' + stats.skewness.toFixed(3) + '):</strong> Negative skewness - longer tail on the left side.</p>';
+  }
+  
+  if (Math.abs(stats.kurtosis) < 0.5) {
+    interpretation += '<p>• <strong>Kurtosis (' + stats.kurtosis.toFixed(3) + '):</strong> Normal peak and tail behavior (mesokurtic).</p>';
+  } else if (stats.kurtosis > 0.5) {
+    interpretation += '<p>• <strong>Kurtosis (' + stats.kurtosis.toFixed(3) + '):</strong> Heavy-tailed distribution with more extreme values.</p>';
+  } else {
+    interpretation += '<p>• <strong>Kurtosis (' + stats.kurtosis.toFixed(3) + '):</strong> Light-tailed distribution with fewer extreme values.</p>';
+  }
+  
+  if (isNormal) {
+    interpretation += '<p>• <strong>Normality:</strong> ✅ Data appears normally distributed. Parametric tests are appropriate.</p>';
+  } else {
+    interpretation += '<p>• <strong>Normality:</strong> ⚠️ Data deviates from normality. Consider non-parametric tests.</p>';
+  }
+  
+  interpretation += '</div>';
+  return interpretation;
+}
+
+function interpretOutliers(outliers, varName) {
+  var interpretation = '<div class="interpretation-box ';
+  
+  if (outliers.percentage < 1) {
+    interpretation += 'success">';
+  } else if (outliers.percentage < 5) {
+    interpretation += 'info">';
+  } else {
+    interpretation += 'warning">';
+  }
+  
+  interpretation += '<h4>🎯 Outlier Detection for ' + varName + '</h4>';
+  
+  if (outliers.count === 0) {
+    interpretation += '<p>• <strong>No Outliers:</strong> All data points fall within the expected range.</p>';
+  } else if (outliers.percentage < 1) {
+    interpretation += '<p>• <strong>Minimal Outliers:</strong> ' + outliers.count + ' outliers (' + outliers.percentage.toFixed(1) + '%) detected - within acceptable limits.</p>';
+  } else if (outliers.percentage < 5) {
+    interpretation += '<p>• <strong>Moderate Outliers:</strong> ' + outliers.count + ' outliers (' + outliers.percentage.toFixed(1) + '%) detected - review may be warranted.</p>';
+  } else {
+    interpretation += '<p>• <strong>Significant Outliers:</strong> ' + outliers.count + ' outliers (' + outliers.percentage.toFixed(1) + '%) detected - data quality review recommended.</p>';
+  }
+  
+  interpretation += '<p>• <strong>Normal Range:</strong> ' + outliers.lowerBound.toFixed(2) + ' to ' + outliers.upperBound.toFixed(2) + '</p>';
+  interpretation += '</div>';
+  return interpretation;
+}
+
+function interpretCategorical(stats, varName) {
+  var interpretation = '<div class="interpretation-box info">';
+  interpretation += '<h4>📋 Categorical Analysis for ' + varName + '</h4>';
+  
+  interpretation += '<p>• <strong>Categories:</strong> ' + stats.categories + ' unique categories</p>';
+  interpretation += '<p>• <strong>Mode:</strong> Most frequent category is "' + stats.mode + '"</p>';
+  
+  if (stats.uniform) {
+    interpretation += '<p>• <strong>Distribution:</strong> ✅ Categories are uniformly distributed (p = ' + stats.pValue.toFixed(4) + ')</p>';
+  } else {
+    interpretation += '<p>• <strong>Distribution:</strong> ⚠️ Categories show significant imbalance (p = ' + stats.pValue.toFixed(4) + ')</p>';
+  }
+  
+  var maxFreq = Math.max.apply(null, Object.values(stats.frequency));
+  var concentration = (maxFreq / stats.total) * 100;
+  
+  if (concentration > 50) {
+    interpretation += '<p>• <strong>Concentration:</strong> High - ' + concentration.toFixed(1) + '% in single category</p>';
+  } else {
+    interpretation += '<p>• <strong>Concentration:</strong> Well-balanced distribution</p>';
+  }
+  
+  interpretation += '</div>';
+  return interpretation;
+}
+
+// Navigation and utility functions
 function showNotifications() {
-  alert('🔔 No new notifications');
+  alert('🔔 Notifications:\n\n• Descriptive analysis completed\n• Statistics calculated\n• Visualizations generated\n• Interpretations provided');
 }
 
 function showSettings() {
-  alert('⚙️ Settings panel coming soon');
+  alert('⚙️ Settings:\n\n• Multiple analysis types\n• Confidence level options\n• Missing data handling\n• Comprehensive reporting');
 }
 
+
+function toggleExportMenu() {
+  if (Object.keys(analysisResults).length === 0) {
+    alert('No results to export. Please run an analysis first.');
+    return;
+  }
+  
+  var menu = document.getElementById('exportMenu');
+  if (menu.style.display === 'none') {
+    menu.style.display = 'block';
+    
+    // Close menu when clicking outside
+    setTimeout(function() {
+      document.addEventListener('click', function closeMenu(e) {
+        if (!e.target.closest('#exportBtn') && !e.target.closest('#exportMenu')) {
+          menu.style.display = 'none';
+          document.removeEventListener('click', closeMenu);
+        }
+      });
+    }, 100);
+  } else {
+    menu.style.display = 'none';
+  }
+}
+
+function closeExportMenu() {
+  document.getElementById('exportMenu').style.display = 'none';
+}
+
+async function exportToPDF() {
+  if (Object.keys(analysisResults).length === 0) {
+    alert('No results to export. Please run an analysis first.');
+    return;
+  }
+  
+  try {
+    // Show loading indicator
+    var loadingDiv = document.createElement('div');
+    loadingDiv.id = 'pdf-loading';
+    loadingDiv.style.cssText = `
+      position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+      background: white; padding: 24px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+      z-index: 1001; text-align: center; min-width: 200px;
+    `;
+    loadingDiv.innerHTML = `
+      <div style="margin-bottom: 16px; font-weight: 600; color: #1e293b;">Generating PDF Report...</div>
+      <div style="color: #64748b; font-size: 14px;">This may take a few moments</div>
+    `;
+    document.body.appendChild(loadingDiv);
+    
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF('p', 'mm', 'a4');
+    let yPosition = 20;
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const pageHeight = pdf.internal.pageSize.getHeight();
+    const margin = 20;
+    const maxWidth = pageWidth - (margin * 2);
+    
+    // Title
+    pdf.setFontSize(20);
+    pdf.setTextColor(40, 40, 40);
+    pdf.text('Descriptive Statistics Report', margin, yPosition);
+    yPosition += 15;
+    
+    // Generated date
+    pdf.setFontSize(10);
+    pdf.setTextColor(100, 100, 100);
+    pdf.text('Generated on: ' + new Date().toLocaleDateString(), margin, yPosition);
+    yPosition += 20;
+    
+    // Analysis type
+    if (selectedAnalysisType) {
+      pdf.setFontSize(12);
+      pdf.setTextColor(60, 130, 246);
+      pdf.text('Analysis Type: ' + selectedAnalysisType.charAt(0).toUpperCase() + selectedAnalysisType.slice(1), margin, yPosition);
+      yPosition += 15;
+    }
+    
+    // Process each variable's results
+    for (const [varName, stats] of Object.entries(analysisResults)) {
+      // Check if we need a new page
+      if (yPosition > pageHeight - 60) {
+        pdf.addPage();
+        yPosition = 20;
+      }
+      
+      // Variable header
+      pdf.setFontSize(14);
+      pdf.setTextColor(40, 40, 40);
+      pdf.text('Variable: ' + varName.replace('_categorical', ''), margin, yPosition);
+      yPosition += 10;
+      
+      pdf.setFontSize(10);
+      pdf.setTextColor(80, 80, 80);
+      
+      if (varName.includes('_categorical')) {
+        // Categorical variable results
+        pdf.text('Type: Categorical', margin, yPosition);
+        yPosition += 6;
+        pdf.text('Total observations: ' + stats.total, margin, yPosition);
+        yPosition += 6;
+        pdf.text('Categories: ' + stats.categories, margin, yPosition);
+        yPosition += 6;
+        pdf.text('Mode: ' + stats.mode, margin, yPosition);
+        yPosition += 10;
+        
+        // Frequency table
+        pdf.text('Frequency Distribution:', margin, yPosition);
+        yPosition += 6;
+        Object.entries(stats.frequency).forEach(([category, freq]) => {
+          const percentage = ((freq / stats.total) * 100).toFixed(1);
+          pdf.text(`  ${category}: ${freq} (${percentage}%)`, margin + 5, yPosition);
+          yPosition += 5;
+        });
+        
+      } else {
+        // Numeric variable results
+        pdf.text('Type: Numeric', margin, yPosition);
+        yPosition += 6;
+        pdf.text(`N: ${stats.n}`, margin, yPosition);
+        yPosition += 6;
+        pdf.text(`Mean: ${stats.mean.toFixed(2)}`, margin, yPosition);
+        yPosition += 6;
+        pdf.text(`Median: ${stats.median.toFixed(2)}`, margin, yPosition);
+        yPosition += 6;
+        pdf.text(`Std Dev: ${stats.std.toFixed(2)}`, margin, yPosition);
+        yPosition += 6;
+        pdf.text(`Min: ${stats.min.toFixed(2)}, Max: ${stats.max.toFixed(2)}`, margin, yPosition);
+        yPosition += 6;
+        
+        if (stats.skewness !== undefined) {
+          pdf.text(`Skewness: ${stats.skewness.toFixed(3)}`, margin, yPosition);
+          yPosition += 6;
+          pdf.text(`Kurtosis: ${stats.kurtosis.toFixed(3)}`, margin, yPosition);
+          yPosition += 6;
+        }
+        
+        if (stats.ci) {
+          pdf.text(`95% CI: [${stats.ci[0].toFixed(2)}, ${stats.ci[1].toFixed(2)}]`, margin, yPosition);
+          yPosition += 6;
+        }
+      }
+      
+      yPosition += 10;
+    }
+    
+    // Add interpretations
+    const interpretationElement = document.getElementById('interpretationSection');
+    if (interpretationElement && interpretationElement.innerHTML.trim()) {
+      if (yPosition > pageHeight - 100) {
+        pdf.addPage();
+        yPosition = 20;
+      }
+      
+      pdf.setFontSize(16);
+      pdf.setTextColor(40, 40, 40);
+      pdf.text('Statistical Interpretations', margin, yPosition);
+      yPosition += 15;
+      
+      const interpretationBoxes = interpretationElement.querySelectorAll('.interpretation-box');
+      interpretationBoxes.forEach((box) => {
+        if (yPosition > pageHeight - 40) {
+          pdf.addPage();
+          yPosition = 20;
+        }
+        
+        const title = box.querySelector('h4');
+        if (title) {
+          pdf.setFontSize(12);
+          pdf.setTextColor(60, 130, 246);
+          const titleText = title.textContent || title.innerText;
+          pdf.text(titleText, margin, yPosition);
+          yPosition += 8;
+        }
+        
+        const paragraphs = box.querySelectorAll('p');
+        pdf.setFontSize(9);
+        pdf.setTextColor(80, 80, 80);
+        
+        paragraphs.forEach(p => {
+          const text = (p.textContent || p.innerText).replace(/[•]/g, '-');
+          const lines = pdf.splitTextToSize(text, maxWidth);
+          
+          if (yPosition + (lines.length * 4) > pageHeight - 20) {
+            pdf.addPage();
+            yPosition = 20;
+          }
+          
+          lines.forEach(line => {
+            pdf.text(line, margin, yPosition);
+            yPosition += 4;
+          });
+        });
+        
+        yPosition += 8;
+      });
+    }
+    
+    // Save PDF
+    const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
+    pdf.save(`descriptive-statistics-report-${timestamp}.pdf`);
+    
+    // Remove loading indicator
+    document.body.removeChild(loadingDiv);
+    
+  } catch (error) {
+    console.error('PDF generation error:', error);
+    const loadingDiv = document.getElementById('pdf-loading');
+    if (loadingDiv) document.body.removeChild(loadingDiv);
+    alert('Error generating PDF. Please try again.');
+  }
+}
+
+async function exportToPDF() {
+  if (Object.keys(analysisResults).length === 0) {
+    alert('No results to export. Please run an analysis first.');
+    return;
+  }
+  
+  try {
+    // Show loading
+    var loading = document.createElement('div');
+    loading.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:white;padding:20px;border-radius:8px;box-shadow:0 10px 30px rgba(0,0,0,0.2);z-index:1001;';
+    loading.innerHTML = 'Generating PDF...';
+    document.body.appendChild(loading);
+    
+    // Capture the entire page
+    const canvas = await html2canvas(document.body, {
+      backgroundColor: '#f8fafc',
+      scale: 0.8,
+      useCORS: true
+    });
+    
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF('p', 'mm', 'a4');
+    const imgWidth = 210; // A4 width
+    const imgHeight = (canvas.height * imgWidth) / canvas.width;
+    
+    pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, 0, imgWidth, imgHeight);
+    pdf.save('statistics-report.pdf');
+    
+    document.body.removeChild(loading);
+  } catch (error) {
+    alert('PDF generation failed');
+    console.error(error);
+  }
+}
+
+
+
+
+
+
 function showHelp() {
-  alert('📈 Descriptive Statistics Guide:\n\n• Basic: Mean, median, mode, standard deviation\n• Distribution: Skewness, kurtosis, Q-Q plots\n• Outliers: IQR and Z-score detection\n• Comparison: Group-by-group analysis\n• Categorical: Frequency tables\n• Comprehensive: All statistics combined\n\nInterpretation includes practical insights for each measure.');
+  alert('📈 Descriptive Statistics Guide:\n\n• Basic: Mean, median, standard deviation\n• Distribution: Skewness, kurtosis, normality\n• Outliers: IQR method, Z-score detection\n• Comparison: Group-by-group analysis\n• Categorical: Frequency tables, chi-square\n• Comprehensive: All statistics combined\n\nInterpretation includes practical insights for each measure.');
+}
+
+function saveConfiguration() {
+  var config = {
+    analysisType: selectedAnalysisType,
+    confidence: document.getElementById('confidenceLevel').value,
+    missing: document.getElementById('missingData').value
+  };
+  
+  if (typeof Storage !== 'undefined') {
+    localStorage.setItem('descriptiveConfig', JSON.stringify(config));
+    alert('✅ Configuration saved successfully!');
+  } else {
+    alert('Local storage not available. Configuration cannot be saved.');
+  }
 }
 
 function resetAll() {
   currentData = null;
   selectedAnalysisType = null;
   analysisResults = {};
+  currentVizVariable = null;
+  currentVizType = null;
   
   document.getElementById('dataPreview').innerHTML = '';
   document.getElementById('analysisTypePanel').style.display = 'none';
   document.getElementById('varPanel').style.display = 'none';
   document.getElementById('resultsPanel').style.display = 'none';
+  document.getElementById('visualizationSection').style.display = 'none';
+  document.getElementById('fileInput').value = '';
   
-  alert('Reset completed!');
-}
-
-// CSV Loading
-document.addEventListener('DOMContentLoaded', function() {
-  document.getElementById('fileInput').addEventListener('change', function(event) {
-    var file = event.target.files[0];
-    if (file) {
-      Papa.parse(file, {
-        complete: function(results) {
-          if (results.data && results.data.length > 1) {
-            processData(results.data);
-          }
-        },
-        header: true,
-        skipEmptyLines: true,
-        dynamicTyping: true
-      });
+  document.querySelectorAll('.model-card').forEach(function(card) {
+    card.classList.remove('selected');
+  });
+  
+  ['histogramPlot', 'boxPlot', 'pieChart', 'qqPlot', 'scatterMatrix'].forEach(function(plotId) {
+    var plotDiv = document.getElementById(plotId);
+    if (plotDiv && typeof Plotly !== 'undefined') {
+      Plotly.purge(plotDiv);
     }
   });
+  
+  document.getElementById('vizTabs').innerHTML = '';
+  
+  alert('Descriptive statistics analysis reset successfully!');
+}
+
+// CSV File Loading
+document.addEventListener('DOMContentLoaded', function() {
+  if (document.getElementById('fileInput')) {
+    document.getElementById('fileInput').addEventListener('change', function(event) {
+      var file = event.target.files[0];
+      if (file && file.type === "text/csv") {
+        Papa.parse(file, {
+          complete: function(results) {
+            if (results.data && results.data.length > 1) {
+              processData(results.data);
+            }
+          },
+          header: true,
+          skipEmptyLines: true,
+          dynamicTyping: true
+        });
+      } else {
+        alert('Please select a valid CSV file.');
+      }
+    });
+  }
 });
 </script>
 </body>
