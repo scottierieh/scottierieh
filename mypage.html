@@ -682,7 +682,7 @@ function openProject(id) {
   const project = projects.find(p => p.id === id);
   if (project) {
     if (project.type === 'ipa') {
-      window.location.href = './ipa-survey-english_1.html';
+      window.location.href = './ipa.html';
     } else {
       alert(`Opening ${project.title}... (To be implemented)`);
     }
@@ -693,7 +693,7 @@ function createNewProject() {
   const projectType = prompt('Enter project type (ipa/survey/statistics):');
   if (projectType) {
     if (projectType.toLowerCase() === 'ipa') {
-      window.location.href = './ipa-survey-english_1.html';
+      window.location.href = './ipa.html';
     } else {
       alert(`Creating new ${projectType} project... (To be implemented)`);
     }
