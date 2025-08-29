@@ -1,0 +1,1884 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>📊 Advanced Survey Platform</title>
+
+<style>
+  :root{
+    --bg:#f8fafc; --card:#ffffff; --muted:#64748b; --accent:#3b82f6; --success:#10b981;
+    --warning:#f59e0b; --danger:#ef4444; --purple:#8b5cf6; --info:#06b6d4;
+    --shadow:0 4px 6px -1px rgba(0,0,0,0.1); --shadow-lg:0 10px 15px -3px rgba(0,0,0,0.1);
+    --gradient:linear-gradient(135deg,#667eea 0%,#764ba2 100%);
+  }
+  
+  * {box-sizing:border-box;margin:0;padding:0;}
+  
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:#1e293b;line-height:1.6}
+  
+  /* Header Navigation */
+  .header{background:white;border-bottom:1px solid #e2e8f0;position:sticky;top:0;z-index:100;box-shadow:var(--shadow)}
+  .header-content{max-width:1400px;margin:0 auto;padding:0 24px;display:flex;align-items:center;justify-content:space-between;height:64px}
+  .logo{display:flex;align-items:center;gap:12px;font-weight:700;font-size:20px}
+  .logo-icon{width:40px;height:40px;background:var(--gradient);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:24px;color:white}
+  
+  .nav-tabs{display:flex;gap:4px;background:#f1f5f9;padding:4px;border-radius:12px}
+  .nav-tab{padding:8px 16px;border-radius:8px;border:none;background:transparent;cursor:pointer;font-weight:500;color:#64748b;transition:all 0.2s}
+  .nav-tab.active{background:white;color:#1e293b;box-shadow:0 1px 3px rgba(0,0,0,0.1)}
+  .nav-tab:hover:not(.active){color:#1e293b}
+  
+  .header-actions{display:flex;gap:12px;align-items:center}
+  .user-avatar{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#667eea,#764ba2);display:flex;align-items:center;justify-content:center;color:white;font-weight:600}
+  
+  /* Main Layout */
+  .main-container{max-width:1400px;margin:0 auto;padding:24px}
+  .content-area{display:none}
+  .content-area.active{display:block}
+  
+  /* Cards and Panels */
+  .card{background:white;border-radius:16px;padding:24px;box-shadow:var(--shadow);margin-bottom:20px}
+  .card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid #e2e8f0}
+  .card-title{font-size:18px;font-weight:600;color:#1e293b}
+  
+  /* Buttons */
+  .btn{border:none;padding:10px 20px;border-radius:10px;cursor:pointer;font-weight:500;transition:all 0.2s;display:inline-flex;align-items:center;gap:8px}
+  .btn:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(0,0,0,0.15)}
+  .btn.primary{background:var(--accent);color:white}
+  .btn.success{background:var(--success);color:white}
+  .btn.warning{background:var(--warning);color:white}
+  .btn.danger{background:var(--danger);color:white}
+  .btn.ghost{background:#f1f5f9;color:#475569}
+  .btn.small{padding:6px 12px;font-size:13px}
+  .btn.large{padding:14px 28px;font-size:16px}
+  
+  /* Forms */
+  input[type="text"],input[type="number"],input[type="email"],textarea,select{
+    width:100%;padding:10px 14px;border:2px solid #e2e8f0;border-radius:8px;font-size:14px;transition:all 0.2s;font-family:inherit
+  }
+  input:focus,textarea:focus,select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(59,130,246,0.1)}
+  label{display:block;margin-bottom:6px;font-weight:500;color:#475569;font-size:14px}
+  .form-group{margin-bottom:20px}
+  .form-hint{font-size:12px;color:var(--muted);margin-top:4px}
+  
+  /* Question Types */
+  .question-type-selector{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px}
+  .type-btn{padding:8px 12px;border:2px solid #e2e8f0;background:white;border-radius:8px;cursor:pointer;font-size:13px;transition:all 0.2s;text-align:center}
+  .type-btn.active{background:var(--accent);color:white;border-color:var(--accent)}
+  .type-btn:hover:not(.active){background:#f8fafc;border-color:var(--accent)}
+  
+  /* Question Item */
+  .question-item{background:white;border-radius:12px;padding:20px;margin-bottom:16px;border:1px solid #e2e8f0;position:relative}
+  .question-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+  .question-number{background:var(--accent);color:white;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:600;margin-right:12px}
+  .question-title{flex:1;font-weight:600;color:#1e293b}
+  .question-controls{display:flex;gap:8px;align-items:center}
+  .question-type-badge{background:#e0f2fe;color:#0369a1;padding:4px 12px;border-radius:6px;font-size:12px;font-weight:500}
+  
+  /* Options */
+  .option-item{display:flex;align-items:center;gap:8px;margin-bottom:8px;padding:8px;background:#f8fafc;border-radius:6px}
+  .option-radio{width:20px;height:20px;accent-color:var(--accent)}
+  .option-checkbox{width:20px;height:20px;accent-color:var(--accent)}
+  .option-text{flex:1}
+  .remove-option{color:var(--danger);cursor:pointer;font-size:12px;padding:4px 8px;background:white;border-radius:4px}
+  
+  /* Likert Scale */
+  .likert-scale{display:flex;justify-content:space-between;gap:8px;margin:12px 0}
+  .likert-option{flex:1;text-align:center}
+  .likert-radio{width:32px;height:32px;border-radius:50%;border:2px solid #cbd5e1;cursor:pointer;margin:0 auto 4px;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:14px;transition:all 0.2s}
+  .likert-radio:hover{border-color:var(--accent);transform:scale(1.1)}
+  .likert-radio.selected{background:var(--accent);border-color:var(--accent);color:white}
+  .likert-label{font-size:11px;color:#64748b}
+  
+  /* Star Rating */
+  .star-rating{display:flex;gap:8px;margin:12px 0}
+  .star{font-size:32px;color:#e2e8f0;cursor:pointer;transition:all 0.2s}
+  .star:hover{transform:scale(1.1)}
+  .star.filled{color:#fbbf24}
+  
+  /* Range Slider */
+  .range-container{margin:16px 0}
+  .range-slider{width:100%;height:6px;border-radius:3px;background:#e2e8f0;-webkit-appearance:none;appearance:none}
+  .range-slider::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:20px;height:20px;border-radius:50%;background:var(--accent);cursor:pointer}
+  .range-slider::-moz-range-thumb{width:20px;height:20px;border-radius:50%;background:var(--accent);cursor:pointer;border:none}
+  .range-value{text-align:center;font-size:24px;font-weight:600;color:var(--accent);margin-top:8px}
+  .range-labels{display:flex;justify-content:space-between;font-size:12px;color:#64748b}
+  
+  /* Response Collection */
+  .response-form{background:#f0f9ff;border-radius:12px;padding:24px;margin-bottom:20px}
+  .response-question{background:white;border-radius:8px;padding:16px;margin-bottom:16px}
+  .response-question-title{font-weight:600;margin-bottom:12px;color:#1e293b}
+  
+  /* Statistics Cards */
+  .stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:20px;margin-bottom:24px}
+  .stat-card{background:white;padding:20px;border-radius:12px;border:1px solid #e2e8f0;position:relative;overflow:hidden}
+  .stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;background:var(--gradient)}
+  .stat-icon{width:48px;height:48px;background:#f1f5f9;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:24px;margin-bottom:12px}
+  .stat-value{font-size:32px;font-weight:700;color:#1e293b;margin-bottom:4px}
+  .stat-label{font-size:14px;color:var(--muted)}
+  
+  /* Response List */
+  .response-item{background:white;border-radius:8px;padding:16px;margin-bottom:12px;border:1px solid #e2e8f0}
+  .response-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+  .response-id{font-weight:600;color:var(--accent)}
+  .response-timestamp{font-size:12px;color:var(--muted)}
+  .response-data{display:grid;gap:12px}
+  .response-answer{background:#f8fafc;padding:8px 12px;border-radius:6px}
+  .response-answer-label{font-size:12px;color:var(--muted);margin-bottom:4px}
+  .response-answer-value{font-weight:500}
+  
+  /* Charts and Visualizations */
+  .chart-container{background:white;border-radius:12px;padding:20px;margin-bottom:20px;box-shadow:var(--shadow)}
+  .chart-title{font-weight:600;margin-bottom:16px;color:#1e293b;font-size:16px}
+  .bar-chart{display:flex;gap:12px;align-items:flex-end;height:200px;margin-bottom:8px;padding-top:30px;position:relative}
+  .bar-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;position:relative;height:100%}
+  .bar{width:100%;background:var(--accent);border-radius:4px 4px 0 0;transition:all 0.3s;position:relative;min-height:4px}
+  .bar:hover{background:#2563eb;transform:scaleY(1.05)}
+  .bar-value{position:absolute;top:-25px;left:50%;transform:translateX(-50%);font-size:12px;font-weight:600;white-space:nowrap}
+  .bar-label{font-size:11px;text-align:center;margin-top:4px;color:var(--muted);word-break:break-word;max-width:100%}
+  
+  /* Word Cloud */
+  .word-cloud{padding:20px;background:#f8fafc;border-radius:8px;min-height:200px;display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:center}
+  .word-item{padding:4px 12px;background:white;border-radius:4px;font-weight:500;transition:all 0.2s;cursor:default}
+  .word-item:hover{transform:scale(1.1);box-shadow:0 4px 8px rgba(0,0,0,0.1)}
+  
+  /* Response Rate Badge */
+  .response-rate-badge{display:inline-flex;align-items:center;gap:8px;padding:8px 16px;background:linear-gradient(135deg,#dbeafe,#bfdbfe);border-radius:8px;font-size:14px;font-weight:500;color:#1e40af}
+  
+  /* Insights Box */
+  .insights-box{background:linear-gradient(135deg,#fef3c7,#fed7aa);padding:16px;border-radius:8px;margin-top:16px}
+  .insights-title{font-weight:600;color:#92400e;margin-bottom:8px;font-size:14px}
+  .insights-content{color:#78350f;font-size:13px;line-height:1.6}
+  
+  /* Notification */
+  .notification{position:fixed;top:20px;right:20px;background:white;border-radius:8px;padding:16px;box-shadow:var(--shadow-lg);border-left:4px solid var(--success);z-index:1000;min-width:300px;transform:translateX(400px);transition:transform 0.3s}
+  .notification.show{transform:translateX(0)}
+  .notification-close{margin-left:auto;cursor:pointer;color:var(--muted)}
+  
+  /* Modal */
+  .modal{display:none;position:fixed;z-index:1000;left:0;top:0;width:100%;height:100%;background-color:rgba(0,0,0,0.5);overflow:auto}
+  .modal-content{background-color:white;margin:2% auto;padding:0;width:90%;max-width:800px;border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,0.3);animation:slideIn 0.3s}
+  @keyframes slideIn{from{transform:translateY(-100px);opacity:0}to{transform:translateY(0);opacity:1}}
+  .modal-header{padding:24px;background:linear-gradient(135deg,#667eea,#764ba2);color:white;border-radius:16px 16px 0 0;display:flex;justify-content:space-between;align-items:center}
+  .modal-close{color:white;font-size:28px;font-weight:bold;cursor:pointer;background:none;border:none;padding:0;width:32px;height:32px;display:flex;align-items:center;justify-content:center;border-radius:50%;transition:background 0.2s}
+  .modal-close:hover{background:rgba(255,255,255,0.2)}
+  .modal-body{padding:24px;max-height:70vh;overflow-y:auto}
+  
+  /* Responsive */
+  @media (max-width:768px){
+    .header-content{padding:0 16px}
+    .nav-tabs{display:none}
+    .main-container{padding:16px}
+    .stats-grid{grid-template-columns:1fr}
+    .question-type-selector{grid-template-columns:repeat(2,1fr)}
+  }
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="header">
+  <div class="header-content">
+    <div class="logo">
+      <div class="logo-icon">📊</div>
+      <span>Survey Platform</span>
+    </div>
+    
+    <div class="nav-tabs">
+      <button class="nav-tab active" onclick="switchTab('design')">🎨 Survey Design</button>
+      <button class="nav-tab" onclick="switchTab('collect')">📋 Data Collection</button>
+      <button class="nav-tab" onclick="switchTab('analysis')">📈 Analysis</button>
+    </div>
+    
+    <div class="header-actions">
+      <button class="btn primary small" onclick="saveToLocal()">💾 Save Survey</button>
+      <div class="user-avatar">U</div>
+    </div>
+  </div>
+</div>
+
+<!-- Main Container -->
+<div class="main-container">
+
+  <!-- Design Tab -->
+  <div id="design-tab" class="content-area active">
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-icon">❓</div>
+        <div class="stat-value" id="total-questions">0</div>
+        <div class="stat-label">Total Questions</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">📊</div>
+        <div class="stat-value" id="response-count">0</div>
+        <div class="stat-label">Responses Collected</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">✅</div>
+        <div class="stat-value" id="completion-rate">0%</div>
+        <div class="stat-label">Completion Rate</div>
+      </div>
+    </div>
+    
+    <div class="card">
+      <div class="card-header">
+        <h2 class="card-title">🎨 Survey Design</h2>
+        <div>
+          <button class="btn ghost small" onclick="previewSurvey()">👁️ Preview</button>
+          <button class="btn success small" onclick="loadSampleSurvey()">📝 Load Sample</button>
+        </div>
+      </div>
+      
+      <div class="form-group">
+        <label>Survey Title</label>
+        <input type="text" id="survey-title" placeholder="e.g., Customer Satisfaction Survey">
+      </div>
+      
+      <div class="form-group">
+        <label>Survey Description</label>
+        <textarea id="survey-description" rows="2" placeholder="Please take a moment to complete this survey..."></textarea>
+      </div>
+      
+      <div style="background:#f0f9ff;border-radius:12px;padding:20px;margin-bottom:20px;">
+        <h3 style="margin-bottom:16px;font-size:16px;color:#0369a1;">➕ Add New Question</h3>
+        
+        <div class="form-group">
+          <label>Question Text</label>
+          <input type="text" id="new-question-text" placeholder="Enter your question here...">
+        </div>
+        
+        <div class="form-group">
+          <label>Question Type</label>
+          <div class="question-type-selector">
+            <button class="type-btn active" onclick="selectQuestionType('single')" id="type-single">
+              🔘 Single Choice
+            </button>
+            <button class="type-btn" onclick="selectQuestionType('multiple')" id="type-multiple">
+              ☑️ Multiple Choice
+            </button>
+            <button class="type-btn" onclick="selectQuestionType('dropdown')" id="type-dropdown">
+              📋 Dropdown
+            </button>
+            <button class="type-btn" onclick="selectQuestionType('likert')" id="type-likert">
+              📏 Likert Scale
+            </button>
+            <button class="type-btn" onclick="selectQuestionType('rating')" id="type-rating">
+              ⭐ Star Rating
+            </button>
+            <button class="type-btn" onclick="selectQuestionType('text')" id="type-text">
+              📝 Text Input
+            </button>
+            <button class="type-btn" onclick="selectQuestionType('textarea')" id="type-textarea">
+              📄 Text Area
+            </button>
+            <button class="type-btn" onclick="selectQuestionType('range')" id="type-range">
+              🔢 Number Range
+            </button>
+          </div>
+        </div>
+        
+        <div class="form-group" id="options-container">
+          <label>Answer Options</label>
+          <div id="options-list">
+            <div class="option-item">
+              <input type="text" class="option-input" placeholder="Option 1">
+            </div>
+            <div class="option-item">
+              <input type="text" class="option-input" placeholder="Option 2">
+            </div>
+          </div>
+          <button class="btn ghost small" onclick="addOption()">+ Add Option</button>
+        </div>
+        
+        <div class="form-group" id="range-settings" style="display:none;">
+          <label>Range Settings</label>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;">
+            <div>
+              <label style="font-size:12px;">Min Value</label>
+              <input type="number" id="range-min" value="0">
+            </div>
+            <div>
+              <label style="font-size:12px;">Max Value</label>
+              <input type="number" id="range-max" value="100">
+            </div>
+            <div>
+              <label style="font-size:12px;">Step</label>
+              <input type="number" id="range-step" value="1">
+            </div>
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label>
+            <input type="checkbox" id="question-required" checked> Required Question
+          </label>
+        </div>
+        
+        <button class="btn primary" onclick="addQuestion()">➕ Add Question</button>
+      </div>
+      
+      <div style="margin-top:24px;">
+        <h3 style="margin-bottom:16px;color:#1e293b;display:none;" id="questions-header">📋 Survey Questions</h3>
+        <div id="questions-container">
+          <!-- Questions will be added here -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Data Collection Tab -->
+  <div id="collect-tab" class="content-area">
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-icon">📊</div>
+        <div class="stat-value" id="total-responses">0</div>
+        <div class="stat-label">Total Responses</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">⏱️</div>
+        <div class="stat-value" id="avg-time">0m</div>
+        <div class="stat-label">Avg. Completion Time</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">📅</div>
+        <div class="stat-value" id="today-responses">0</div>
+        <div class="stat-label">Today's Responses</div>
+      </div>
+    </div>
+    
+    <div class="card">
+      <div class="card-header">
+        <h2 class="card-title">📋 Collect Responses</h2>
+        <div>
+          <button class="btn ghost small" onclick="clearAllResponses()">🗑️ Clear All</button>
+          <button class="btn warning small" onclick="generateSampleData()">🎲 Generate Sample</button>
+          <button class="btn primary small" onclick="exportData()">💾 Export CSV</button>
+        </div>
+      </div>
+      
+      <div class="response-form" id="response-form">
+        <!-- Response form will be generated here -->
+      </div>
+    </div>
+    
+    <div class="card">
+      <div class="card-header">
+        <h2 class="card-title">📊 Collected Responses</h2>
+      </div>
+      <div id="responses-list">
+        <div style="text-align:center;padding:40px;color:var(--muted);">
+          No responses collected yet.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Analysis Tab -->
+  <div id="analysis-tab" class="content-area">
+    <div class="card">
+      <div class="card-header">
+        <h2 class="card-title">📈 Survey Analysis</h2>
+        <button class="btn primary" onclick="performAnalysis()">🔍 Run Analysis</button>
+      </div>
+      
+      <div id="analysis-results">
+        <div style="text-align:center;padding:60px;color:var(--muted);">
+          <div style="font-size:48px;margin-bottom:16px;">📊</div>
+          <div>Analysis results will appear here</div>
+          <div style="font-size:14px;margin-top:8px;">Collect at least 1 response to see results</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Notification Container -->
+<div id="notification-container"></div>
+
+<!-- Preview Modal -->
+<div id="preview-modal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2 style="margin:0;">📋 Survey Preview</h2>
+      <button class="modal-close" onclick="closeModal()">&times;</button>
+    </div>
+    <div class="modal-body" id="preview-content">
+      <!-- Preview content will be inserted here -->
+    </div>
+  </div>
+</div>
+
+<script>
+// Global state
+window.surveyData = {
+  title: '',
+  description: '',
+  questions: [],
+  responses: []
+};
+
+window.currentQuestionType = 'single';
+window.currentResponse = {};
+window.responseStartTime = null;
+
+// Tab switching
+window.switchTab = function(tab) {
+  document.querySelectorAll('.content-area').forEach(area => {
+    area.classList.remove('active');
+  });
+  document.getElementById(tab + '-tab').classList.add('active');
+  
+  document.querySelectorAll('.nav-tab').forEach(navTab => {
+    navTab.classList.remove('active');
+  });
+  
+  const navTabs = document.querySelectorAll('.nav-tab');
+  if (tab === 'design') navTabs[0].classList.add('active');
+  else if (tab === 'collect') {
+    navTabs[1].classList.add('active');
+    updateResponseForm();
+    displayResponses();
+  }
+  else if (tab === 'analysis') navTabs[2].classList.add('active');
+}
+
+// Question type selection
+window.selectQuestionType = function(type) {
+  currentQuestionType = type;
+  document.querySelectorAll('.type-btn').forEach(btn => btn.classList.remove('active'));
+  document.getElementById(`type-${type}`).classList.add('active');
+  
+  const optionsContainer = document.getElementById('options-container');
+  const rangeSettings = document.getElementById('range-settings');
+  
+  if (type === 'single' || type === 'multiple' || type === 'dropdown') {
+    optionsContainer.style.display = 'block';
+    rangeSettings.style.display = 'none';
+  } else if (type === 'range') {
+    optionsContainer.style.display = 'none';
+    rangeSettings.style.display = 'block';
+  } else {
+    optionsContainer.style.display = 'none';
+    rangeSettings.style.display = 'none';
+  }
+}
+
+// Add option
+window.addOption = function() {
+  const optionsList = document.getElementById('options-list');
+  const optionCount = optionsList.children.length;
+  const optionItem = document.createElement('div');
+  optionItem.className = 'option-item';
+  optionItem.innerHTML = `
+    <input type="text" class="option-input" placeholder="Option ${optionCount + 1}">
+    <span class="remove-option" onclick="this.parentElement.remove()">✕</span>
+  `;
+  optionsList.appendChild(optionItem);
+}
+
+// Add question
+window.addQuestion = function() {
+  const questionText = document.getElementById('new-question-text').value.trim();
+  
+  if (!questionText) {
+    showNotification('Error', 'Please enter a question text', 'error');
+    return;
+  }
+  
+  const question = {
+    id: Date.now(),
+    text: questionText,
+    type: currentQuestionType,
+    required: document.getElementById('question-required').checked
+  };
+  
+  if (currentQuestionType === 'single' || currentQuestionType === 'multiple' || currentQuestionType === 'dropdown') {
+    const options = Array.from(document.querySelectorAll('.option-input'))
+      .map(input => input.value.trim())
+      .filter(value => value);
+    
+    if (options.length < 2) {
+      showNotification('Error', 'Please add at least 2 options', 'error');
+      return;
+    }
+    question.options = options;
+  } else if (currentQuestionType === 'likert') {
+    question.options = ['Strongly Disagree', 'Disagree', 'Neutral', 'Agree', 'Strongly Agree'];
+  } else if (currentQuestionType === 'rating') {
+    question.maxRating = 5;
+  } else if (currentQuestionType === 'range') {
+    question.min = parseInt(document.getElementById('range-min').value) || 0;
+    question.max = parseInt(document.getElementById('range-max').value) || 100;
+    question.step = parseInt(document.getElementById('range-step').value) || 1;
+  }
+  
+  surveyData.questions.push(question);
+  
+  document.getElementById('new-question-text').value = '';
+  if (currentQuestionType === 'single' || currentQuestionType === 'multiple' || currentQuestionType === 'dropdown') {
+    document.getElementById('options-list').innerHTML = `
+      <div class="option-item">
+        <input type="text" class="option-input" placeholder="Option 1">
+      </div>
+      <div class="option-item">
+        <input type="text" class="option-input" placeholder="Option 2">
+      </div>
+    `;
+  }
+  document.getElementById('question-required').checked = true;
+  
+  renderQuestions();
+  updateStats();
+  showNotification('Success', 'Question added successfully', 'success');
+}
+
+// Render questions
+window.renderQuestions = function() {
+  const container = document.getElementById('questions-container');
+  const header = document.getElementById('questions-header');
+  
+  if (!surveyData.questions || surveyData.questions.length === 0) {
+    container.innerHTML = '';
+    if (header) header.style.display = 'none';
+    return;
+  }
+  
+  if (header) header.style.display = 'block';
+  container.innerHTML = '';
+  
+  surveyData.questions.forEach((q, index) => {
+    const questionDiv = document.createElement('div');
+    questionDiv.className = 'question-item';
+    
+    let typeBadge = '';
+    switch(q.type) {
+      case 'single': typeBadge = '🔘 Single'; break;
+      case 'multiple': typeBadge = '☑️ Multiple'; break;
+      case 'dropdown': typeBadge = '📋 Dropdown'; break;
+      case 'likert': typeBadge = '📏 Likert'; break;
+      case 'rating': typeBadge = '⭐ Rating'; break;
+      case 'text': typeBadge = '📝 Text'; break;
+      case 'textarea': typeBadge = '📄 TextArea'; break;
+      case 'range': typeBadge = '🔢 Range'; break;
+    }
+    
+    let optionsHtml = '';
+    if (q.options) {
+      const bulletStyle = q.type === 'single' ? '○' : q.type === 'multiple' ? '☐' : '•';
+      optionsHtml = q.options.map(opt => `
+        <div style="padding:4px 0;color:#64748b;font-size:14px;">
+          ${bulletStyle} ${opt}
+        </div>
+      `).join('');
+    } else if (q.type === 'rating') {
+      optionsHtml = `<div style="padding:4px 0;color:#64748b;font-size:14px;">⭐ 1 to ${q.maxRating} stars</div>`;
+    } else if (q.type === 'range') {
+      optionsHtml = `<div style="padding:4px 0;color:#64748b;font-size:14px;">🔢 Range: ${q.min} to ${q.max} (step: ${q.step})</div>`;
+    } else if (q.type === 'text') {
+      optionsHtml = `<div style="padding:4px 0;color:#64748b;font-size:14px;">📝 Short text input</div>`;
+    } else if (q.type === 'textarea') {
+      optionsHtml = `<div style="padding:4px 0;color:#64748b;font-size:14px;">📄 Long text input</div>`;
+    }
+    
+    questionDiv.innerHTML = `
+      <div class="question-header">
+        <div style="display:flex;align-items:center;">
+          <div class="question-number">${index + 1}</div>
+          <div class="question-title">${q.text}</div>
+        </div>
+        <div class="question-controls">
+          <span class="question-type-badge">${typeBadge}</span>
+          ${q.required ? '<span style="color:var(--danger);font-size:12px;">* Required</span>' : '<span style="color:var(--success);font-size:12px;">Optional</span>'}
+          <button class="btn danger small" onclick="removeQuestion(${q.id})">Delete</button>
+        </div>
+      </div>
+      <div style="padding-left:44px;">
+        ${optionsHtml}
+      </div>
+    `;
+    container.appendChild(questionDiv);
+  });
+}
+
+// Remove question
+window.removeQuestion = function(id) {
+  if (confirm('Are you sure you want to delete this question?')) {
+    surveyData.questions = surveyData.questions.filter(q => q.id !== id);
+    renderQuestions();
+    updateStats();
+    showNotification('Deleted', 'Question removed', 'info');
+  }
+}
+
+// Update response form
+window.updateResponseForm = function() {
+  const container = document.getElementById('response-form');
+  
+  if (surveyData.questions.length === 0) {
+    container.innerHTML = `
+      <div style="text-align:center;padding:40px;color:var(--muted);">
+        Please add questions in the Survey Design tab first.
+      </div>
+    `;
+    return;
+  }
+  
+  responseStartTime = new Date();
+  
+  let html = '<div style="margin-bottom:16px;">';
+  html += '<label>Respondent Name (Optional)</label>';
+  html += '<input type="text" id="respondent-name" placeholder="Anonymous">';
+  html += '</div>';
+  
+  surveyData.questions.forEach((q, index) => {
+    html += `
+      <div class="response-question">
+        <div class="response-question-title">
+          ${index + 1}. ${q.text}
+          ${q.required ? '<span style="color:var(--danger);">*</span>' : '<span style="color:var(--muted);font-size:12px;"> (Optional)</span>'}
+        </div>
+        <div>
+    `;
+    
+    if (q.type === 'single') {
+      q.options.forEach((opt, i) => {
+        html += `
+          <label style="display:flex;align-items:center;gap:8px;margin-bottom:8px;cursor:pointer;">
+            <input type="radio" name="q-${q.id}" value="${opt.replace(/"/g, '&quot;')}" class="option-radio" 
+              onchange="updateCurrentResponse(${q.id}, this.value)">
+            <span>${opt}</span>
+          </label>
+        `;
+      });
+    } else if (q.type === 'multiple') {
+      q.options.forEach((opt, i) => {
+        html += `
+          <label style="display:flex;align-items:center;gap:8px;margin-bottom:8px;cursor:pointer;">
+            <input type="checkbox" value="${opt.replace(/"/g, '&quot;')}" class="option-checkbox" 
+              onchange="updateMultipleResponse(${q.id}, this.value, this.checked)">
+            <span>${opt}</span>
+          </label>
+        `;
+      });
+    } else if (q.type === 'dropdown') {
+      html += `
+        <select onchange="updateCurrentResponse(${q.id}, this.value)" style="width:100%;">
+          <option value="">Select an option...</option>
+          ${q.options.map(opt => `<option value="${opt.replace(/"/g, '&quot;')}">${opt}</option>`).join('')}
+        </select>
+      `;
+    } else if (q.type === 'likert') {
+      html += '<div class="likert-scale">';
+      q.options.forEach((opt, i) => {
+        html += `
+          <div class="likert-option">
+            <div class="likert-radio" onclick="selectLikert(${q.id}, ${i}, this)" data-value="${i}">
+              ${i + 1}
+            </div>
+            <div class="likert-label">${opt}</div>
+          </div>
+        `;
+      });
+      html += '</div>';
+    } else if (q.type === 'rating') {
+      html += '<div class="star-rating" data-question="' + q.id + '">';
+      for (let i = 1; i <= q.maxRating; i++) {
+        html += `<span class="star" onclick="selectRating(${q.id}, ${i}, this)">☆</span>`;
+      }
+      html += '</div>';
+    } else if (q.type === 'text') {
+      html += `<input type="text" oninput="updateCurrentResponse(${q.id}, this.value)" style="width:100%;">`;
+    } else if (q.type === 'textarea') {
+      html += `<textarea rows="4" oninput="updateCurrentResponse(${q.id}, this.value)" style="width:100%;"></textarea>`;
+    } else if (q.type === 'range') {
+      html += `
+        <div class="range-container">
+          <input type="range" class="range-slider" min="${q.min}" max="${q.max}" step="${q.step}" 
+                 value="${(q.min + q.max) / 2}" oninput="updateRange(${q.id}, this.value)">
+          <div class="range-value" id="range-value-${q.id}">${(q.min + q.max) / 2}</div>
+          <div class="range-labels">
+            <span>${q.min}</span>
+            <span>${q.max}</span>
+          </div>
+        </div>
+      `;
+    }
+    
+    html += '</div></div>';
+  });
+  
+  html += `
+    <button class="btn success large" onclick="submitResponse()" style="width:100%;margin-top:16px;">
+      📝 Submit Response
+    </button>
+  `;
+  
+  container.innerHTML = html;
+  currentResponse = {};
+}
+
+// Update response functions
+window.updateCurrentResponse = function(questionId, value) {
+  if (value && value !== '') {
+    currentResponse[questionId] = value;
+  } else {
+    delete currentResponse[questionId];
+  }
+}
+
+window.updateMultipleResponse = function(questionId, value, checked) {
+  if (!currentResponse[questionId]) {
+    currentResponse[questionId] = [];
+  }
+  if (checked) {
+    currentResponse[questionId].push(value);
+  } else {
+    currentResponse[questionId] = currentResponse[questionId].filter(v => v !== value);
+  }
+  if (currentResponse[questionId].length === 0) {
+    delete currentResponse[questionId];
+  }
+}
+
+window.selectLikert = function(questionId, value, element) {
+  const parent = element.parentElement.parentElement;
+  parent.querySelectorAll('.likert-radio').forEach(el => el.classList.remove('selected'));
+  element.classList.add('selected');
+  
+  const question = surveyData.questions.find(q => q.id === questionId);
+  currentResponse[questionId] = question.options[value];
+}
+
+window.selectRating = function(questionId, rating, element) {
+  const parent = element.parentElement;
+  const stars = parent.querySelectorAll('.star');
+  stars.forEach((star, index) => {
+    star.textContent = index < rating ? '⭐' : '☆';
+    star.classList.toggle('filled', index < rating);
+  });
+  currentResponse[questionId] = rating;
+}
+
+window.updateRange = function(questionId, value) {
+  document.getElementById(`range-value-${questionId}`).textContent = value;
+  currentResponse[questionId] = parseInt(value);
+}
+
+// Submit response
+window.submitResponse = function() {
+  const requiredQuestions = surveyData.questions.filter(q => q.required);
+  const missingRequired = requiredQuestions.filter(q => {
+    const answer = currentResponse[q.id];
+    return !answer || (Array.isArray(answer) && answer.length === 0);
+  });
+  
+  if (missingRequired.length > 0) {
+    showNotification('Error', `Please answer all required questions (${missingRequired.length} remaining)`, 'error');
+    return;
+  }
+  
+  const completionTime = responseStartTime ? 
+    Math.floor((new Date() - responseStartTime) / 1000) : 0;
+  
+  const response = {
+    id: Date.now(),
+    respondentName: document.getElementById('respondent-name').value || 'Anonymous',
+    timestamp: new Date().toISOString(),
+    answers: {...currentResponse},
+    completionTime: completionTime,
+    isComplete: true
+  };
+  
+  surveyData.responses.push(response);
+  
+  updateResponseForm();
+  updateStats();
+  displayResponses();
+  showNotification('Success', 'Response submitted successfully!', 'success');
+}
+
+// Display responses
+window.displayResponses = function() {
+  const container = document.getElementById('responses-list');
+  
+  if (!surveyData.responses || surveyData.responses.length === 0) {
+    container.innerHTML = `
+      <div style="text-align:center;padding:40px;color:var(--muted);">
+        No responses collected yet.
+      </div>
+    `;
+    return;
+  }
+  
+  container.innerHTML = surveyData.responses.slice().reverse().map((r, index) => {
+    let responseHTML = `
+      <div class="response-item">
+        <div class="response-header">
+          <div>
+            <span class="response-id">Response #${surveyData.responses.length - index}</span>
+            <span style="margin-left:12px;color:#64748b;">${r.respondentName || 'Anonymous'}</span>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <span class="response-timestamp">${new Date(r.timestamp).toLocaleString()}</span>
+            <button class="btn danger small" onclick="deleteResponse(${r.id})">Delete</button>
+          </div>
+        </div>
+        <div class="response-data">`;
+    
+    surveyData.questions.forEach(q => {
+      const answer = r.answers ? r.answers[q.id] : undefined;
+      let displayAnswer = 'Not answered';
+      if (answer !== undefined && answer !== null) {
+        if (Array.isArray(answer)) {
+          displayAnswer = answer.join(', ');
+        } else if (q.type === 'rating') {
+          displayAnswer = '⭐'.repeat(answer) + '☆'.repeat(q.maxRating - answer);
+        } else {
+          displayAnswer = answer.toString();
+        }
+      }
+      responseHTML += `
+        <div class="response-answer">
+          <div class="response-answer-label">${q.text}</div>
+          <div class="response-answer-value">${displayAnswer}</div>
+        </div>
+      `;
+    });
+    
+    responseHTML += `
+        </div>
+      </div>
+    `;
+    return responseHTML;
+  }).join('');
+}
+
+// Delete response
+window.deleteResponse = function(id) {
+  if (confirm('Delete this response?')) {
+    surveyData.responses = surveyData.responses.filter(r => r.id !== id);
+    updateStats();
+    displayResponses();
+    showNotification('Deleted', 'Response deleted', 'info');
+  }
+}
+
+// Clear all responses
+window.clearAllResponses = function() {
+  if (confirm('Delete all responses? This cannot be undone.')) {
+    surveyData.responses = [];
+    updateStats();
+    displayResponses();
+    showNotification('Cleared', 'All responses deleted', 'warning');
+  }
+}
+
+// Generate sample data
+window.generateSampleData = function() {
+  if (surveyData.questions.length === 0) {
+    showNotification('Error', 'Please add questions first', 'error');
+    return;
+  }
+  
+  const names = ['John Doe', 'Jane Smith', 'Mike Johnson', 'Sarah Williams', 'David Brown', 
+                  'Emily Chen', 'Robert Taylor', 'Lisa Anderson', 'James Wilson', 'Maria Garcia'];
+  const sampleTexts = [
+    'Great service, very satisfied!',
+    'Could be better in some areas.',
+    'Excellent experience overall.',
+    'Needs improvement.',
+    'Very happy with the results.'
+  ];
+  const numSamples = 10;
+  
+  for (let i = 0; i < numSamples; i++) {
+    const daysAgo = Math.floor(Math.random() * 7);
+    const hoursAgo = Math.floor(Math.random() * 24);
+    const timestamp = new Date();
+    timestamp.setDate(timestamp.getDate() - daysAgo);
+    timestamp.setHours(timestamp.getHours() - hoursAgo);
+    
+    const response = {
+      id: Date.now() + i,
+      respondentName: names[i % names.length],
+      timestamp: timestamp.toISOString(),
+      answers: {},
+      completionTime: Math.floor(Math.random() * 300) + 60,
+      isComplete: Math.random() > 0.1
+    };
+    
+    surveyData.questions.forEach(q => {
+      if (!q.required && !response.isComplete && Math.random() > 0.7) {
+        return;
+      }
+      
+      if (q.type === 'single' || q.type === 'dropdown') {
+        response.answers[q.id] = q.options[Math.floor(Math.random() * q.options.length)];
+      } else if (q.type === 'multiple') {
+        const numSelections = Math.floor(Math.random() * q.options.length) + 1;
+        const shuffled = [...q.options].sort(() => 0.5 - Math.random());
+        response.answers[q.id] = shuffled.slice(0, numSelections);
+      } else if (q.type === 'likert') {
+        response.answers[q.id] = q.options[Math.floor(Math.random() * q.options.length)];
+      } else if (q.type === 'rating') {
+        response.answers[q.id] = Math.floor(Math.random() * q.maxRating) + 1;
+      } else if (q.type === 'text' || q.type === 'textarea') {
+        response.answers[q.id] = sampleTexts[Math.floor(Math.random() * sampleTexts.length)];
+      } else if (q.type === 'range') {
+        response.answers[q.id] = Math.floor(Math.random() * (q.max - q.min + 1)) + q.min;
+      }
+    });
+    
+    surveyData.responses.push(response);
+  }
+  
+  updateStats();
+  displayResponses();
+  showNotification('Generated', `${numSamples} sample responses created`, 'success');
+}
+
+// Load sample survey
+window.loadSampleSurvey = function() {
+  surveyData.questions = [
+    {
+      id: 1,
+      text: 'How satisfied are you with our service?',
+      type: 'single',
+      options: ['Very Satisfied', 'Satisfied', 'Neutral', 'Dissatisfied', 'Very Dissatisfied'],
+      required: true
+    },
+    {
+      id: 2,
+      text: 'Which features do you use most?',
+      type: 'multiple',
+      options: ['Dashboard', 'Reports', 'Analytics', 'Export', 'Collaboration'],
+      required: false
+    },
+    {
+      id: 3,
+      text: 'How much do you agree with: "The product is easy to use"',
+      type: 'likert',
+      options: ['Strongly Disagree', 'Disagree', 'Neutral', 'Agree', 'Strongly Agree'],
+      required: true
+    },
+    {
+      id: 4,
+      text: 'Rate your overall experience',
+      type: 'rating',
+      maxRating: 5,
+      required: true
+    },
+    {
+      id: 5,
+      text: 'What improvements would you suggest?',
+      type: 'textarea',
+      required: false
+    },
+    {
+      id: 6,
+      text: 'How likely are you to recommend us? (0-10)',
+      type: 'range',
+      min: 0,
+      max: 10,
+      step: 1,
+      required: true
+    }
+  ];
+  
+  surveyData.responses = [];
+  
+  renderQuestions();
+  updateStats();
+  showNotification('Loaded', 'Sample survey loaded', 'success');
+}
+
+// Perform analysis with complete visualizations
+window.performAnalysis = function() {
+  if (!surveyData.responses || surveyData.responses.length === 0) {
+    showNotification('Error', 'No responses to analyze', 'error');
+    return;
+  }
+  
+  const container = document.getElementById('analysis-results');
+  let html = '<div style="display:grid;gap:24px;">';
+  
+  const totalResponses = surveyData.responses.length;
+  const totalQuestions = surveyData.questions ? surveyData.questions.length : 0;
+  const avgCompletionTime = surveyData.responses.reduce((sum, r) => sum + (r.completionTime || 0), 0) / totalResponses;
+  const completeResponses = surveyData.responses.filter(r => r.isComplete).length;
+  const completionRate = Math.round((completeResponses / totalResponses) * 100);
+  
+  // Summary Statistics
+  html += `
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-icon">📊</div>
+        <div class="stat-value">${totalResponses}</div>
+        <div class="stat-label">Total Responses</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">✅</div>
+        <div class="stat-value">${completionRate}%</div>
+        <div class="stat-label">Completion Rate</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">❓</div>
+        <div class="stat-value">${totalQuestions}</div>
+        <div class="stat-label">Total Questions</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">⏱️</div>
+        <div class="stat-value">${Math.round(avgCompletionTime / 60)}m ${Math.round(avgCompletionTime % 60)}s</div>
+        <div class="stat-label">Avg. Completion Time</div>
+      </div>
+    </div>
+  `;
+  
+  // Analyze each question
+  if (surveyData.questions && surveyData.questions.length > 0) {
+    surveyData.questions.forEach((q, index) => {
+      const answers = surveyData.responses
+        .map(r => (r.answers ? r.answers[q.id] : undefined))
+        .filter(a => a !== undefined && a !== null);
+      
+      const responseRate = Math.round(answers.length / totalResponses * 100);
+      
+      // Single Choice / Dropdown / Likert Scale Analysis
+      if (q.type === 'single' || q.type === 'dropdown' || q.type === 'likert') {
+        const counts = {};
+        const options = q.options || [];
+        options.forEach(opt => counts[opt] = 0);
+        answers.forEach(ans => {
+          if (counts[ans] !== undefined) counts[ans]++;
+        });
+        
+        const sortedCounts = Object.entries(counts).sort((a,b) => b[1]-a[1]);
+        const maxCount = Math.max(...Object.values(counts), 1);
+        const totalAnswers = answers.length || 1;
+        
+        const colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#f97316'];
+        
+        // Calculate pie chart angles
+        let currentAngle = -90;
+        const pieData = sortedCounts.map(([option, count], i) => {
+          const percentage = (count / totalAnswers) * 100;
+          const angle = (percentage / 100) * 360;
+          const startAngle = currentAngle;
+          currentAngle += angle;
+          return { option, count, percentage, angle, startAngle, color: colors[i % colors.length] };
+        });
+        
+        html += `
+          <div class="chart-container">
+            <div style="display:flex;justify-content:between;align-items:center;margin-bottom:16px;">
+              <div class="chart-title">
+                ${index + 1}. ${q.text}
+                <span style="background:#e0f2fe;color:#0369a1;padding:2px 8px;border-radius:4px;font-size:11px;margin-left:8px;">
+                  ${q.type.toUpperCase()}
+                </span>
+              </div>
+              <div class="response-rate-badge">📊 Response Rate: ${responseRate}%</div>
+            </div>
+            
+            <!-- Bar Chart -->
+            <div class="bar-chart">
+              ${sortedCounts.map(([option, count], i) => {
+                const percentage = totalAnswers > 0 ? Math.round(count / totalAnswers * 100) : 0;
+                const heightPercent = maxCount > 0 ? (count / maxCount * 100) : 0;
+                return `
+                  <div class="bar-item">
+                    <div class="bar" style="height:${heightPercent}%;background:${colors[i % colors.length]}">
+                      <div class="bar-value">${count} (${percentage}%)</div>
+                    </div>
+                    <div class="bar-label">${option}</div>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+            
+            <!-- Pie Chart -->
+            <div style="display:flex;gap:40px;align-items:center;margin:20px 0;">
+              <svg width="200" height="200" style="transform:rotate(0deg);">
+                ${pieData.map(d => {
+                  const x1 = 100 + 80 * Math.cos((d.startAngle * Math.PI) / 180);
+                  const y1 = 100 + 80 * Math.sin((d.startAngle * Math.PI) / 180);
+                  const x2 = 100 + 80 * Math.cos(((d.startAngle + d.angle) * Math.PI) / 180);
+                  const y2 = 100 + 80 * Math.sin(((d.startAngle + d.angle) * Math.PI) / 180);
+                  const largeArc = d.angle > 180 ? 1 : 0;
+                  
+                  return `
+                    <path d="M 100 100 L ${x1} ${y1} A 80 80 0 ${largeArc} 1 ${x2} ${y2} Z"
+                          fill="${d.color}" stroke="white" stroke-width="2" opacity="0.9"/>
+                  `;
+                }).join('')}
+              </svg>
+              <div style="display:flex;flex-direction:column;gap:8px;">
+                ${pieData.map(d => `
+                  <div style="display:flex;align-items:center;gap:8px;">
+                    <div style="width:16px;height:16px;background:${d.color};border-radius:2px;"></div>
+                    <span style="font-size:13px;color:#475569;">${d.option}</span>
+                    <span style="margin-left:auto;font-weight:600;font-size:13px;">${d.percentage.toFixed(1)}%</span>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+            
+            <!-- Data Table -->
+            <table style="width:100%;border-collapse:collapse;margin-top:16px;">
+              <thead>
+                <tr style="background:#f8fafc;">
+                  <th style="padding:8px;text-align:left;border-bottom:2px solid #e2e8f0;">Option</th>
+                  <th style="padding:8px;text-align:center;border-bottom:2px solid #e2e8f0;">Count</th>
+                  <th style="padding:8px;text-align:center;border-bottom:2px solid #e2e8f0;">Percentage</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${sortedCounts.map(([option, count]) => `
+                  <tr style="border-bottom:1px solid #f1f5f9;">
+                    <td style="padding:8px;">${option}</td>
+                    <td style="padding:8px;text-align:center;font-weight:600;">${count}</td>
+                    <td style="padding:8px;text-align:center;color:#3b82f6;font-weight:500;">
+                      ${((count / totalAnswers) * 100).toFixed(1)}%
+                    </td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+            
+            <div class="insights-box">
+              <div class="insights-title">📈 Key Insights</div>
+              <div class="insights-content">
+                • Most selected: <strong>${sortedCounts[0][0]}</strong> (${Math.round(sortedCounts[0][1] / totalAnswers * 100)}%)<br>
+                • Least selected: <strong>${sortedCounts[sortedCounts.length-1][0]}</strong> (${Math.round(sortedCounts[sortedCounts.length-1][1] / totalAnswers * 100)}%)<br>
+                • Response distribution: ${getDistributionInsight(sortedCounts, totalAnswers)}
+              </div>
+            </div>
+          </div>
+        `;
+      }
+      
+      // Multiple Choice Analysis
+      else if (q.type === 'multiple') {
+        const counts = {};
+        q.options.forEach(opt => counts[opt] = 0);
+        answers.forEach(ansArray => {
+          if (Array.isArray(ansArray)) {
+            ansArray.forEach(ans => {
+              if (counts[ans] !== undefined) counts[ans]++;
+            });
+          }
+        });
+        
+        const sortedCounts = Object.entries(counts).sort((a,b) => b[1]-a[1]);
+        const maxCount = Math.max(...Object.values(counts), 1);
+        const avgSelections = answers.length > 0 ? 
+          answers.reduce((sum, a) => sum + (Array.isArray(a) ? a.length : 0), 0) / answers.length : 0;
+        
+        const colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
+        
+        html += `
+          <div class="chart-container">
+            <div class="chart-title">
+              ${index + 1}. ${q.text}
+              <span style="background:#dcfce7;color:#166534;padding:2px 8px;border-radius:4px;font-size:11px;margin-left:8px;">
+                MULTIPLE CHOICE
+              </span>
+            </div>
+            
+            <!-- Horizontal Bar Chart -->
+            <div style="margin:20px 0;">
+              ${sortedCounts.map(([option, count], i) => {
+                const percentage = answers.length > 0 ? (count / answers.length * 100) : 0;
+                const widthPercent = maxCount > 0 ? (count / maxCount * 100) : 0;
+                return `
+                  <div style="display:flex;align-items:center;margin-bottom:12px;">
+                    <div style="width:150px;font-size:13px;color:#475569;">${option}</div>
+                    <div style="flex:1;position:relative;height:32px;background:#f1f5f9;border-radius:4px;overflow:hidden;">
+                      <div style="position:absolute;left:0;top:0;height:100%;background:${colors[i % colors.length]};width:${widthPercent}%;transition:width 0.5s;"></div>
+                      <span style="position:absolute;left:8px;top:50%;transform:translateY(-50%);font-size:12px;font-weight:600;color:${widthPercent > 20 ? 'white' : '#1e293b'};">
+                        ${count} (${percentage.toFixed(1)}%)
+                      </span>
+                    </div>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+            
+            <!-- Selection Frequency Distribution -->
+            <div style="background:#f8fafc;padding:16px;border-radius:8px;margin:16px 0;">
+              <div style="font-size:14px;font-weight:600;margin-bottom:12px;">Selection Frequency</div>
+              <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;">
+                <div style="text-align:center;">
+                  <div style="font-size:24px;font-weight:700;color:#3b82f6;">${avgSelections.toFixed(1)}</div>
+                  <div style="font-size:12px;color:#64748b;">Avg. Selections</div>
+                </div>
+                <div style="text-align:center;">
+                  <div style="font-size:24px;font-weight:700;color:#10b981;">${Math.max(...answers.map(a => Array.isArray(a) ? a.length : 0))}</div>
+                  <div style="font-size:12px;color:#64748b;">Max Selections</div>
+                </div>
+                <div style="text-align:center;">
+                  <div style="font-size:24px;font-weight:700;color:#f59e0b;">${Math.min(...answers.map(a => Array.isArray(a) ? a.length : 0))}</div>
+                  <div style="font-size:12px;color:#64748b;">Min Selections</div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Co-occurrence Matrix -->
+            <div style="margin-top:16px;">
+              <div style="font-size:14px;font-weight:600;margin-bottom:8px;">Option Combinations</div>
+              <table style="width:100%;border-collapse:collapse;font-size:12px;">
+                <thead>
+                  <tr style="background:#f1f5f9;">
+                    <th style="padding:6px;border:1px solid #e2e8f0;">Options</th>
+                    ${q.options.map(opt => `<th style="padding:6px;border:1px solid #e2e8f0;font-size:11px;">${opt.substring(0,8)}...</th>`).join('')}
+                  </tr>
+                </thead>
+                <tbody>
+                  ${q.options.map(opt1 => {
+                    return `
+                      <tr>
+                        <td style="padding:6px;border:1px solid #e2e8f0;font-weight:600;">${opt1}</td>
+                        ${q.options.map(opt2 => {
+                          let coCount = 0;
+                          answers.forEach(ansArray => {
+                            if (Array.isArray(ansArray) && ansArray.includes(opt1) && ansArray.includes(opt2)) {
+                              coCount++;
+                            }
+                          });
+                          const intensity = Math.min(coCount / answers.length, 0.5);
+                          return `<td style="padding:6px;border:1px solid #e2e8f0;background:rgba(59,130,246,${intensity});">${coCount}</td>`;
+                        }).join('')}
+                      </tr>
+                    `;
+                  }).join('')}
+                </tbody>
+              </table>
+            </div>
+            
+            <div class="insights-box">
+              <div class="insights-title">📈 Key Insights</div>
+              <div class="insights-content">
+                • Most selected: <strong>${sortedCounts[0][0]}</strong> (${Math.round(sortedCounts[0][1] / answers.length * 100)}% of respondents)<br>
+                • Avg. options selected per response: ${avgSelections.toFixed(1)}<br>
+                • Most common combination: ${getMostCommonCombination(answers, q.options)}
+              </div>
+            </div>
+          </div>
+        `;
+      }
+      
+      // Rating Analysis
+      else if (q.type === 'rating') {
+        const avgRating = answers.reduce((sum, r) => sum + r, 0) / answers.length;
+        const distribution = {};
+        for (let i = 1; i <= q.maxRating; i++) {
+          distribution[i] = answers.filter(r => r === i).length;
+        }
+        
+        // Calculate standard deviation
+        const variance = answers.reduce((sum, r) => sum + Math.pow(r - avgRating, 2), 0) / answers.length;
+        const stdDev = Math.sqrt(variance);
+        
+        html += `
+          <div class="chart-container">
+            <div class="chart-title">
+              ${index + 1}. ${q.text}
+              <span style="background:#fef3c7;color:#92400e;padding:2px 8px;border-radius:4px;font-size:11px;margin-left:8px;">
+                RATING
+              </span>
+            </div>
+            
+            <!-- Rating Summary -->
+            <div style="text-align:center;padding:20px;background:linear-gradient(135deg,#fef3c7,#fed7aa);border-radius:12px;">
+              <div style="font-size:48px;margin-bottom:8px;">
+                ${'⭐'.repeat(Math.round(avgRating))}${'☆'.repeat(q.maxRating - Math.round(avgRating))}
+              </div>
+              <div style="font-size:32px;font-weight:700;color:#92400e;">
+                ${avgRating.toFixed(2)} / ${q.maxRating}
+              </div>
+              <div style="color:#78350f;margin-top:8px;">Average Rating (σ = ${stdDev.toFixed(2)})</div>
+            </div>
+            
+            <!-- Distribution Bar Chart -->
+            <div class="bar-chart" style="margin-top:20px;">
+              ${Object.entries(distribution).map(([stars, count]) => {
+                const percentage = answers.length > 0 ? Math.round(count / answers.length * 100) : 0;
+                const heightPercent = Math.max(...Object.values(distribution)) > 0 ? 
+                  (count / Math.max(...Object.values(distribution)) * 100) : 0;
+                return `
+                  <div class="bar-item">
+                    <div class="bar" style="height:${heightPercent}%;background:linear-gradient(to top,#fbbf24,#f59e0b)">
+                      <div class="bar-value">${count} (${percentage}%)</div>
+                    </div>
+                    <div class="bar-label">${'⭐'.repeat(parseInt(stars))}</div>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+            
+            <!-- Rating Statistics Table -->
+            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:20px;">
+              <div style="background:white;padding:12px;border-radius:8px;text-align:center;border:1px solid #e2e8f0;">
+                <div style="font-size:20px;font-weight:700;color:#10b981;">${Math.max(...answers)}</div>
+                <div style="font-size:11px;color:#64748b;">Highest</div>
+              </div>
+              <div style="background:white;padding:12px;border-radius:8px;text-align:center;border:1px solid #e2e8f0;">
+                <div style="font-size:20px;font-weight:700;color:#ef4444;">${Math.min(...answers)}</div>
+                <div style="font-size:11px;color:#64748b;">Lowest</div>
+              </div>
+              <div style="background:white;padding:12px;border-radius:8px;text-align:center;border:1px solid #e2e8f0;">
+                <div style="font-size:20px;font-weight:700;color:#3b82f6;">${getMode(answers)}</div>
+                <div style="font-size:11px;color:#64748b;">Mode</div>
+              </div>
+              <div style="background:white;padding:12px;border-radius:8px;text-align:center;border:1px solid #e2e8f0;">
+                <div style="font-size:20px;font-weight:700;color:#8b5cf6;">${getMedian(answers)}</div>
+                <div style="font-size:11px;color:#64748b;">Median</div>
+              </div>
+            </div>
+            
+            <div class="insights-box">
+              <div class="insights-title">📈 Key Insights</div>
+              <div class="insights-content">
+                • Average rating: ${avgRating.toFixed(2)} out of ${q.maxRating}<br>
+                • ${getRatingSentiment(avgRating, q.maxRating)}<br>
+                • Distribution: ${getRatingDistribution(distribution, q.maxRating)}
+              </div>
+            </div>
+          </div>
+        `;
+      }
+      
+      // Range Analysis
+      else if (q.type === 'range') {
+        const avgValue = answers.reduce((sum, v) => sum + v, 0) / answers.length;
+        const minValue = Math.min(...answers);
+        const maxValue = Math.max(...answers);
+        const median = getMedian(answers);
+        
+        // Create histogram
+        const buckets = 10;
+        const bucketSize = (q.max - q.min) / buckets;
+        const histogram = Array(buckets).fill(0);
+        answers.forEach(val => {
+          const bucketIndex = Math.min(Math.floor((val - q.min) / bucketSize), buckets - 1);
+          histogram[bucketIndex]++;
+        });
+        
+        html += `
+          <div class="chart-container">
+            <div class="chart-title">
+              ${index + 1}. ${q.text}
+              <span style="background:#e0e7ff;color:#3730a3;padding:2px 8px;border-radius:4px;font-size:11px;margin-left:8px;">
+                RANGE (${q.min}-${q.max})
+              </span>
+            </div>
+            
+            <!-- Range Statistics -->
+            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:20px;">
+              <div style="text-align:center;padding:16px;background:linear-gradient(135deg,#dbeafe,#bfdbfe);border-radius:8px;">
+                <div style="font-size:28px;font-weight:700;color:#1e40af;">${avgValue.toFixed(1)}</div>
+                <div style="font-size:12px;color:#1e3a8a;">Average</div>
+              </div>
+              <div style="text-align:center;padding:16px;background:linear-gradient(135deg,#dcfce7,#bbf7d0);border-radius:8px;">
+                <div style="font-size:28px;font-weight:700;color:#166534;">${median.toFixed(1)}</div>
+                <div style="font-size:12px;color:#14532d;">Median</div>
+              </div>
+              <div style="text-align:center;padding:16px;background:linear-gradient(135deg,#fef3c7,#fed7aa);border-radius:8px;">
+                <div style="font-size:28px;font-weight:700;color:#92400e;">${minValue}</div>
+                <div style="font-size:12px;color:#78350f;">Minimum</div>
+              </div>
+              <div style="text-align:center;padding:16px;background:linear-gradient(135deg,#fecaca,#fca5a5);border-radius:8px;">
+                <div style="font-size:28px;font-weight:700;color:#991b1b;">${maxValue}</div>
+                <div style="font-size:12px;color:#7f1d1d;">Maximum</div>
+              </div>
+            </div>
+            
+            <!-- Histogram -->
+            <div style="margin:20px 0;">
+              <div style="font-size:14px;font-weight:600;margin-bottom:12px;">Distribution Histogram</div>
+              <div style="display:flex;align-items:flex-end;height:150px;gap:2px;">
+                ${histogram.map((count, i) => {
+                  const heightPercent = Math.max(...histogram) > 0 ? (count / Math.max(...histogram) * 100) : 0;
+                  const rangeStart = q.min + (i * bucketSize);
+                  const rangeEnd = rangeStart + bucketSize;
+                  return `
+                    <div style="flex:1;position:relative;height:100%;">
+                      <div style="position:absolute;bottom:0;width:100%;background:linear-gradient(to top,#3b82f6,#60a5fa);height:${heightPercent}%;border-radius:2px 2px 0 0;">
+                        <span style="position:absolute;top:-20px;left:50%;transform:translateX(-50%);font-size:10px;font-weight:600;">${count}</span>
+                      </div>
+                      <div style="position:absolute;bottom:-20px;left:0;right:0;font-size:9px;text-align:center;color:#64748b;">
+                        ${Math.round(rangeStart)}
+                      </div>
+                    </div>
+                  `;
+                }).join('')}
+              </div>
+            </div>
+            
+            <!-- Box Plot Visualization -->
+            <div style="margin-top:40px;padding:20px;background:#f8fafc;border-radius:8px;">
+              <div style="font-size:14px;font-weight:600;margin-bottom:12px;">Box Plot</div>
+              <div style="position:relative;height:60px;background:white;border:1px solid #e2e8f0;border-radius:4px;">
+                <div style="position:absolute;top:50%;left:${((minValue - q.min) / (q.max - q.min)) * 100}%;width:${((maxValue - minValue) / (q.max - q.min)) * 100}%;height:2px;background:#cbd5e1;transform:translateY(-50%);"></div>
+                <div style="position:absolute;top:25%;left:${((getQuartile(answers, 0.25) - q.min) / (q.max - q.min)) * 100}%;width:${((getQuartile(answers, 0.75) - getQuartile(answers, 0.25)) / (q.max - q.min)) * 100}%;height:50%;background:#3b82f6;opacity:0.3;border:2px solid #3b82f6;border-radius:4px;"></div>
+                <div style="position:absolute;top:25%;left:${((median - q.min) / (q.max - q.min)) * 100}%;width:2px;height:50%;background:#ef4444;"></div>
+                <div style="position:absolute;top:10%;left:${((avgValue - q.min) / (q.max - q.min)) * 100}%;width:12px;height:12px;background:#10b981;border-radius:50%;transform:translateX(-50%);"></div>
+              </div>
+              <div style="display:flex;justify-content:space-between;margin-top:8px;font-size:11px;color:#64748b;">
+                <span>Min: ${minValue}</span>
+                <span>Q1: ${getQuartile(answers, 0.25).toFixed(1)}</span>
+                <span>Median: ${median.toFixed(1)}</span>
+                <span>Q3: ${getQuartile(answers, 0.75).toFixed(1)}</span>
+                <span>Max: ${maxValue}</span>
+              </div>
+            </div>
+            
+            <div class="insights-box">
+              <div class="insights-title">📈 Key Insights</div>
+              <div class="insights-content">
+                • Range utilization: ${((maxValue - minValue) / (q.max - q.min) * 100).toFixed(1)}% of available range<br>
+                • Central tendency: Values cluster around ${avgValue.toFixed(1)}<br>
+                • Spread: ${getSpreadAnalysis(answers, q)}
+              </div>
+            </div>
+          </div>
+        `;
+      }
+      
+      // Text Response Analysis
+      else if (q.type === 'text' || q.type === 'textarea') {
+        const wordFreq = {};
+        const sentiments = { positive: 0, negative: 0, neutral: 0 };
+        const avgLength = answers.reduce((sum, text) => sum + text.length, 0) / answers.length;
+        
+        // Word frequency analysis
+        answers.forEach(text => {
+          // Simple sentiment analysis
+          if (text.match(/good|great|excellent|amazing|love|best|happy|satisfied/gi)) sentiments.positive++;
+          else if (text.match(/bad|poor|terrible|hate|worst|unhappy|dissatisfied/gi)) sentiments.negative++;
+          else sentiments.neutral++;
+          
+          text.toLowerCase().split(/\s+/).forEach(word => {
+            word = word.replace(/[^a-z0-9]/g, '');
+            if (word.length > 3) {
+              wordFreq[word] = (wordFreq[word] || 0) + 1;
+            }
+          });
+        });
+        
+        const topWords = Object.entries(wordFreq)
+          .sort((a, b) => b[1] - a[1])
+          .slice(0, 15);
+        
+        html += `
+          <div class="chart-container">
+            <div class="chart-title">
+              ${index + 1}. ${q.text}
+              <span style="background:#ecfdf5;color:#065f46;padding:2px 8px;border-radius:4px;font-size:11px;margin-left:8px;">
+                TEXT RESPONSE
+              </span>
+            </div>
+            
+            <!-- Response Statistics -->
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px;">
+              <div style="text-align:center;padding:16px;background:#f0f9ff;border-radius:8px;">
+                <div style="font-size:28px;font-weight:700;color:#0369a1;">${answers.length}</div>
+                <div style="font-size:12px;color:#075985;">Total Responses</div>
+              </div>
+              <div style="text-align:center;padding:16px;background:#f0fdf4;border-radius:8px;">
+                <div style="font-size:28px;font-weight:700;color:#166534;">${Math.round(avgLength)}</div>
+                <div style="font-size:12px;color:#14532d;">Avg. Characters</div>
+              </div>
+              <div style="text-align:center;padding:16px;background:#fef3c7;border-radius:8px;">
+                <div style="font-size:28px;font-weight:700;color:#92400e;">${responseRate}%</div>
+                <div style="font-size:12px;color:#78350f;">Response Rate</div>
+              </div>
+            </div>
+            
+            <!-- Word Cloud -->
+            ${topWords.length > 0 ? `
+              <div style="margin:20px 0;">
+                <div style="font-size:14px;font-weight:600;margin-bottom:12px;">Word Cloud</div>
+                <div class="word-cloud" style="min-height:150px;">
+                  ${topWords.map(([word, count], i) => {
+                    const size = 24 - i;
+                    const colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4'];
+                    return `<span class="word-item" style="font-size:${size}px;color:${colors[i % colors.length]};font-weight:${600 - i * 20};">${word}</span>`;
+                  }).join('')}
+                </div>
+              </div>
+            ` : ''}
+            
+            <!-- Sentiment Analysis -->
+            <div style="margin:20px 0;">
+              <div style="font-size:14px;font-weight:600;margin-bottom:12px;">Sentiment Analysis</div>
+              <div style="display:flex;gap:8px;">
+                <div style="flex:${sentiments.positive};background:#10b981;padding:12px;border-radius:4px;text-align:center;color:white;">
+                  <div style="font-size:20px;font-weight:700;">${sentiments.positive}</div>
+                  <div style="font-size:11px;">Positive</div>
+                </div>
+                <div style="flex:${sentiments.neutral};background:#64748b;padding:12px;border-radius:4px;text-align:center;color:white;">
+                  <div style="font-size:20px;font-weight:700;">${sentiments.neutral}</div>
+                  <div style="font-size:11px;">Neutral</div>
+                </div>
+                <div style="flex:${sentiments.negative};background:#ef4444;padding:12px;border-radius:4px;text-align:center;color:white;">
+                  <div style="font-size:20px;font-weight:700;">${sentiments.negative}</div>
+                  <div style="font-size:11px;">Negative</div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Sample Responses -->
+            <div style="margin-top:20px;">
+              <div style="font-size:14px;font-weight:600;margin-bottom:12px;">Sample Responses</div>
+              <div style="display:grid;gap:8px;max-height:300px;overflow-y:auto;">
+                ${answers.slice(0, 5).map((text, i) => `
+                  <div style="padding:12px;background:${i % 2 === 0 ? '#f8fafc' : 'white'};border-left:3px solid #3b82f6;border-radius:4px;">
+                    <div style="font-size:11px;color:#64748b;margin-bottom:4px;">Response #${i + 1}</div>
+                    <div style="font-size:13px;color:#1e293b;font-style:italic;">"${text}"</div>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+            
+            <!-- Top Keywords Table -->
+            ${topWords.length > 0 ? `
+              <table style="width:100%;margin-top:20px;border-collapse:collapse;">
+                <thead>
+                  <tr style="background:#f1f5f9;">
+                    <th style="padding:8px;text-align:left;border-bottom:2px solid #e2e8f0;">Keyword</th>
+                    <th style="padding:8px;text-align:center;border-bottom:2px solid #e2e8f0;">Frequency</th>
+                    <th style="padding:8px;text-align:center;border-bottom:2px solid #e2e8f0;">Percentage</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${topWords.slice(0, 10).map(([word, count]) => `
+                    <tr style="border-bottom:1px solid #f1f5f9;">
+                      <td style="padding:8px;font-weight:500;">${word}</td>
+                      <td style="padding:8px;text-align:center;">${count}</td>
+                      <td style="padding:8px;text-align:center;color:#3b82f6;">
+                        ${((count / answers.length) * 100).toFixed(1)}%
+                      </td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            ` : ''}
+            
+            <div class="insights-box">
+              <div class="insights-title">📈 Key Insights</div>
+              <div class="insights-content">
+                • Response quality: ${avgLength > 50 ? 'Detailed responses' : 'Brief responses'} (avg. ${Math.round(avgLength)} chars)<br>
+                • Most common theme: ${topWords.length > 0 ? topWords[0][0] : 'N/A'}<br>
+                • Overall sentiment: ${getSentimentSummary(sentiments)}
+              </div>
+            </div>
+          </div>
+        `;
+      }
+    });
+  }
+  
+  html += '</div>';
+  container.innerHTML = html;
+}
+
+// Helper functions for analysis
+window.getMode = function(arr) {
+  const freq = {};
+  let maxFreq = 0;
+  let mode = arr[0];
+  arr.forEach(val => {
+    freq[val] = (freq[val] || 0) + 1;
+    if (freq[val] > maxFreq) {
+      maxFreq = freq[val];
+      mode = val;
+    }
+  });
+  return mode;
+}
+
+window.getMedian = function(arr) {
+  const sorted = [...arr].sort((a, b) => a - b);
+  const mid = Math.floor(sorted.length / 2);
+  return sorted.length % 2 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+}
+
+window.getQuartile = function(arr, q) {
+  const sorted = [...arr].sort((a, b) => a - b);
+  const pos = (sorted.length - 1) * q;
+  const base = Math.floor(pos);
+  const rest = pos - base;
+  if (sorted[base + 1] !== undefined) {
+    return sorted[base] + rest * (sorted[base + 1] - sorted[base]);
+  } else {
+    return sorted[base];
+  }
+}
+
+window.getRatingSentiment = function(avg, max) {
+  const percentage = (avg / max) * 100;
+  if (percentage >= 80) return 'Excellent overall satisfaction';
+  if (percentage >= 60) return 'Good overall satisfaction';
+  if (percentage >= 40) return 'Moderate satisfaction';
+  return 'Low satisfaction - needs improvement';
+}
+
+window.getRatingDistribution = function(dist, max) {
+  const highRatings = Object.entries(dist)
+    .filter(([rating]) => parseInt(rating) >= Math.ceil(max * 0.6))
+    .reduce((sum, [, count]) => sum + count, 0);
+  const total = Object.values(dist).reduce((sum, count) => sum + count, 0);
+  const percentage = (highRatings / total) * 100;
+  return `${percentage.toFixed(1)}% gave high ratings (${Math.ceil(max * 0.6)}+ stars)`;
+}
+
+window.getSpreadAnalysis = function(answers, q) {
+  const range = Math.max(...answers) - Math.min(...answers);
+  const possibleRange = q.max - q.min;
+  const spreadPercentage = (range / possibleRange) * 100;
+  if (spreadPercentage > 75) return 'Wide spread across the range';
+  if (spreadPercentage > 50) return 'Moderate spread';
+  return 'Narrow spread - responses clustered';
+}
+
+window.getSentimentSummary = function(sentiments) {
+  const total = sentiments.positive + sentiments.negative + sentiments.neutral;
+  const posPercent = (sentiments.positive / total * 100).toFixed(1);
+  const negPercent = (sentiments.negative / total * 100).toFixed(1);
+  if (sentiments.positive > sentiments.negative * 2) return `Predominantly positive (${posPercent}%)`;
+  if (sentiments.negative > sentiments.positive * 2) return `Predominantly negative (${negPercent}%)`;
+  return `Mixed sentiments (${posPercent}% positive, ${negPercent}% negative)`;
+}
+
+window.getMostCommonCombination = function(answers, options) {
+  const combinations = {};
+  answers.forEach(ansArray => {
+    if (Array.isArray(ansArray) && ansArray.length > 1) {
+      const key = ansArray.sort().join(' + ');
+      combinations[key] = (combinations[key] || 0) + 1;
+    }
+  });
+  const sorted = Object.entries(combinations).sort((a, b) => b[1] - a[1]);
+  return sorted.length > 0 ? sorted[0][0] : 'No combinations found';
+}
+
+// Helper function
+window.getDistributionInsight = function(sortedCounts, totalAnswers) {
+  if (sortedCounts.length === 0) return 'No data available';
+  
+  const topPercentage = Math.round(sortedCounts[0][1] / totalAnswers * 100);
+  
+  if (topPercentage > 60) {
+    return 'Strong consensus on top choice';
+  } else if (topPercentage > 40) {
+    return 'Moderate preference for top choice';
+  } else {
+    return 'Evenly distributed responses';
+  }
+}
+
+// Update statistics
+window.updateStats = function() {
+  document.getElementById('total-questions').textContent = surveyData.questions.length;
+  document.getElementById('response-count').textContent = surveyData.responses.length;
+  
+  const completionRate = surveyData.responses.length > 0 ?
+    Math.round(surveyData.responses.filter(r => r.isComplete).length / surveyData.responses.length * 100) : 0;
+  document.getElementById('completion-rate').textContent = completionRate + '%';
+  
+  document.getElementById('total-responses').textContent = surveyData.responses.length;
+  
+  const avgTime = surveyData.responses.length > 0 ?
+    surveyData.responses.reduce((sum, r) => sum + (r.completionTime || 0), 0) / surveyData.responses.length : 0;
+  document.getElementById('avg-time').textContent = Math.round(avgTime / 60) + 'm';
+  
+  const today = new Date().toDateString();
+  const todayResponses = surveyData.responses.filter(r => 
+    new Date(r.timestamp).toDateString() === today
+  ).length;
+  document.getElementById('today-responses').textContent = todayResponses;
+}
+
+// Save to local
+window.saveToLocal = function() {
+  surveyData.title = document.getElementById('survey-title').value;
+  surveyData.description = document.getElementById('survey-description').value;
+  showNotification('Saved', 'Survey saved to memory', 'success');
+}
+
+// Export data
+window.exportData = function() {
+  if (surveyData.responses.length === 0) {
+    showNotification('Error', 'No data to export', 'error');
+    return;
+  }
+  
+  let csv = 'Response ID,Respondent Name,Timestamp,Completion Time (seconds)';
+  
+  surveyData.questions.forEach(q => {
+    csv += ',"' + q.text.replace(/"/g, '""') + '"';
+  });
+  csv += '\n';
+  
+  surveyData.responses.forEach(r => {
+    csv += r.id + ',';
+    csv += '"' + (r.respondentName || 'Anonymous').replace(/"/g, '""') + '",';
+    csv += '"' + new Date(r.timestamp).toLocaleString() + '",';
+    csv += r.completionTime || 0;
+    
+    surveyData.questions.forEach(q => {
+      const answer = r.answers ? r.answers[q.id] : '';
+      let answerStr = '';
+      
+      if (Array.isArray(answer)) {
+        answerStr = answer.join('; ');
+      } else if (answer !== undefined && answer !== null) {
+        answerStr = answer.toString();
+      }
+      
+      csv += ',"' + answerStr.replace(/"/g, '""') + '"';
+    });
+    csv += '\n';
+  });
+  
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const url = window.URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'survey_responses_' + new Date().toISOString().split('T')[0] + '.csv';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  window.URL.revokeObjectURL(url);
+  
+  showNotification('Success', 'Data exported successfully', 'success');
+}
+
+// Preview survey
+window.previewSurvey = function() {
+  const modal = document.getElementById('preview-modal');
+  const content = document.getElementById('preview-content');
+  
+  if (surveyData.questions.length === 0) {
+    showNotification('Error', 'Please add questions first', 'error');
+    return;
+  }
+  
+  let html = `
+    <div style="padding:20px;">
+      <h2 style="color:#1e293b;margin-bottom:8px;">${surveyData.title || 'Untitled Survey'}</h2>
+      <p style="color:#64748b;margin-bottom:24px;">${surveyData.description || 'Please complete this survey.'}</p>
+  `;
+  
+  surveyData.questions.forEach((q, index) => {
+    html += `
+      <div style="background:#f8fafc;border-radius:8px;padding:16px;margin-bottom:16px;">
+        <div style="font-weight:600;margin-bottom:12px;">
+          ${index + 1}. ${q.text}
+          ${q.required ? '<span style="color:#ef4444;">*</span>' : ''}
+        </div>
+    `;
+    
+    if (q.type === 'single' || q.type === 'dropdown' || q.type === 'likert') {
+      q.options.forEach(opt => {
+        html += `
+          <div style="padding:8px 12px;background:white;border:1px solid #e2e8f0;border-radius:6px;margin-bottom:8px;">
+            ${q.type === 'single' ? '○' : ''} ${opt}
+          </div>
+        `;
+      });
+    } else if (q.type === 'multiple') {
+      q.options.forEach(opt => {
+        html += `
+          <div style="padding:8px 12px;background:white;border:1px solid #e2e8f0;border-radius:6px;margin-bottom:8px;">
+            ☐ ${opt}
+          </div>
+        `;
+      });
+    } else if (q.type === 'rating') {
+      html += '<div style="font-size:24px;">';
+      for (let i = 0; i < q.maxRating; i++) {
+        html += '☆ ';
+      }
+      html += '</div>';
+    } else if (q.type === 'text') {
+      html += '<input type="text" style="width:100%;padding:8px;border:1px solid #e2e8f0;border-radius:6px;" placeholder="Your answer...">';
+    } else if (q.type === 'textarea') {
+      html += '<textarea style="width:100%;padding:8px;border:1px solid #e2e8f0;border-radius:6px;" rows="3" placeholder="Your answer..."></textarea>';
+    } else if (q.type === 'range') {
+      html += `
+        <div style="display:flex;justify-content:space-between;margin-top:8px;">
+          <span>${q.min}</span>
+          <input type="range" style="flex:1;margin:0 12px;" min="${q.min}" max="${q.max}" step="${q.step}">
+          <span>${q.max}</span>
+        </div>
+      `;
+    }
+    
+    html += '</div>';
+  });
+  
+  html += '</div>';
+  content.innerHTML = html;
+  modal.style.display = 'block';
+}
+
+// Close modal
+window.closeModal = function() {
+  document.getElementById('preview-modal').style.display = 'none';
+}
+
+// Show notification
+window.showNotification = function(title, message, type = 'success') {
+  const container = document.getElementById('notification-container');
+  const notification = document.createElement('div');
+  notification.className = 'notification';
+  
+  let borderColor = 'var(--success)';
+  if (type === 'error') borderColor = 'var(--danger)';
+  else if (type === 'warning') borderColor = 'var(--warning)';
+  else if (type === 'info') borderColor = 'var(--info)';
+  
+  notification.style.borderLeftColor = borderColor;
+  notification.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:start;">
+      <div>
+        <div style="font-weight:600;margin-bottom:4px;">${title}</div>
+        <div style="font-size:14px;color:#64748b;">${message}</div>
+      </div>
+      <span class="notification-close" onclick="this.parentElement.parentElement.remove()">✕</span>
+    </div>
+  `;
+  
+  container.appendChild(notification);
+  
+  setTimeout(() => {
+    notification.classList.add('show');
+  }, 10);
+  
+  setTimeout(() => {
+    notification.classList.remove('show');
+    setTimeout(() => {
+      notification.remove();
+    }, 300);
+  }, 3000);
+}
+
+// Close modal when clicking outside
+window.onclick = function(event) {
+  const modal = document.getElementById('preview-modal');
+  if (event.target === modal) {
+    modal.style.display = 'none';
+  }
+}
+
+// Initialize on load
+document.addEventListener('DOMContentLoaded', function() {
+  updateStats();
+});
+</script>
+
+</body>
+</html>
