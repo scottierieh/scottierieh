@@ -69,6 +69,7 @@
     padding:0 24px;
   }
   
+  
   /* Hero Section */
   .hero-section{
     text-align:center;
@@ -349,6 +350,14 @@
 
 <!-- Main Content -->
 <div class="main-container">
+ 
+  <!-- Analysis Detail Container -->
+<div id="analysis-detail" style="display:none; margin-top:40px; padding:24px; background:#fff; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.1);">
+  <h2 id="analysis-title"></h2>
+  <p id="analysis-description"></p>
+  <ul id="analysis-methods"></ul>
+</div>
+
   
   <!-- Hero Section -->
   <div class="hero-section">
@@ -545,8 +554,49 @@
 
 <script>
 function openAnalysis(type) {
-  // Here you would navigate to the specific analysis page
-  // For now, we'll just show an alert
+ const analysisData = {
+    'descriptive': {
+      title: 'Descriptive Statistics',
+      description: 'Summarize and describe the main features of your dataset with comprehensive statistical measures.',
+      methods: [
+        'Frequency Analysis & Distributions',
+        'Central Tendency & Variability',
+        'Crosstabulation & Contingency',
+        'Exploratory Data Analysis'
+      ]
+    },
+    'assumption': {
+      title: 'Assumption Checks',
+      description: 'Verify statistical assumptions before conducting analyses to ensure valid results.',
+      methods: [
+        'Normality Tests (Shapiro-Wilk, K-S)',
+        'Homogeneity of Variance',
+        'Linearity & Independence',
+        'Outlier Detection'
+      ]
+    },
+    // 다른 카테고리도 동일하게 추가 가능
+  };
+
+  const container = document.getElementById('analysis-detail');
+  const data = analysisData[type];
+
+  if (data) {
+    document.getElementById('analysis-title').innerText = data.title;
+    document.getElementById('analysis-description').innerText = data.description;
+    const methodsList = document.getElementById('analysis-methods');
+    methodsList.innerHTML = '';
+    data.methods.forEach(m => {
+      const li = document.createElement('li');
+      li.innerText = m;
+      methodsList.appendChild(li);
+    });
+    container.style.display = 'block';
+    container.scrollIntoView({behavior: 'smooth'});
+  }
+}
+
+  
   const analysisNames = {
     'descriptive': 'Descriptive Statistics',
     'assumption': 'Assumption Checks',
