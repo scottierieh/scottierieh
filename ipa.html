@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>📊 IPA Survey Platform</title>
+<title>📊 IPA (Importance-Performance) Survey Platform</title>
 
 <style>
   :root{
@@ -154,7 +154,7 @@
   <div class="header-content">
     <div class="logo">
       <div class="logo-icon">📊</div>
-      <span>IPA Survey</span>
+      <span>IPA (Importance-Performance) Survey</span>
     </div>
     
     <div class="nav-tabs">
@@ -164,6 +164,8 @@
     </div>
     
     <div class="header-actions">
+      <button class="btn ghost small" onclick="goToMyPage()">← Back to Dashboard</button>
+      <button class="btn primary small" onclick="saveToLocal()">💾 Save Survey</button>
       <div class="user-avatar">Admin</div>
     </div>
   </div>
@@ -194,7 +196,7 @@
     
     <div class="card">
       <div class="card-header">
-        <h2 class="card-title">🎨 IPA Survey Design</h2>
+        <h2 class="card-title">🎨 IPA (Importance-Performance) Survey Design</h2>
         <div>
           <button class="btn ghost small" onclick="previewSurvey()">👁️ Preview</button>
           <button class="btn success small" onclick="loadSampleSurvey()">📝 Load Sample Survey</button>
@@ -1051,13 +1053,26 @@ function saveToLocal() {
   
   saveToLocalStorage();
   showNotification('Save Complete', 'Data has been saved to browser storage.', 'success');
+}
+
+function goToMyPage() {
+  const hasUnsavedChanges = 
+    document.getElementById('survey-title').value !== surveyData.title ||
+    document.getElementById('survey-description').value !== surveyData.description ||
+    document.getElementById('overall-question').value !== surveyData.overallQuestion;
   
-  setTimeout(() => {
-    const goBack = confirm('Return to dashboard?');
-    if (goBack) {
-      window.location.href = './mypage.html';
+  if (hasUnsavedChanges) {
+    const shouldSave = confirm('You have unsaved changes. Would you like to save before returning to dashboard?');
+    if (shouldSave) {
+      saveToLocal();
+      setTimeout(() => {
+        window.location.href = './mypage-complete.html';
+      }, 500);
+      return;
     }
-  }, 1000);
+  }
+  
+  window.location.href = './mypage-complete.html';
 }
 
 function saveToLocalStorage() {
