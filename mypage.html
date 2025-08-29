@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>📊 Statistical Analysis Platform</title>
+
+<style>
+  :root{
+    --bg:#f8fafc; --card:#ffffff; --muted:#64748b; --accent:#3b82f6; --success:#10b981;
+    --warning:#f59e0b; --danger:#ef4444; --purple:#8b5cf6; --info:#06b6d4;
+    --shadow:0 4px 6px -1px rgba(0,0,0,0.1); --shadow-lg:0 10px 15px -3px rgba(0,0,0,0.1);
+    --gradient:linear-gradient(135deg,#667eea 0%,#764ba2 100%);
+  }
+  
+  * {box-sizing:border-box;margin:0;padding:0;}
+  
+  body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:#1e293b;line-height:1.6;margin:0;padding:0}
+  
+  /* Header Navigation */
+  .header{background:white;border-bottom:1px solid #e2e8f0;position:sticky;top:0;z-index:100;box-shadow:var(--shadow)}
+  .header-content{max-width:1400px;margin:0 auto;padding:0 24px;display:flex;align-items:center;justify-content:space-between;height:64px}
+  
+  .logo{display:flex;align-items:center;gap:12px;font-weight:700;font-size:20px;cursor:pointer}
+  .logo-icon{width:40px;height:40px;background:var(--gradient);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:24px}
+  
+  /* Navigation with Dropdown - Initially Hidden */
+    .nav-tabs{
+    display:none;
+    gap:4px;
+    background:#f1f5f9;
+    padding:4px;
+    border-radius:12px;
+  }
+  
+  .nav-tabs.active{
+    display:flex;
+  }
+  
+  .nav-item{
+    position:relative;
+  }
+  
+  .nav-tab{
+    padding:8px 16px;
+    border-radius:8px;
+    border:none;
+    background:transparent;
+    cursor:pointer;
+    font-weight:500;
+    color:#64748b;
+    transition:all 0.2s;
+    white-space:nowrap;
+    font-size:14px;
+    display:flex;
+    align-items:center;
+    gap:4px;
+  }
+  
+  .nav-tab:hover{
+    background:white;
+    color:#1e293b;
+    box-shadow:0 1px 3px rgba(0,0,0,0.1);
+  }
+  
+  .nav-tab.active{
+    background:white;
+    color:#1e293b;
+    box-shadow:0 1px 3px rgba(0,0,0,0.1);
+  }
+  
+  /* Dropdown Menu */
+  .dropdown{
+    position:absolute;
+    top:calc(100% + 4px);
+    left:50%;
+    transform:translateX(-50%);
+    background:white;
+    border-radius:12px;
+    box-shadow:0 10px 40px rgba(0,0,0,0.15);
+    padding:8px;
+    min-width:200px;
+    opacity:0;
+    visibility:hidden;
+    transition:all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    pointer-events:none;
+  }
+  
+  /* Invisible bridge to keep hover active */
+  .dropdown::before{
+    content:'';
+    position:absolute;
+    top:-8px;
+    left:0;
+    right:0;
+    height:12px;
+    background:transparent;
+  }
+  
+  .nav-item:hover .dropdown{
+    opacity:1;
+    visibility:visible;
+    pointer-events:all;
+  }
+  
+  .dropdown-item{
+    padding:10px 16px;
+    border-radius:8px;
+    cursor:pointer;
+    transition:all 0.2s;
+    font-size:13px;
+    color:#475569;
+    display:block;
+  }
+  
+  .dropdown-item:hover{
+    background:#f8fafc;
+    color:#1e293b;
+    transform:translateX(4px);
+  }
+  
+  /* Category specific colors on hover */
+  .descriptives .dropdown-item:hover{background:linear-gradient(to right,#3b82f615,#06b6d415);color:#3b82f6}
+  .difference .dropdown-item:hover{background:linear-gradient(to right,#8b5cf615,#a855f715);color:#8b5cf6}
+  .regression .dropdown-item:hover{background:linear-gradient(to right,#10b98115,#05966915);color:#10b981}
+  .classification .dropdown-item:hover{background:linear-gradient(to right,#f59e0b15,#f9731615);color:#f59e0b}
+  .reliability .dropdown-item:hover{background:linear-gradient(to right,#ef444415,#f8717115);color:#ef4444}
+  
+  /* Back Button */
+  .back-btn{
+    display:none;
+    align-items:center;
+    gap:8px;
+    padding:8px 16px;
+    background:#f1f5f9;
+    border:none;
+    border-radius:8px;
+    color:#64748b;
+    cursor:pointer;
+    font-weight:500;
+    transition:all 0.2s;
+  }
+  
+  .back-btn.active{
+    display:flex;
+  }
+  
+  .back-btn:hover{
+    background:#e2e8f0;
+    color:#1e293b;
+    transform:translateX(-2px);
+  }
+  
+  .header-actions{display:flex;gap:12px;align-items:center}
+  .user-avatar{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#667eea,#764ba2);display:flex;align-items:center;justify-content:center;color:white;font-weight:600}
+  
+  .btn{border:0;padding:10px 20px;border-radius:10px;cursor:pointer;font-weight:500;transition:all 0.2s;display:inline-flex;align-items:center;gap:8px}
+  .btn:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(0,0,0,0.15)}
+  .btn.primary{background:var(--accent);color:#fff}
+  .btn.ghost{background:#f1f5f9;color:#475569}
+  .btn.small{padding:6px 12px;font-size:13px}
+  .btn.icon{padding:8px;width:36px;height:36px;justify-content:center}
+  
+  /* Main container */
+  .main-container{
+    max-width:1400px;
+    margin:40px auto;
+    padding:0 24px;
+  }
+  
+  /* Main Menu Section */
+  .main-menu{
+    display:block;
+  }
+  
+  .main-menu.hidden{
+    display:none;
+  }
+  
+  .hero-section{
+    text-align:center;
+    margin-bottom:48px;
+  }
+  
+  .hero-title{
+    font-size:48px;
+    font-weight:800;
+    background:var(--gradient);
+    -webkit-background-clip:text;
+    -webkit-text-fill-color:transparent;
+    background-clip:text;
+    margin-bottom:16px;
+  }
+  
+  .hero-subtitle{
+    font-size:20px;
+    color:var(--muted);
+  }
+  
+  .category-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(300px,1fr));
+    gap:24px;
+    margin-bottom:32px;
+  }
+  
+  .category-card{
+    background:white;
+    border-radius:16px;
+    padding:32px;
+    box-shadow:var(--shadow);
+    cursor:pointer;
+    transition:all 0.3s;
+    border:2px solid transparent;
+    position:relative;
+    overflow:hidden;
+  }
+  
+  .category-card::before{
+    content:'';
+    position:absolute;
+    top:0;
+    left:0;
+    right:0;
+    height:4px;
+    background:var(--gradient);
+    transform:scaleX(0);
+    transition:transform 0.3s;
+  }
+  
+  .category-card:hover::before{
+    transform:scaleX(1);
+  }
+  
+  .category-card:hover{
+    transform:translateY(-4px);
+    box-shadow:var(--shadow-lg);
+    border-color:#e2e8f0;
+  }
+  
+  .category-icon{
+    width:60px;
+    height:60px;
+    background:#f1f5f9;
+    border-radius:12px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:28px;
+    margin-bottom:20px;
+  }
+  
+  .category-card:nth-child(1) .category-icon{background:linear-gradient(135deg,#667eea,#764ba2);color:white}
+  .category-card:nth-child(2) .category-icon{background:linear-gradient(135deg,#3b82f6,#06b6d4);color:white}
+  .category-card:nth-child(3) .category-icon{background:linear-gradient(135deg,#8b5cf6,#a855f7);color:white}
+  .category-card:nth-child(4) .category-icon{background:linear-gradient(135deg,#10b981,#059669);color:white}
+  .category-card:nth-child(5) .category-icon{background:linear-gradient(135deg,#f59e0b,#f97316);color:white}
+  .category-card:nth-child(6) .category-icon{background:linear-gradient(135deg,#ef4444,#f87171);color:white}
+  .category-card:nth-child(7) .category-icon{background:linear-gradient(135deg,#06b6d4,#0891b2);color:white}
+  
+  .category-title{
+    font-size:20px;
+    font-weight:700;
+    color:#1e293b;
+    margin-bottom:8px;
+  }
+  
+  .category-desc{
+    font-size:14px;
+    color:var(--muted);
+    line-height:1.5;
+    margin-bottom:16px;
+  }
+  
+  .category-items{
+    display:flex;
+    flex-wrap:wrap;
+    gap:6px;
+  }
+  
+  .category-tag{
+    padding:4px 8px;
+    background:#f8fafc;
+    border-radius:6px;
+    font-size:12px;
+    color:#64748b;
+  }
+  
+  /* Analysis Content Section */
+  .analysis-content{
+    display:none;
+  }
+  
+  .analysis-content.active{
+    display:block;
+  }
+  
+  .section-header{
+    background:white;
+    border-radius:16px;
+    padding:24px;
+    box-shadow:var(--shadow);
+    margin-bottom:24px;
+  }
+  
+  .section-title{
+    font-size:28px;
+    font-weight:700;
+    color:#1e293b;
+    margin-bottom:8px;
+  }
+  
+  .section-desc{
+    font-size:16px;
+    color:var(--muted);
+  }
+  
+  @media (max-width: 768px) {
+    .header-content{padding:0 16px}
+    .category-grid{grid-template-columns:1fr}
+    .hero-title{font-size:32px}
+  }
+</style>
+</head>
+<body>
+
+<!-- Header Navigation -->
+<div class="header">
+  <div class="header-content">
+    <div class="logo" onclick="goHome()">
+      <div class="logo-icon">📊</div>
+      <span>Statistical Analysis Platform</span>
+    </div>
+    
+    <!-- Back Button -->
+    <button class="back-btn" id="backBtn" onclick="goHome()">
+      ← Back to Main
+    </button>
+    
+    <!-- Navigation Tabs (Initially Hidden) -->
+    <div class="nav-tabs" id="navTabs">
+      <div class="nav-item descriptives">
+        <button class="nav-tab">
+          📊 Descriptive
+          <span style="font-size:10px">▼</span>
+        </button>
+        <div class="dropdown">
+          <div class="dropdown-item" onclick="selectAnalysis('frequency')">
+            Frequency Analysis
+          </div>
+          <div class="dropdown-item" onclick="selectAnalysis('descriptive')">
+            Descriptive Measures
+          </div>
+          <div class="dropdown-item" onclick="selectAnalysis('crosstab')">
+            Crosstabulation
+          </div>
+          <div class="dropdown-item" onclick="selectAnalysis('correlation')">
+            Correlation Analysis
+          </div>
+        </div>
+      </div>
+      
+      <div class="nav-item difference">
+        <button class="nav-tab">
+          🔍 Comparison
+          <span style="font-size:10px">▼</span>
+        </button>
+        <div class="dropdown">
+          <div class="dropdown-item" onclick="selectAnalysis('ttest')">
+            t-test
+          </div>
+          <div class="dropdown-item" onclick="selectAnalysis('anova')">
+            ANOVA
+          </div>
+          <div class="dropdown-item" onclick="selectAnalysis('nonparametric')">
+            Nonparametric Tests
+          </div>
+        </div>
+      </div>
+      
+      <div class="nav-item regression">
+        <button class="nav-tab">
+          📈 Prediction
+          <span style="font-size:10px">▼</span>
+        </button>
+        <div class="dropdown">
+          <div class="dropdown-item" onclick="selectAnalysis('regression')">
+            Regression Analysis
+          </div>
+          <div class="dropdown-item" onclick="selectAnalysis('logistic')">
+            Logistic Regression
+          </div>
+          <div class="dropdown-item" onclick="selectAnalysis('glm')">
+            GLM
+          </div>
+        </div>
+      </div>
+      
+      <div class="nav-item classification">
+        <button class="nav-tab">
+          🎯 Classification
+          <span style="font-size:10px">▼</span>
+        </button>
+        <div class="dropdown">
+          <div class="dropdown-item" onclick="selectAnalysis('discriminant')">
+            Discriminant Analysis
+          </div>
+          <div class="dropdown-item" onclick="selectAnalysis('cluster')">
+            Cluster Analysis
+          </div>
+          <div class="dropdown-item" onclick="selectAnalysis('factor')">
+            Factor Analysis
+          </div>
+          <div class="dropdown-item" onclick="selectAnalysis('pca')">
+            PCA
+          </div>
+        </div>
+      </div>
+      
+      <div class="nav-item reliability">
+        <button class="nav-tab">
+          ✅ Reliability
+          <span style="font-size:10px">▼</span>
+        </button>
+        <div class="dropdown">
+          <div class="dropdown-item" onclick="selectAnalysis('reliability')">
+            Reliability Analysis
+          </div>
+          <div class="dropdown-item" onclick="selectAnalysis('validity')">
+            Validity Testing
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="header-actions">
+      <button class="btn ghost icon">🔔</button>
+      <button class="btn ghost icon">⚙️</button>
+      <button class="btn primary small">📥 Export</button>
+      <div class="user-avatar">AD</div>
+    </div>
+  </div>
+</div>
+
+<!-- Main Content -->
+<div class="main-container">
+  
+  <!-- Main Menu -->
+  <div class="main-menu" id="mainMenu">
+    <div class="hero-section">
+      <h1 class="hero-title">Statistical Analysis Platform</h1>
+      <p class="hero-subtitle">Choose your analysis domain to get started</p>
+    </div>
+    
+    <div class="category-grid">
+      <!-- Data Editor -->
+      <div class="category-card" onclick="openCategory('dataeditor')">
+        <div class="category-icon">📝</div>
+        <h3 class="category-title">Data Editor</h3>
+        <p class="category-desc">Data entry, editing, transformation, and management tools for statistical analysis</p>
+        <div class="category-items">
+          <span class="category-tag">Import/Export</span>
+          <span class="category-tag">Transform</span>
+          <span class="category-tag">Clean</span>
+          <span class="category-tag">Merge</span>
+        </div>
+      </div>
+      
+      <!-- Basic Statistics -->
+      <div class="category-card" onclick="openCategory('basic')">
+        <div class="category-icon">📊</div>
+        <h3 class="category-title">Statistics</h3>
+        <p class="category-desc">Basic statistical analysis including descriptive statistics, hypothesis testing, and correlation analysis</p>
+        <div class="category-items">
+          <span class="category-tag">Descriptive</span>
+          <span class="category-tag">t-test</span>
+          <span class="category-tag">ANOVA</span>
+          <span class="category-tag">Regression</span>
+        </div>
+      </div>
+      
+      <!-- Survey Research -->
+      <div class="category-card" onclick="openCategory('survey')">
+        <div class="category-icon">📋</div>
+        <h3 class="category-title">Survey Research</h3>
+        <p class="category-desc">Survey data analysis, reliability testing, factor analysis, and structural equation modeling</p>
+        <div class="category-items">
+          <span class="category-tag">Reliability</span>
+          <span class="category-tag">Factor Analysis</span>
+          <span class="category-tag">SEM</span>
+        </div>
+      </div>
+      
+      <!-- Econometrics -->
+      <div class="category-card" onclick="openCategory('econometrics')">
+        <div class="category-icon">💹</div>
+        <h3 class="category-title">Econometrics</h3>
+        <p class="category-desc">Economic data analysis, time series, panel data, and causal inference methods</p>
+        <div class="category-items">
+          <span class="category-tag">Time Series</span>
+          <span class="category-tag">Panel Data</span>
+          <span class="category-tag">IV</span>
+        </div>
+      </div>
+      
+      <!-- Applied Statistics -->
+      <div class="category-card" onclick="openCategory('applied')">
+        <div class="category-icon">🔬</div>
+        <h3 class="category-title">Applied Statistics</h3>
+        <p class="category-desc">Advanced statistical methods for research including multivariate analysis and machine learning</p>
+        <div class="category-items">
+          <span class="category-tag">Multivariate</span>
+          <span class="category-tag">ML</span>
+          <span class="category-tag">Bayesian</span>
+        </div>
+      </div>
+      
+      <!-- Optimization -->
+      <div class="category-card" onclick="openCategory('optimization')">
+        <div class="category-icon">🎯</div>
+        <h3 class="category-title">Optimization</h3>
+        <p class="category-desc">Optimization techniques, linear programming, and operations research methods</p>
+        <div class="category-items">
+          <span class="category-tag">Linear Programming</span>
+          <span class="category-tag">Simplex</span>
+          <span class="category-tag">Integer</span>
+        </div>
+      </div>
+      
+      <!-- Simulation -->
+      <div class="category-card" onclick="openCategory('simulation')">
+        <div class="category-icon">🎲</div>
+        <h3 class="category-title">Simulation</h3>
+        <p class="category-desc">Monte Carlo simulation, bootstrap methods, and stochastic modeling</p>
+        <div class="category-items">
+          <span class="category-tag">Monte Carlo</span>
+          <span class="category-tag">Bootstrap</span>
+          <span class="category-tag">Markov</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Analysis Content (Initially Hidden) -->
+  <div class="analysis-content" id="analysisContent">
+    <div class="section-header">
+      <h2 class="section-title" id="sectionTitle">Basic Statistics</h2>
+      <p class="section-desc" id="sectionDesc">Select an analysis method from the menu above</p>
+    </div>
+    
+    <!-- Content will be loaded here -->
+    <div id="contentArea">
+      <!-- Dynamic content based on selection -->
+    </div>
+  </div>
+  
+</div>
+
+<script>
+let currentCategory = null;
+const categoryPages = {
+  "basic": "statistics.html",
+  "dataeditor": "dataeditor.html",
+  "survey": "survey.html",
+  "econometrics": "econometrics.html",
+  "applied": "applied.html",
+  "optimization": "optimization.html",
+  "simulation": "simulation.html"
+};
+
+function openCategory(category) {
+  if (categoryPages[category]) {
+    window.location.href = categoryPages[category];
+    return;
+  }
+
+
+  
+  // Hide main menu
+  document.getElementById('mainMenu').classList.add('hidden');
+  document.getElementById('analysisContent').classList.add('active');
+  document.getElementById('sectionTitle').textContent = getCategoryTitle(category);
+  document.getElementById('sectionDesc').textContent = getCategoryDescription(category);
+  document.getElementById('backBtn').classList.add('active');
+  
+  // Show analysis content
+  document.getElementById('analysisContent').classList.add('active');
+  
+  // Show navigation based on category
+  if (category === 'basic') {
+    document.getElementById('navTabs').classList.add('active');
+    document.getElementById('sectionTitle').textContent = 'Basic Statistics';
+    document.getElementById('sectionDesc').textContent = 'Basic statistical analysis tools and methods';
+  } else {
+    // For other categories, show different navigation or content
+    document.getElementById('sectionTitle').textContent = getCategoryTitle(category);
+    document.getElementById('sectionDesc').textContent = getCategoryDescription(category);
+  }
+  
+  // Show back button
+  document.getElementById('backBtn').classList.add('active');
+}
+
+function goHome() {
+  // Show main menu
+  document.getElementById('mainMenu').classList.remove('hidden');
+  
+  // Hide analysis content
+  document.getElementById('analysisContent').classList.remove('active');
+  
+  // Hide navigation
+  document.getElementById('navTabs').classList.remove('active');
+  
+  // Hide back button
+  document.getElementById('backBtn').classList.remove('active');
+  
+  currentCategory = null;
+}
+
+
+
+// Add active class on click for nav tabs
+document.querySelectorAll('.nav-tab').forEach(tab => {
+  tab.addEventListener('click', function(e) {
+    e.preventDefault();
+    document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+    this.classList.add('active');
+  });
+});
+</script>
+
+</body>
+</html>
