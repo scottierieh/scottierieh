@@ -1334,9 +1334,15 @@ function saveToLocal() {
   surveyData.overallQuestion = document.getElementById('overall-question').value;
   
   saveToLocalStorage();
-  showNotification('Save Complete', 'Data has been saved to browser storage.', 'success');
+  
+  // 메인 페이지로 돌아가기 옵션 추가
+  const goBack = confirm('Survey saved! Return to dashboard?');
+  if (goBack) {
+    window.location.href = './mypage.html';
+  } else {
+    showNotification('Save Complete', 'Data has been saved to browser storage.', 'success');
+  }
 }
-
 function loadFromLocal() {
   if (confirm('Load saved data? Current data will be overwritten.')) {
     loadFromLocalStorage();
