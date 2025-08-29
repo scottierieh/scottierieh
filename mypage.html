@@ -605,45 +605,21 @@ function openTool(tool) {
   alert(`Opening ${tool} tool... (To be implemented)`);
 }
 
-function loadProjects() {
-  const container = document.getElementById('projects-container');
+function saveToLocal() {
+  // 기존 저장 로직...
+  surveyData.title = document.getElementById('survey-title').value;
+  surveyData.description = document.getElementById('survey-description').value;
+  surveyData.overallQuestion = document.getElementById('overall-question').value;
   
-  if (projects.length === 0) {
-    container.innerHTML = `
-      <div class="empty-state">
-        <div class="empty-icon">📊</div>
-        <div class="empty-title">No Projects Yet</div>
-        <div class="empty-desc">Create your first analysis project to get started</div>
-        <button class="btn primary" onclick="createNewProject()">Create Project</button>
-      </div>
-    `;
+  saveToLocalStorage();
+  
+  // 메인 페이지로 돌아가기 옵션
+  const goBack = confirm('Survey saved! Return to dashboard?');
+  if (goBack) {
+    window.location.href = './mypage.html';
   } else {
-    container.innerHTML = `
-      <div class="projects-grid">
-        ${projects.map(project => `
-          <div class="project-card ${project.type}" onclick="openProject(${project.id})">
-            <div class="project-header">
-              <div>
-                <div class="project-title">${project.title}</div>
-                <span class="project-type ${project.type}">${project.type.toUpperCase()}</span>
-              </div>
-            </div>
-            <div class="project-desc">${project.description}</div>
-            <div class="project-meta">
-              <div class="project-date">
-                📅 ${new Date(project.lastModified).toLocaleDateString()}
-              </div>
-              <div class="project-responses">
-                📊 ${project.responses} responses
-              </div>
-            </div>
-          </div>
-        `).join('')}
-      </div>
-    `;
+    showNotification('Save Complete', 'Data has been saved to browser storage.', 'success');
   }
-  
-  updateProjectStats();
 }
 
 function updateProjectStats() {
