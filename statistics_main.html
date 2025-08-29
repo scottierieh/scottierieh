@@ -552,10 +552,17 @@
   ⚡
 </button>
 
-<script>
+descriptive.html로 페이지 이동하려면 이렇게 수정하세요:
+html<script>
 function openAnalysis(type) {
+  // descriptive만 페이지 이동
+  if (type === 'descriptive') {
+    window.location.href = 'descriptive.html';
+    return;
+  }
+  
+  // 나머지는 현재 페이지에서 표시하거나 Coming Soon
   const analysisNames = {
-    'descriptive': 'descriptive.html',
     'assumption': 'Assumption Checks',
     'difference': 'Difference Tests',
     'relationship': 'Relationship Analysis',
@@ -563,17 +570,7 @@ function openAnalysis(type) {
     'specialized': 'Specialized Methods'
   };
   
- const analysisData = {
-    'descriptive': {
-      title: 'Descriptive Statistics',
-      description: 'Summarize and describe the main features of your dataset with comprehensive statistical measures.',
-      methods: [
-        'Frequency Analysis & Distributions',
-        'Central Tendency & Variability',
-        'Crosstabulation & Contingency',
-        'Exploratory Data Analysis'
-      ]
-    },
+  const analysisData = {
     'assumption': {
       title: 'Assumption Checks',
       description: 'Verify statistical assumptions before conducting analyses to ensure valid results.',
@@ -583,13 +580,12 @@ function openAnalysis(type) {
         'Linearity & Independence',
         'Outlier Detection'
       ]
-    },
-    // 다른 카테고리도 동일하게 추가 가능
+    }
   };
 
   const container = document.getElementById('analysis-detail');
   const data = analysisData[type];
-
+  
   if (data) {
     document.getElementById('analysis-title').innerText = data.title;
     document.getElementById('analysis-description').innerText = data.description;
@@ -602,21 +598,9 @@ function openAnalysis(type) {
     });
     container.style.display = 'block';
     container.scrollIntoView({behavior: 'smooth'});
-     } else {
-    // 여기에 추가
+  } else {
     alert(`${analysisNames[type]} - Coming Soon!`);
-    return;
   }
-}
-
-
-  
-  
-  
-  // In production, you would navigate to the specific page
-  // window.location.href = `${type}-analysis.html`;
-  
-  // For demonstration
 }
 
 // Add hover effect for cards
@@ -635,6 +619,5 @@ document.querySelector('.fab').addEventListener('click', function() {
   alert('Quick Analysis Wizard - Coming Soon!');
 });
 </script>
-
 </body>
 </html>
