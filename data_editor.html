@@ -1218,15 +1218,10 @@
 
 
   function goToMyPage() {
-  const hasUnsavedChanges = 
-    document.getElementById('survey-title').value !== surveyData.title ||
-    document.getElementById('survey-description').value !== surveyData.description ||
-    document.getElementById('overall-question').value !== surveyData.overallQuestion;
-  
-  if (hasUnsavedChanges) {
+  if (isModified) {
     const shouldSave = confirm('You have unsaved changes. Would you like to save before returning to dashboard?');
     if (shouldSave) {
-      saveToLocal();
+      downloadCSV();
       setTimeout(() => {
         window.location.href = './mypage.html';
       }, 500);
@@ -1236,6 +1231,8 @@
   
   window.location.href = './mypage.html';
 }
+
+  
   
   function downloadCSV() {
     const rows = [tableData.headers, ...tableData.rows];
