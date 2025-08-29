@@ -492,6 +492,13 @@
               <option value="|">Pipe (|)</option>
             </select>
           </div>
+
+
+          <div class="header-actions">
+      <button class="btn ghost small" onclick="goToMyPage()">← Back to Dashboard</button>
+      <div class="user-avatar">Admin</div>
+    </div>
+
           
           <div class="btn-group">
             <button id="createSampleBtn" class="btn ghost">Sample Data</button>
@@ -1209,6 +1216,27 @@
     markModified();
   }
 
+
+  function goToMyPage() {
+  const hasUnsavedChanges = 
+    document.getElementById('survey-title').value !== surveyData.title ||
+    document.getElementById('survey-description').value !== surveyData.description ||
+    document.getElementById('overall-question').value !== surveyData.overallQuestion;
+  
+  if (hasUnsavedChanges) {
+    const shouldSave = confirm('You have unsaved changes. Would you like to save before returning to dashboard?');
+    if (shouldSave) {
+      saveToLocal();
+      setTimeout(() => {
+        window.location.href = './mypage.html';
+      }, 500);
+      return;
+    }
+  }
+  
+  window.location.href = './mypage.html';
+}
+  
   function downloadCSV() {
     const rows = [tableData.headers, ...tableData.rows];
     const csv = rows.map(row => 
