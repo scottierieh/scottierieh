@@ -380,8 +380,9 @@
     
     <!-- Main Tabs -->
     <div class="main-tabs">
-      <button class="main-tab active" onclick="switchMainTab('tools')">🔧 Analysis Tools</button>
-      <button class="main-tab" onclick="switchMainTab('projects')">📁 My Projects</button>
+      <button class="main-tab active" onclick="switchMainTab('projects')">📁 My Projects</button>
+      <button class="main-tab" onclick="switchMainTab('survey')">📋 Survey Tools</button>
+      <button class="main-tab" onclick="switchMainTab('analysis')">📊 Analysis Tools</button>
     </div>
     
     <div class="header-actions">
@@ -396,105 +397,8 @@
 <!-- Main Content -->
 <div class="main-container">
   
-  <!-- Analysis Tools Tab -->
-  <div class="tab-content active" id="tools-tab">
-    <div class="hero-section">
-      <h1 class="hero-title">Statistical Analysis Platform</h1>
-      <p class="hero-subtitle">Choose your analysis domain to get started</p>
-    </div>
-    
-    <div class="category-grid">
-      <!-- Data Editor -->
-      <div class="category-card" onclick="openTool('dataeditor')">
-        <div class="category-icon">📝</div>
-        <h3 class="category-title">Data Editor</h3>
-        <p class="category-desc">Data entry, editing, transformation, and management tools for statistical analysis</p>
-        <div class="category-items">
-          <span class="category-tag">Import/Export</span>
-          <span class="category-tag">Transform</span>
-          <span class="category-tag">Clean</span>
-          <span class="category-tag">Merge</span>
-        </div>
-      </div>
-      
-      <!-- Basic Statistics -->
-      <div class="category-card" onclick="openTool('basic')">
-        <div class="category-icon">📊</div>
-        <h3 class="category-title">Statistics</h3>
-        <p class="category-desc">Basic statistical analysis including descriptive statistics, hypothesis testing, and correlation analysis</p>
-        <div class="category-items">
-          <span class="category-tag">Descriptive</span>
-          <span class="category-tag">t-test</span>
-          <span class="category-tag">ANOVA</span>
-          <span class="category-tag">Regression</span>
-        </div>
-      </div>
-      
-      <!-- Survey Research -->
-      <div class="category-card" onclick="openTool('survey')">
-        <div class="category-icon">📋</div>
-        <h3 class="category-title">Survey Research</h3>
-        <p class="category-desc">Survey data analysis, reliability testing, factor analysis, and structural equation modeling</p>
-        <div class="category-items">
-          <span class="category-tag">Reliability</span>
-          <span class="category-tag">Factor Analysis</span>
-          <span class="category-tag">SEM</span>
-          <span class="category-tag">IPA</span>
-        </div>
-      </div>
-      
-      <!-- Econometrics -->
-      <div class="category-card" onclick="openTool('econometrics')">
-        <div class="category-icon">💹</div>
-        <h3 class="category-title">Econometrics</h3>
-        <p class="category-desc">Economic data analysis, time series, panel data, and causal inference methods</p>
-        <div class="category-items">
-          <span class="category-tag">Time Series</span>
-          <span class="category-tag">Panel Data</span>
-          <span class="category-tag">IV</span>
-        </div>
-      </div>
-      
-      <!-- Applied Statistics -->
-      <div class="category-card" onclick="openTool('applied')">
-        <div class="category-icon">🔬</div>
-        <h3 class="category-title">Applied Statistics</h3>
-        <p class="category-desc">Advanced statistical methods for research including multivariate analysis and machine learning</p>
-        <div class="category-items">
-          <span class="category-tag">Multivariate</span>
-          <span class="category-tag">ML</span>
-          <span class="category-tag">Bayesian</span>
-        </div>
-      </div>
-      
-      <!-- Optimization -->
-      <div class="category-card" onclick="openTool('optimization')">
-        <div class="category-icon">🎯</div>
-        <h3 class="category-title">Optimization</h3>
-        <p class="category-desc">Optimization techniques, linear programming, and operations research methods</p>
-        <div class="category-items">
-          <span class="category-tag">Linear Programming</span>
-          <span class="category-tag">Simplex</span>
-          <span class="category-tag">Integer</span>
-        </div>
-      </div>
-      
-      <!-- Simulation -->
-      <div class="category-card" onclick="openTool('simulation')">
-        <div class="category-icon">🎲</div>
-        <h3 class="category-title">Simulation</h3>
-        <p class="category-desc">Monte Carlo simulation, bootstrap methods, and stochastic modeling</p>
-        <div class="category-items">
-          <span class="category-tag">Monte Carlo</span>
-          <span class="category-tag">Bootstrap</span>
-          <span class="category-tag">Markov</span>
-        </div>
-      </div>
-    </div>
-  </div>
-  
-  <!-- Projects Tab -->
-  <div class="tab-content" id="projects-tab">
+  <!-- My Projects Tab -->
+  <div class="tab-content active" id="projects-tab">
     <div class="projects-header">
       <div>
         <h1 style="font-size:32px;font-weight:700;color:#1e293b;margin-bottom:8px">My Projects</h1>
@@ -536,7 +440,185 @@
     </div>
   </div>
   
-</div>
+  <!-- Survey Tools Tab -->
+  <div class="tab-content" id="survey-tab">
+    <div class="hero-section">
+      <h1 class="hero-title">Survey Research Tools</h1>
+      <p class="hero-subtitle">Design, collect, and analyze survey data</p>
+    </div>
+    
+    <div class="category-grid">
+      <!-- IPA Survey -->
+      <div class="category-card" onclick="openTool('ipa')">
+        <div class="category-icon">📋</div>
+        <h3 class="category-title">IPA Survey</h3>
+        <p class="category-desc">Importance-Performance Analysis for customer satisfaction and service quality measurement</p>
+        <div class="category-items">
+          <span class="category-tag">Survey Design</span>
+          <span class="category-tag">Data Collection</span>
+          <span class="category-tag">IPA Matrix</span>
+          <span class="category-tag">Analysis</span>
+        </div>
+      </div>
+      
+      <!-- Survey Builder -->
+      <div class="category-card" onclick="openTool('survey-builder')">
+        <div class="category-icon">🏗️</div>
+        <h3 class="category-title">Survey Builder</h3>
+        <p class="category-desc">General purpose survey creation tool with multiple question types and logic</p>
+        <div class="category-items">
+          <span class="category-tag">Question Types</span>
+          <span class="category-tag">Logic Rules</span>
+          <span class="category-tag">Templates</span>
+        </div>
+      </div>
+      
+      <!-- Form Creator -->
+      <div class="category-card" onclick="openTool('form-creator')">
+        <div class="category-icon">📝</div>
+        <h3 class="category-title">Form Creator</h3>
+        <p class="category-desc">Create custom forms for data collection, registration, and feedback</p>
+        <div class="category-items">
+          <span class="category-tag">Custom Fields</span>
+          <span class="category-tag">Validation</span>
+          <span class="category-tag">Export</span>
+        </div>
+      </div>
+      
+      <!-- Poll Maker -->
+      <div class="category-card" onclick="openTool('poll-maker')">
+        <div class="category-icon">🗳️</div>
+        <h3 class="category-title">Poll Maker</h3>
+        <p class="category-desc">Quick polling tool for real-time voting and opinion collection</p>
+        <div class="category-items">
+          <span class="category-tag">Real-time</span>
+          <span class="category-tag">Multiple Choice</span>
+          <span class="category-tag">Live Results</span>
+        </div>
+      </div>
+      
+      <!-- Quiz Builder -->
+      <div class="category-card" onclick="openTool('quiz-builder')">
+        <div class="category-icon">🧠</div>
+        <h3 class="category-title">Quiz Builder</h3>
+        <p class="category-desc">Create educational quizzes and assessments with scoring and feedback</p>
+        <div class="category-items">
+          <span class="category-tag">Scoring</span>
+          <span class="category-tag">Feedback</span>
+          <span class="category-tag">Timer</span>
+        </div>
+      </div>
+      
+      <!-- 360 Feedback -->
+      <div class="category-card" onclick="openTool('360-feedback')">
+        <div class="category-icon">🔄</div>
+        <h3 class="category-title">360° Feedback</h3>
+        <p class="category-desc">Multi-source feedback collection for performance evaluation and development</p>
+        <div class="category-items">
+          <span class="category-tag">Multi-rater</span>
+          <span class="category-tag">Anonymous</span>
+          <span class="category-tag">Reports</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Analysis Tools Tab -->
+  <div class="tab-content" id="analysis-tab">
+    <div class="hero-section">
+      <h1 class="hero-title">Statistical Analysis Tools</h1>
+      <p class="hero-subtitle">Advanced statistical analysis and data processing</p>
+    </div>
+    
+    <div class="category-grid">
+      <!-- Data Editor -->
+      <div class="category-card" onclick="openTool('dataeditor')">
+        <div class="category-icon">📝</div>
+        <h3 class="category-title">Data Editor</h3>
+        <p class="category-desc">Data entry, editing, transformation, and management tools for statistical analysis</p>
+        <div class="category-items">
+          <span class="category-tag">Import/Export</span>
+          <span class="category-tag">Transform</span>
+          <span class="category-tag">Clean</span>
+          <span class="category-tag">Merge</span>
+        </div>
+      </div>
+      
+      <!-- Basic Statistics -->
+      <div class="category-card" onclick="openTool('basic')">
+        <div class="category-icon">📊</div>
+        <h3 class="category-title">Statistics</h3>
+        <p class="category-desc">Basic statistical analysis including descriptive statistics, hypothesis testing, and correlation analysis</p>
+        <div class="category-items">
+          <span class="category-tag">Descriptive</span>
+          <span class="category-tag">t-test</span>
+          <span class="category-tag">ANOVA</span>
+          <span class="category-tag">Regression</span>
+        </div>
+      </div>
+      
+      <!-- Advanced Analysis -->
+      <div class="category-card" onclick="openTool('advanced')">
+        <div class="category-icon">🔬</div>
+        <h3 class="category-title">Advanced Analysis</h3>
+        <p class="category-desc">Advanced statistical methods including multivariate analysis and machine learning</p>
+        <div class="category-items">
+          <span class="category-tag">Multivariate</span>
+          <span class="category-tag">ML</span>
+          <span class="category-tag">Factor Analysis</span>
+          <span class="category-tag">SEM</span>
+        </div>
+      </div>
+      
+      <!-- Econometrics -->
+      <div class="category-card" onclick="openTool('econometrics')">
+        <div class="category-icon">💹</div>
+        <h3 class="category-title">Econometrics</h3>
+        <p class="category-desc">Economic data analysis, time series, panel data, and causal inference methods</p>
+        <div class="category-items">
+          <span class="category-tag">Time Series</span>
+          <span class="category-tag">Panel Data</span>
+          <span class="category-tag">IV</span>
+        </div>
+      </div>
+      
+      <!-- Reliability Testing -->
+      <div class="category-card" onclick="openTool('reliability')">
+        <div class="category-icon">✅</div>
+        <h3 class="category-title">Reliability Testing</h3>
+        <p class="category-desc">Test reliability and validity of scales, questionnaires, and measurement instruments</p>
+        <div class="category-items">
+          <span class="category-tag">Cronbach's Alpha</span>
+          <span class="category-tag">Factor Analysis</span>
+          <span class="category-tag">Validity</span>
+        </div>
+      </div>
+      
+      <!-- Optimization -->
+      <div class="category-card" onclick="openTool('optimization')">
+        <div class="category-icon">🎯</div>
+        <h3 class="category-title">Optimization</h3>
+        <p class="category-desc">Optimization techniques, linear programming, and operations research methods</p>
+        <div class="category-items">
+          <span class="category-tag">Linear Programming</span>
+          <span class="category-tag">Simplex</span>
+          <span class="category-tag">Integer</span>
+        </div>
+      </div>
+      
+      <!-- Simulation -->
+      <div class="category-card" onclick="openTool('simulation')">
+        <div class="category-icon">🎲</div>
+        <h3 class="category-title">Simulation</h3>
+        <p class="category-desc">Monte Carlo simulation, bootstrap methods, and stochastic modeling</p>
+        <div class="category-items">
+          <span class="category-tag">Monte Carlo</span>
+          <span class="category-tag">Bootstrap</span>
+          <span class="category-tag">Markov</span>
+        </div>
+      </div>
+    </div>
+  </div>
 
 <script>
 // 샘플 데이터 제거 - 빈 배열로 시작
@@ -596,7 +678,7 @@ function switchMainTab(tab) {
   // Update tab buttons
   document.querySelectorAll('.main-tab').forEach(t => t.classList.remove('active'));
   document.querySelectorAll('.main-tab').forEach((t, index) => {
-    if ((tab === 'tools' && index === 0) || (tab === 'projects' && index === 1)) {
+    if ((tab === 'projects' && index === 0) || (tab === 'survey' && index === 1) || (tab === 'analysis' && index === 2)) {
       t.classList.add('active');
     }
   });
@@ -614,6 +696,11 @@ function switchMainTab(tab) {
 }
 
 function openTool(tool) {
+  if (tool === 'ipa') {
+    window.location.href = './ipa.html';
+    return;
+  }
+  
   if (tool === 'survey') {
     const choice = confirm('Open IPA (Importance-Performance Analysis) tool?');
     if (choice) {
