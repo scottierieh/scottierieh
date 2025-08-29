@@ -539,44 +539,56 @@
 </div>
 
 <script>
-// Sample projects data (in real app, this would come from localStorage/server)
-let projects = [
-  {
-    id: 1,
-    title: "Customer Satisfaction IPA",
-    type: "ipa",
-    description: "Analysis of customer satisfaction factors for Q1 2024",
-    createdAt: "2024-01-15",
-    lastModified: "2024-01-20",
-    responses: 245,
-    status: "completed"
-  },
-  {
-    id: 2,
-    title: "Employee Survey Analysis",
-    type: "survey",
-    description: "Employee engagement and satisfaction survey with reliability analysis",
-    createdAt: "2024-01-10",
-    lastModified: "2024-01-18",
-    responses: 89,
-    status: "active"
-  },
-  {
-    id: 3,
-    title: "Sales Performance Analysis",
-    type: "statistics",
-    description: "Quarterly sales data analysis using regression and ANOVA",
-    createdAt: "2024-01-05",
-    lastModified: "2024-01-12",
-    responses: 0,
-    status: "draft"
+// Sample projects data
+let projects = [];
+
+// IPA 프로젝트 로드 함수
+function loadIPAProjects() {
+  const ipaSurveyData = localStorage.getItem('ipaSurveyData');
+  let allProjects = JSON.parse(localStorage.getItem('allProjects') || '[]');
+  
+  // IPA 설문이 저장되어 있으면 프로젝트 목록에 추가
+  if (ipaSurveyData) {
+    const surveyData = JSON.parse(ipaSurveyData);
+    
+    if (surveyData.title || surveyData.attributes?.length > 0) {
+      // 이미 추가된 프로젝트인지 확인
+      const existingProjectIndex = allProjects.findIndex(p => p.id === 'ipa-main');
+      
+      const projectData = {
+        id: 'ipa-main',
+        title: surveyData.title || 'IPA Survey',
+        type: 'ipa',
+        description: surveyData.description || 'Importance-Performance Analysis Survey',
+        createdAt: new Date().toISOString(),
+        lastModified: new Date().toISOString(),
+        responses: surveyData.responses ? surveyData.responses.length : 0,
+        status: surveyData.responses && surveyData.responses.length > 0 ? 'active' : 'draft'
+      };
+      
+      if (existingProjectIndex >= 0) {
+        // 기존 프로젝트 업데이트
+        allProjects[existingProjectIndex] = projectData;
+      } else {
+        // 새 프로젝트 추가
+        allProjects.push(projectData);
+      }
+      
+      localStorage.setItem('allProjects', JSON.stringify(allProjects));
+    }
   }
-];
+  
+  return allProjects;
+}
 
 function switchMainTab(tab) {
   // Update tab buttons
   document.querySelectorAll('.main-tab').forEach(t => t.classList.remove('active'));
-  event.target.classList.add('active');
+  document.querySelectorAll('.main-tab').forEach((t, index) => {
+    if ((tab === 'tools' && index === 0) || (tab === 'projects' && index === 1)) {
+      t.classList.add('active');
+    }
+  });
   
   // Show/hide tab content
   document.querySelectorAll('.tab-content').forEach(content => {
@@ -591,35 +603,57 @@ function switchMainTab(tab) {
 }
 
 function openTool(tool) {
-  // Handle special cases
   if (tool === 'survey') {
-    // Check if IPA tool should be shown
     const choice = confirm('Open IPA (Importance-Performance Analysis) tool?');
     if (choice) {
-      window.open('./ipa-survey/index.html', '_blank');
+      window.location.href = './ipa-survey-english_1.html';
       return;
     }
   }
   
-  // For other tools, show placeholder or redirect
   alert(`Opening ${tool} tool... (To be implemented)`);
 }
 
-function saveToLocal() {
-  // 기존 저장 로직...
-  surveyData.title = document.getElementById('survey-title').value;
-  surveyData.description = document.getElementById('survey-description').value;
-  surveyData.overallQuestion = document.getElementById('overall-question').value;
+function loadProjects() {
+  const container = document.getElementById('projects-container');
+  projects = loadIPAProjects(); // IPA 데이터도 함께 로드
   
-  saveToLocalStorage();
-  
-  // 메인 페이지로 돌아가기 옵션
-  const goBack = confirm('Survey saved! Return to dashboard?');
-  if (goBack) {
-    window.location.href = './mypage.html';
+  if (projects.length === 0) {
+    container.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-icon">📊</div>
+        <div class="empty-title">No Projects Yet</div>
+        <div class="empty-desc">Create your first analysis project to get started</div>
+        <button class="btn primary" onclick="createNewProject()">Create Project</button>
+      </div>
+    `;
   } else {
-    showNotification('Save Complete', 'Data has been saved to browser storage.', 'success');
+    container.innerHTML = `
+      <div class="projects-grid">
+        ${projects.map(project => `
+          <div class="project-card ${project.type}" onclick="openProject('${project.id}')">
+            <div class="project-header">
+              <div>
+                <div class="project-title">${project.title}</div>
+                <span class="project-type ${project.type}">${project.type.toUpperCase()}</span>
+              </div>
+            </div>
+            <div class="project-desc">${project.description}</div>
+            <div class="project-meta">
+              <div class="project-date">
+                📅 ${new Date(project.lastModified).toLocaleDateString()}
+              </div>
+              <div class="project-responses">
+                📊 ${project.responses} responses
+              </div>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    `;
   }
+  
+  updateProjectStats();
 }
 
 function updateProjectStats() {
@@ -637,7 +671,7 @@ function openProject(id) {
   const project = projects.find(p => p.id === id);
   if (project) {
     if (project.type === 'ipa') {
-      window.open('./ipa-survey/index.html', '_blank');
+      window.location.href = './ipa-survey-english_1.html';
     } else {
       alert(`Opening ${project.title}... (To be implemented)`);
     }
@@ -648,7 +682,7 @@ function createNewProject() {
   const projectType = prompt('Enter project type (ipa/survey/statistics):');
   if (projectType) {
     if (projectType.toLowerCase() === 'ipa') {
-      window.open('./ipa-survey/index.html', '_blank');
+      window.location.href = './ipa-survey-english_1.html';
     } else {
       alert(`Creating new ${projectType} project... (To be implemented)`);
     }
@@ -656,12 +690,12 @@ function createNewProject() {
 }
 
 function refreshProjects() {
-  // In real app, this would fetch from server or refresh localStorage
   loadProjects();
 }
 
 // Initialize projects when page loads
 document.addEventListener('DOMContentLoaded', function() {
+  // Always load projects on page load to check for IPA data
   if (document.getElementById('projects-tab').classList.contains('active')) {
     loadProjects();
   }
