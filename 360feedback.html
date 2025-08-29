@@ -1,0 +1,1264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>🎯 360-Degree Feedback Platform</title>
+
+<style>
+  :root{
+    --bg:#f8fafc; --card:#ffffff; --muted:#64748b; --accent:#3b82f6; --success:#10b981;
+    --warning:#f59e0b; --danger:#ef4444; --purple:#8b5cf6; --info:#06b6d4;
+    --shadow:0 4px 6px -1px rgba(0,0,0,0.1); --shadow-lg:0 10px 15px -3px rgba(0,0,0,0.1);
+    --gradient:linear-gradient(135deg,#667eea 0%,#764ba2 100%);
+  }
+  
+  * {box-sizing:border-box;margin:0;padding:0;}
+  
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:#1e293b;line-height:1.6}
+  
+  /* Header Navigation */
+  .header{background:white;border-bottom:1px solid #e2e8f0;position:sticky;top:0;z-index:100;box-shadow:var(--shadow)}
+  .header-content{max-width:1400px;margin:0 auto;padding:0 24px;display:flex;align-items:center;justify-content:space-between;height:64px}
+  .logo{display:flex;align-items:center;gap:12px;font-weight:700;font-size:20px}
+  .logo-icon{width:40px;height:40px;background:var(--gradient);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:24px;color:white}
+  
+  .nav-tabs{display:flex;gap:4px;background:#f1f5f9;padding:4px;border-radius:12px}
+  .nav-tab{padding:8px 16px;border-radius:8px;border:none;background:transparent;cursor:pointer;font-weight:500;color:#64748b;transition:all 0.2s}
+  .nav-tab.active{background:white;color:#1e293b;box-shadow:0 1px 3px rgba(0,0,0,0.1)}
+  .nav-tab:hover:not(.active){color:#1e293b}
+  
+  .header-actions{display:flex;gap:12px;align-items:center}
+  .user-avatar{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#667eea,#764ba2);display:flex;align-items:center;justify-content:center;color:white;font-weight:600}
+  
+  /* Main Layout */
+  .main-container{max-width:1400px;margin:0 auto;padding:24px}
+  .content-area{display:none}
+  .content-area.active{display:block}
+  
+  /* Cards and Panels */
+  .card{background:white;border-radius:16px;padding:24px;box-shadow:var(--shadow);margin-bottom:20px}
+  .card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid #e2e8f0}
+  .card-title{font-size:18px;font-weight:600;color:#1e293b}
+  
+  /* Buttons */
+  .btn{border:none;padding:10px 20px;border-radius:10px;cursor:pointer;font-weight:500;transition:all 0.2s;display:inline-flex;align-items:center;gap:8px}
+  .btn:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(0,0,0,0.15)}
+  .btn.primary{background:var(--accent);color:white}
+  .btn.success{background:var(--success);color:white}
+  .btn.warning{background:var(--warning);color:white}
+  .btn.danger{background:var(--danger);color:white}
+  .btn.ghost{background:#f1f5f9;color:#475569}
+  .btn.small{padding:6px 12px;font-size:13px}
+  .btn.large{padding:14px 28px;font-size:16px}
+  
+  /* Forms */
+  input[type="text"],input[type="number"],input[type="email"],textarea,select{
+    width:100%;padding:10px 14px;border:2px solid #e2e8f0;border-radius:8px;font-size:14px;transition:all 0.2s;font-family:inherit
+  }
+  input:focus,textarea:focus,select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(59,130,246,0.1)}
+  label{display:block;margin-bottom:6px;font-weight:500;color:#475569;font-size:14px}
+  .form-group{margin-bottom:20px}
+  .form-hint{font-size:12px;color:var(--muted);margin-top:4px}
+  
+  /* Rating Scale */
+  .rating-scale{display:flex;gap:8px;align-items:center;margin:12px 0}
+  .rating-option{width:40px;height:40px;border:2px solid #e2e8f0;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-weight:600;transition:all 0.2s}
+  .rating-option:hover{border-color:var(--accent);transform:scale(1.1)}
+  .rating-option.selected{background:var(--accent);color:white;border-color:var(--accent)}
+  .rating-label{font-size:12px;color:var(--muted);margin:0 8px}
+  
+  /* Competency Item */
+  .competency-item{background:white;border-radius:12px;padding:20px;margin-bottom:16px;border:1px solid #e2e8f0}
+  .competency-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+  .competency-title{font-weight:600;color:#1e293b;flex:1}
+  .competency-category{background:#e0f2fe;color:#0369a1;padding:4px 12px;border-radius:6px;font-size:12px;font-weight:500}
+  
+  /* Reviewee Cards */
+  .reviewee-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:20px;margin-bottom:24px}
+  .reviewee-card{background:white;border-radius:12px;padding:20px;border:1px solid #e2e8f0;transition:all 0.2s;cursor:pointer}
+  .reviewee-card:hover{box-shadow:var(--shadow-lg);transform:translateY(-2px)}
+  .reviewee-avatar{width:60px;height:60px;border-radius:50%;background:linear-gradient(135deg,#667eea,#764ba2);display:flex;align-items:center;justify-content:center;color:white;font-size:24px;font-weight:600;margin-bottom:12px}
+  .reviewee-name{font-size:16px;font-weight:600;color:#1e293b;margin-bottom:4px}
+  .reviewee-role{font-size:14px;color:var(--muted);margin-bottom:12px}
+  .reviewee-status{display:inline-flex;align-items:center;gap:4px;padding:4px 12px;border-radius:6px;font-size:12px;font-weight:500}
+  .status-pending{background:#fef3c7;color:#92400e}
+  .status-in-progress{background:#dbeafe;color:#1e40af}
+  .status-completed{background:#d1fae5;color:#065f46}
+  
+  /* Relationship Badge */
+  .relationship-badge{display:inline-flex;align-items:center;gap:4px;padding:6px 12px;border-radius:8px;font-size:13px;font-weight:500;margin-right:8px}
+  .rel-self{background:#f3e8ff;color:#6b21a8}
+  .rel-manager{background:#fee2e2;color:#991b1b}
+  .rel-peer{background:#dbeafe;color:#1e40af}
+  .rel-report{background:#d1fae5;color:#065f46}
+  .rel-other{background:#fef3c7;color:#92400e}
+  
+  /* Statistics Cards */
+  .stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:20px;margin-bottom:24px}
+  .stat-card{background:white;padding:20px;border-radius:12px;border:1px solid #e2e8f0;position:relative;overflow:hidden}
+  .stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;background:var(--gradient)}
+  .stat-icon{width:48px;height:48px;background:#f1f5f9;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:24px;margin-bottom:12px}
+  .stat-value{font-size:32px;font-weight:700;color:#1e293b;margin-bottom:4px}
+  .stat-label{font-size:14px;color:var(--muted)}
+  
+  /* Feedback Response */
+  .feedback-form{background:#f0f9ff;border-radius:12px;padding:24px;margin-bottom:20px}
+  .feedback-section{background:white;border-radius:8px;padding:16px;margin-bottom:16px}
+  .feedback-question{font-weight:600;margin-bottom:12px;color:#1e293b}
+  
+  /* Radar Chart Container */
+  .radar-chart-container{display:flex;align-items:center;justify-content:center;padding:20px;background:white;border-radius:12px;margin:20px 0}
+  .radar-chart{width:400px;height:400px}
+  
+  /* Comparison Table */
+  .comparison-table{width:100%;border-collapse:separate;border-spacing:0;margin-top:16px}
+  .comparison-table thead{background:#f8fafc}
+  .comparison-table th{padding:12px;text-align:left;font-weight:600;color:#475569;font-size:13px;border-bottom:2px solid #e2e8f0}
+  .comparison-table td{padding:12px;border-bottom:1px solid #f1f5f9;font-size:14px}
+  .comparison-table tbody tr:hover{background:#f8fafc}
+  .score-cell{font-weight:600;text-align:center}
+  .score-high{color:var(--success)}
+  .score-medium{color:var(--warning)}
+  .score-low{color:var(--danger)}
+  
+  /* Progress Indicator */
+  .progress-container{background:#e2e8f0;border-radius:8px;height:8px;margin:12px 0;overflow:hidden}
+  .progress-bar{height:100%;background:var(--gradient);transition:width 0.3s;border-radius:8px}
+  
+  /* Comment Box */
+  .comment-box{background:#f8fafc;padding:12px;border-radius:8px;border-left:3px solid var(--accent);margin:8px 0}
+  .comment-author{font-size:12px;color:var(--muted);margin-bottom:4px}
+  .comment-text{font-size:14px;color:#1e293b;line-height:1.5}
+  
+  /* Modal */
+  .modal{display:none;position:fixed;z-index:1000;left:0;top:0;width:100%;height:100%;background-color:rgba(0,0,0,0.5);overflow:auto}
+  .modal-content{background-color:white;margin:2% auto;padding:0;width:90%;max-width:800px;border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,0.3);animation:slideIn 0.3s}
+  @keyframes slideIn{from{transform:translateY(-100px);opacity:0}to{transform:translateY(0);opacity:1}}
+  .modal-header{padding:24px;background:linear-gradient(135deg,#667eea,#764ba2);color:white;border-radius:16px 16px 0 0;display:flex;justify-content:space-between;align-items:center}
+  .modal-close{color:white;font-size:28px;font-weight:bold;cursor:pointer;background:none;border:none;padding:0;width:32px;height:32px;display:flex;align-items:center;justify-content:center;border-radius:50%;transition:background 0.2s}
+  .modal-close:hover{background:rgba(255,255,255,0.2)}
+  .modal-body{padding:24px;max-height:70vh;overflow-y:auto}
+  
+  /* Notification */
+  .notification{position:fixed;top:20px;right:20px;background:white;border-radius:8px;padding:16px;box-shadow:var(--shadow-lg);border-left:4px solid var(--success);z-index:1000;min-width:300px;transform:translateX(400px);transition:transform 0.3s}
+  .notification.show{transform:translateX(0)}
+  
+  /* Responsive */
+  @media (max-width:768px){
+    .header-content{padding:0 16px}
+    .nav-tabs{display:none}
+    .main-container{padding:16px}
+    .stats-grid{grid-template-columns:1fr}
+    .reviewee-grid{grid-template-columns:1fr}
+  }
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="header">
+  <div class="header-content">
+    <div class="logo">
+      <div class="logo-icon">🎯</div>
+      <span>360° Feedback</span>
+    </div>
+    
+    <div class="nav-tabs">
+      <button class="nav-tab active" onclick="switchTab('setup')">⚙️ Setup</button>
+      <button class="nav-tab" onclick="switchTab('collect')">📝 Collect Feedback</button>
+      <button class="nav-tab" onclick="switchTab('analysis')">📊 Analysis</button>
+    </div>
+    
+    <div class="header-actions">
+      <button class="btn primary small" onclick="saveToLocal()">💾 Save Data</button>
+      <div class="user-avatar">A</div>
+    </div>
+  </div>
+</div>
+
+<!-- Main Container -->
+<div class="main-container">
+
+  <!-- Setup Tab -->
+  <div id="setup-tab" class="content-area active">
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-icon">👥</div>
+        <div class="stat-value" id="total-reviewees">0</div>
+        <div class="stat-label">Total Reviewees</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">📋</div>
+        <div class="stat-value" id="total-competencies">0</div>
+        <div class="stat-label">Competencies</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">✍️</div>
+        <div class="stat-value" id="total-responses">0</div>
+        <div class="stat-label">Feedback Responses</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">📈</div>
+        <div class="stat-value" id="completion-rate">0%</div>
+        <div class="stat-label">Completion Rate</div>
+      </div>
+    </div>
+    
+    <!-- Reviewees Management -->
+    <div class="card">
+      <div class="card-header">
+        <h2 class="card-title">👥 Reviewees Management</h2>
+        <div>
+          <button class="btn ghost small" onclick="loadSampleData()">📋 Load Sample</button>
+          <button class="btn primary small" onclick="showAddRevieweeModal()">➕ Add Reviewee</button>
+        </div>
+      </div>
+      
+      <div id="reviewees-grid" class="reviewee-grid">
+        <!-- Reviewee cards will be added here -->
+      </div>
+    </div>
+    
+    <!-- Competencies Setup -->
+    <div class="card">
+      <div class="card-header">
+        <h2 class="card-title">🎯 Competencies & Questions</h2>
+        <button class="btn success small" onclick="addCompetency()">➕ Add Competency</button>
+      </div>
+      
+      <div style="background:#f0f9ff;border-radius:12px;padding:20px;margin-bottom:20px;">
+        <h3 style="margin-bottom:16px;font-size:16px;color:#0369a1;">➕ Add New Competency</h3>
+        
+        <div class="form-group">
+          <label>Competency Name</label>
+          <input type="text" id="new-competency-name" placeholder="e.g., Leadership, Communication, Technical Skills">
+        </div>
+        
+        <div class="form-group">
+          <label>Category</label>
+          <select id="new-competency-category">
+            <option value="leadership">Leadership</option>
+            <option value="technical">Technical Skills</option>
+            <option value="interpersonal">Interpersonal Skills</option>
+            <option value="performance">Performance</option>
+            <option value="development">Development</option>
+          </select>
+        </div>
+        
+        <div class="form-group">
+          <label>Description</label>
+          <textarea id="new-competency-description" rows="2" placeholder="Brief description of this competency..."></textarea>
+        </div>
+        
+        <button class="btn primary" onclick="addCompetency()">➕ Add Competency</button>
+      </div>
+      
+      <div id="competencies-list">
+        <!-- Competencies will be listed here -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Collect Feedback Tab -->
+  <div id="collect-tab" class="content-area">
+    <div class="card">
+      <div class="card-header">
+        <h2 class="card-title">📝 Provide Feedback</h2>
+        <div>
+          <button class="btn ghost small" onclick="clearAllResponses()">🗑️ Clear All</button>
+          <button class="btn warning small" onclick="generateSampleFeedback()">🎲 Generate Sample</button>
+        </div>
+      </div>
+      
+      <!-- Reviewer Info -->
+      <div style="background:#f8fafc;border-radius:12px;padding:16px;margin-bottom:20px;">
+        <div class="form-group">
+          <label>Your Name (Optional for Anonymous Feedback)</label>
+          <input type="text" id="reviewer-name" placeholder="Leave blank for anonymous feedback">
+        </div>
+        
+        <div class="form-group">
+          <label>Select Person to Review</label>
+          <select id="reviewee-select" onchange="updateFeedbackForm()">
+            <option value="">Select a reviewee...</option>
+          </select>
+        </div>
+        
+        <div class="form-group">
+          <label>Your Relationship to This Person</label>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <label class="relationship-option">
+              <input type="radio" name="relationship" value="self" onchange="updateRelationship('self')">
+              <span class="relationship-badge rel-self">Self</span>
+            </label>
+            <label class="relationship-option">
+              <input type="radio" name="relationship" value="manager" onchange="updateRelationship('manager')">
+              <span class="relationship-badge rel-manager">Manager</span>
+            </label>
+            <label class="relationship-option">
+              <input type="radio" name="relationship" value="peer" onchange="updateRelationship('peer')">
+              <span class="relationship-badge rel-peer">Peer</span>
+            </label>
+            <label class="relationship-option">
+              <input type="radio" name="relationship" value="report" onchange="updateRelationship('report')">
+              <span class="relationship-badge rel-report">Direct Report</span>
+            </label>
+            <label class="relationship-option">
+              <input type="radio" name="relationship" value="other" onchange="updateRelationship('other')">
+              <span class="relationship-badge rel-other">Other</span>
+            </label>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Feedback Form -->
+      <div class="feedback-form" id="feedback-form">
+        <div style="text-align:center;padding:40px;color:var(--muted);">
+          Please select a reviewee and your relationship to begin providing feedback.
+        </div>
+      </div>
+    </div>
+    
+    <!-- Recent Feedback -->
+    <div class="card">
+      <div class="card-header">
+        <h2 class="card-title">📊 Recent Feedback Submissions</h2>
+      </div>
+      <div id="recent-feedback">
+        <div style="text-align:center;padding:40px;color:var(--muted);">
+          No feedback collected yet.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Analysis Tab -->
+  <div id="analysis-tab" class="content-area">
+    <div class="card">
+      <div class="card-header">
+        <h2 class="card-title">📊 360° Feedback Analysis</h2>
+        <div>
+          <select id="analysis-reviewee-select" onchange="runAnalysis()">
+            <option value="">Select reviewee to analyze...</option>
+          </select>
+          <button class="btn primary small" onclick="exportReport()">📄 Export Report</button>
+        </div>
+      </div>
+      
+      <div id="analysis-results">
+        <div style="text-align:center;padding:60px;color:var(--muted);">
+          <div style="font-size:48px;margin-bottom:16px;">📊</div>
+          <div>Select a reviewee to see their 360° feedback analysis</div>
+          <div style="font-size:14px;margin-top:8px;">Collect feedback from multiple reviewers for comprehensive insights</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Add Reviewee Modal -->
+<div id="add-reviewee-modal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2 style="margin:0;">➕ Add New Reviewee</h2>
+      <button class="modal-close" onclick="closeModal('add-reviewee-modal')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Full Name</label>
+        <input type="text" id="modal-reviewee-name" placeholder="John Doe">
+      </div>
+      <div class="form-group">
+        <label>Role/Position</label>
+        <input type="text" id="modal-reviewee-role" placeholder="Senior Developer">
+      </div>
+      <div class="form-group">
+        <label>Department</label>
+        <input type="text" id="modal-reviewee-department" placeholder="Engineering">
+      </div>
+      <div class="form-group">
+        <label>Email (Optional)</label>
+        <input type="email" id="modal-reviewee-email" placeholder="john.doe@company.com">
+      </div>
+      <button class="btn primary large" onclick="saveReviewee()" style="width:100%;">Save Reviewee</button>
+    </div>
+  </div>
+</div>
+
+<!-- Notification Container -->
+<div id="notification-container"></div>
+
+<script>
+// Global state
+let feedbackData = {
+  reviewees: [],
+  competencies: [],
+  responses: []
+};
+
+let currentReviewee = null;
+let currentRelationship = null;
+let currentRatings = {};
+
+// Initialize
+document.addEventListener('DOMContentLoaded', function() {
+  loadFromLocal();
+  updateStats();
+  renderReviewees();
+  renderCompetencies();
+});
+
+// Tab switching
+function switchTab(tab) {
+  document.querySelectorAll('.content-area').forEach(area => {
+    area.classList.remove('active');
+  });
+  document.getElementById(tab + '-tab').classList.add('active');
+  
+  document.querySelectorAll('.nav-tab').forEach(navTab => {
+    navTab.classList.remove('active');
+  });
+  
+  const navTabs = document.querySelectorAll('.nav-tab');
+  if (tab === 'setup') navTabs[0].classList.add('active');
+  else if (tab === 'collect') {
+    navTabs[1].classList.add('active');
+    updateRevieweeSelect();
+    displayRecentFeedback();
+  }
+  else if (tab === 'analysis') {
+    navTabs[2].classList.add('active');
+    updateAnalysisSelect();
+  }
+}
+
+// Modal functions
+function showAddRevieweeModal() {
+  document.getElementById('add-reviewee-modal').style.display = 'block';
+}
+
+function closeModal(modalId) {
+  document.getElementById(modalId).style.display = 'none';
+}
+
+// Reviewee management
+function saveReviewee() {
+  const name = document.getElementById('modal-reviewee-name').value.trim();
+  const role = document.getElementById('modal-reviewee-role').value.trim();
+  const department = document.getElementById('modal-reviewee-department').value.trim();
+  const email = document.getElementById('modal-reviewee-email').value.trim();
+  
+  if (!name || !role) {
+    showNotification('Error', 'Name and role are required', 'error');
+    return;
+  }
+  
+  const reviewee = {
+    id: Date.now(),
+    name: name,
+    role: role,
+    department: department,
+    email: email,
+    addedDate: new Date().toISOString()
+  };
+  
+  feedbackData.reviewees.push(reviewee);
+  
+  // Reset modal
+  document.getElementById('modal-reviewee-name').value = '';
+  document.getElementById('modal-reviewee-role').value = '';
+  document.getElementById('modal-reviewee-department').value = '';
+  document.getElementById('modal-reviewee-email').value = '';
+  
+  closeModal('add-reviewee-modal');
+  renderReviewees();
+  updateStats();
+  saveToLocal();
+  showNotification('Success', 'Reviewee added successfully', 'success');
+}
+
+function renderReviewees() {
+  const container = document.getElementById('reviewees-grid');
+  
+  if (feedbackData.reviewees.length === 0) {
+    container.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--muted);">No reviewees added yet. Click "Add Reviewee" to get started.</div>';
+    return;
+  }
+  
+  container.innerHTML = feedbackData.reviewees.map(reviewee => {
+    const responses = feedbackData.responses.filter(r => r.revieweeId === reviewee.id);
+    const responseCount = responses.length;
+    let status = 'pending';
+    let statusClass = 'status-pending';
+    let statusText = 'No Feedback';
+    
+    if (responseCount > 0 && responseCount < 3) {
+      status = 'in-progress';
+      statusClass = 'status-in-progress';
+      statusText = `${responseCount} Response${responseCount > 1 ? 's' : ''}`;
+    } else if (responseCount >= 3) {
+      status = 'completed';
+      statusClass = 'status-completed';
+      statusText = `${responseCount} Responses`;
+    }
+    
+    return `
+      <div class="reviewee-card" onclick="selectReviewee(${reviewee.id})">
+        <div class="reviewee-avatar">${reviewee.name.split(' ').map(n => n[0]).join('').toUpperCase()}</div>
+        <div class="reviewee-name">${reviewee.name}</div>
+        <div class="reviewee-role">${reviewee.role}</div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:12px;">${reviewee.department || 'No Department'}</div>
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <span class="reviewee-status ${statusClass}">${statusText}</span>
+          <button class="btn danger small" onclick="event.stopPropagation();removeReviewee(${reviewee.id})">Remove</button>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function selectReviewee(id) {
+  switchTab('collect');
+  document.getElementById('reviewee-select').value = id.toString();
+  updateFeedbackForm();
+}
+
+function removeReviewee(id) {
+  if (confirm('Remove this reviewee and all associated feedback?')) {
+    feedbackData.reviewees = feedbackData.reviewees.filter(r => r.id !== id);
+    feedbackData.responses = feedbackData.responses.filter(r => r.revieweeId !== id);
+    renderReviewees();
+    updateStats();
+    saveToLocal();
+    showNotification('Removed', 'Reviewee removed', 'info');
+  }
+}
+
+// Competency management
+function addCompetency() {
+  const name = document.getElementById('new-competency-name').value.trim();
+  const category = document.getElementById('new-competency-category').value;
+  const description = document.getElementById('new-competency-description').value.trim();
+  
+  if (!name) {
+    showNotification('Error', 'Competency name is required', 'error');
+    return;
+  }
+  
+  const competency = {
+    id: Date.now(),
+    name: name,
+    category: category,
+    description: description
+  };
+  
+  feedbackData.competencies.push(competency);
+  
+  // Reset form
+  document.getElementById('new-competency-name').value = '';
+  document.getElementById('new-competency-description').value = '';
+  
+  renderCompetencies();
+  updateStats();
+  saveToLocal();
+  showNotification('Success', 'Competency added successfully', 'success');
+}
+
+function renderCompetencies() {
+  const container = document.getElementById('competencies-list');
+  
+  if (feedbackData.competencies.length === 0) {
+    container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--muted);">No competencies defined yet.</div>';
+    return;
+  }
+  
+  const categoryColors = {
+    leadership: '#6b21a8',
+    technical: '#1e40af',
+    interpersonal: '#065f46',
+    performance: '#92400e',
+    development: '#991b1b'
+  };
+  
+  container.innerHTML = feedbackData.competencies.map((comp, index) => `
+    <div class="competency-item">
+      <div class="competency-header">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <div style="width:32px;height:32px;background:${categoryColors[comp.category]};color:white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:600;">
+            ${index + 1}
+          </div>
+          <div class="competency-title">${comp.name}</div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <span class="competency-category">${comp.category.charAt(0).toUpperCase() + comp.category.slice(1)}</span>
+          <button class="btn danger small" onclick="removeCompetency(${comp.id})">Remove</button>
+        </div>
+      </div>
+      ${comp.description ? `<div style="padding-left:44px;color:#64748b;font-size:14px;">${comp.description}</div>` : ''}
+    </div>
+  `).join('');
+}
+
+function removeCompetency(id) {
+  if (confirm('Remove this competency?')) {
+    feedbackData.competencies = feedbackData.competencies.filter(c => c.id !== id);
+    renderCompetencies();
+    updateStats();
+    saveToLocal();
+    showNotification('Removed', 'Competency removed', 'info');
+  }
+}
+
+// Feedback collection
+function updateRevieweeSelect() {
+  const select = document.getElementById('reviewee-select');
+  select.innerHTML = '<option value="">Select a reviewee...</option>';
+  
+  feedbackData.reviewees.forEach(reviewee => {
+    const option = document.createElement('option');
+    option.value = reviewee.id;
+    option.textContent = `${reviewee.name} - ${reviewee.role}`;
+    select.appendChild(option);
+  });
+}
+
+function updateRelationship(relationship) {
+  currentRelationship = relationship;
+}
+
+function updateFeedbackForm() {
+  const revieweeId = document.getElementById('reviewee-select').value;
+  if (!revieweeId) {
+    document.getElementById('feedback-form').innerHTML = '<div style="text-align:center;padding:40px;color:var(--muted);">Please select a reviewee and your relationship to begin providing feedback.</div>';
+    return;
+  }
+  
+  currentReviewee = feedbackData.reviewees.find(r => r.id === parseInt(revieweeId));
+  if (!currentReviewee) return;
+  
+  if (feedbackData.competencies.length === 0) {
+    document.getElementById('feedback-form').innerHTML = '<div style="text-align:center;padding:40px;color:var(--muted);">Please add competencies in the Setup tab first.</div>';
+    return;
+  }
+  
+  let html = '';
+  
+  feedbackData.competencies.forEach((comp, index) => {
+    html += `
+      <div class="feedback-section">
+        <div class="feedback-question">
+          ${index + 1}. ${comp.name}
+          ${comp.description ? `<div style="font-weight:400;font-size:13px;color:var(--muted);margin-top:4px;">${comp.description}</div>` : ''}
+        </div>
+        <div class="rating-scale">
+          <span class="rating-label">Poor</span>
+          ${[1,2,3,4,5].map(rating => `
+            <div class="rating-option" id="rating-${comp.id}-${rating}" onclick="setRating(${comp.id}, ${rating})">
+              ${rating}
+            </div>
+          `).join('')}
+          <span class="rating-label">Excellent</span>
+        </div>
+        <div class="form-group">
+          <label style="font-size:13px;">Comments (Optional)</label>
+          <textarea id="comment-${comp.id}" rows="2" placeholder="Provide specific examples or suggestions..."></textarea>
+        </div>
+      </div>
+    `;
+  });
+  
+  html += `
+    <div class="form-group">
+      <label>Overall Comments</label>
+      <textarea id="overall-comments" rows="3" placeholder="Additional feedback or suggestions for improvement..."></textarea>
+    </div>
+    
+    <button class="btn success large" onclick="submitFeedback()" style="width:100%;">
+      ✍️ Submit Feedback
+    </button>
+  `;
+  
+  document.getElementById('feedback-form').innerHTML = html;
+  currentRatings = {};
+}
+
+function setRating(competencyId, rating) {
+  // Clear previous selection for this competency
+  for (let i = 1; i <= 5; i++) {
+    const elem = document.getElementById(`rating-${competencyId}-${i}`);
+    if (elem) elem.classList.remove('selected');
+  }
+  
+  // Set new selection
+  document.getElementById(`rating-${competencyId}-${rating}`).classList.add('selected');
+  currentRatings[competencyId] = rating;
+}
+
+function submitFeedback() {
+  if (!currentReviewee || !currentRelationship) {
+    showNotification('Error', 'Please select a reviewee and your relationship', 'error');
+    return;
+  }
+  
+  // Check if all competencies are rated
+  const missingRatings = feedbackData.competencies.filter(c => !currentRatings[c.id]);
+  if (missingRatings.length > 0) {
+    showNotification('Error', `Please rate all competencies (${missingRatings.length} missing)`, 'error');
+    return;
+  }
+  
+  const feedback = {
+    id: Date.now(),
+    revieweeId: currentReviewee.id,
+    reviewerName: document.getElementById('reviewer-name').value || 'Anonymous',
+    relationship: currentRelationship,
+    timestamp: new Date().toISOString(),
+    ratings: {...currentRatings},
+    comments: {}
+  };
+  
+  // Collect comments
+  feedbackData.competencies.forEach(comp => {
+    const comment = document.getElementById(`comment-${comp.id}`).value;
+    if (comment) feedback.comments[comp.id] = comment;
+  });
+  
+  feedback.overallComments = document.getElementById('overall-comments').value;
+  
+  feedbackData.responses.push(feedback);
+  
+  // Reset form
+  document.getElementById('reviewer-name').value = '';
+  document.getElementById('reviewee-select').value = '';
+  document.querySelectorAll('input[name="relationship"]').forEach(r => r.checked = false);
+  currentReviewee = null;
+  currentRelationship = null;
+  currentRatings = {};
+  updateFeedbackForm();
+  
+  updateStats();
+  displayRecentFeedback();
+  saveToLocal();
+  showNotification('Success', 'Feedback submitted successfully!', 'success');
+}
+
+function displayRecentFeedback() {
+  const container = document.getElementById('recent-feedback');
+  
+  if (feedbackData.responses.length === 0) {
+    container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--muted);">No feedback collected yet.</div>';
+    return;
+  }
+  
+  const recent = feedbackData.responses.slice(-5).reverse();
+  
+  container.innerHTML = recent.map(response => {
+    const reviewee = feedbackData.reviewees.find(r => r.id === response.revieweeId);
+    if (!reviewee) return '';
+    
+    const avgRating = Object.values(response.ratings).reduce((a,b) => a+b, 0) / Object.values(response.ratings).length;
+    const relBadgeClass = `rel-${response.relationship}`;
+    
+    return `
+      <div style="background:white;border:1px solid #e2e8f0;border-radius:8px;padding:16px;margin-bottom:12px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+          <div>
+            <span style="font-weight:600;color:#1e293b;">${reviewee.name}</span>
+            <span class="relationship-badge ${relBadgeClass}" style="margin-left:8px;">${response.relationship.charAt(0).toUpperCase() + response.relationship.slice(1)}</span>
+          </div>
+          <div style="font-size:12px;color:var(--muted);">${new Date(response.timestamp).toLocaleString()}</div>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <div style="font-size:14px;color:#64748b;">
+            Reviewer: ${response.reviewerName} | Avg Rating: <span style="font-weight:600;color:var(--accent);">${avgRating.toFixed(1)}/5</span>
+          </div>
+          <button class="btn danger small" onclick="deleteResponse(${response.id})">Delete</button>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function deleteResponse(id) {
+  if (confirm('Delete this feedback response?')) {
+    feedbackData.responses = feedbackData.responses.filter(r => r.id !== id);
+    updateStats();
+    displayRecentFeedback();
+    saveToLocal();
+    showNotification('Deleted', 'Feedback deleted', 'info');
+  }
+}
+
+// Analysis
+function updateAnalysisSelect() {
+  const select = document.getElementById('analysis-reviewee-select');
+  select.innerHTML = '<option value="">Select reviewee to analyze...</option>';
+  
+  feedbackData.reviewees.forEach(reviewee => {
+    const responseCount = feedbackData.responses.filter(r => r.revieweeId === reviewee.id).length;
+    if (responseCount > 0) {
+      const option = document.createElement('option');
+      option.value = reviewee.id;
+      option.textContent = `${reviewee.name} (${responseCount} responses)`;
+      select.appendChild(option);
+    }
+  });
+}
+
+function runAnalysis() {
+  const revieweeId = parseInt(document.getElementById('analysis-reviewee-select').value);
+  if (!revieweeId) {
+    document.getElementById('analysis-results').innerHTML = `
+      <div style="text-align:center;padding:60px;color:var(--muted);">
+        <div style="font-size:48px;margin-bottom:16px;">📊</div>
+        <div>Select a reviewee to see their 360° feedback analysis</div>
+      </div>
+    `;
+    return;
+  }
+  
+  const reviewee = feedbackData.reviewees.find(r => r.id === revieweeId);
+  const responses = feedbackData.responses.filter(r => r.revieweeId === revieweeId);
+  
+  if (responses.length === 0) {
+    showNotification('Error', 'No feedback available for this reviewee', 'error');
+    return;
+  }
+  
+  let html = '<div style="display:grid;gap:24px;">';
+  
+  // Summary stats
+  html += `
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-icon">📝</div>
+        <div class="stat-value">${responses.length}</div>
+        <div class="stat-label">Total Responses</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">⭐</div>
+        <div class="stat-value">${calculateOverallAverage(responses).toFixed(1)}</div>
+        <div class="stat-label">Overall Average</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">📈</div>
+        <div class="stat-value">${getTopCompetency(responses)}</div>
+        <div class="stat-label">Top Strength</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">🎯</div>
+        <div class="stat-value">${getImprovementArea(responses)}</div>
+        <div class="stat-label">Development Area</div>
+      </div>
+    </div>
+  `;
+  
+  // Radar Chart
+  html += `
+    <div class="card">
+      <h3 style="margin-bottom:20px;">Competency Overview</h3>
+      <div class="radar-chart-container">
+        ${generateRadarChart(responses)}
+      </div>
+    </div>
+  `;
+  
+  // Relationship Comparison
+  html += `
+    <div class="card">
+      <h3 style="margin-bottom:20px;">Feedback by Relationship</h3>
+      ${generateRelationshipComparison(responses)}
+    </div>
+  `;
+  
+  // Detailed Competency Analysis
+  html += `
+    <div class="card">
+      <h3 style="margin-bottom:20px;">Detailed Competency Analysis</h3>
+      <table class="comparison-table">
+        <thead>
+          <tr>
+            <th>Competency</th>
+            <th>Self</th>
+            <th>Manager</th>
+            <th>Peers</th>
+            <th>Reports</th>
+            <th>Overall</th>
+            <th>Gap</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${generateCompetencyTable(responses)}
+        </tbody>
+      </table>
+    </div>
+  `;
+  
+  // Comments Summary
+  html += `
+    <div class="card">
+      <h3 style="margin-bottom:20px;">Feedback Comments</h3>
+      ${generateCommentsSummary(responses)}
+    </div>
+  `;
+  
+  html += '</div>';
+  document.getElementById('analysis-results').innerHTML = html;
+}
+
+// Analysis helper functions
+function calculateOverallAverage(responses) {
+  let total = 0;
+  let count = 0;
+  
+  responses.forEach(response => {
+    Object.values(response.ratings).forEach(rating => {
+      total += rating;
+      count++;
+    });
+  });
+  
+  return count > 0 ? total / count : 0;
+}
+
+function getTopCompetency(responses) {
+  const competencyAverages = {};
+  
+  feedbackData.competencies.forEach(comp => {
+    let total = 0;
+    let count = 0;
+    
+    responses.forEach(response => {
+      if (response.ratings[comp.id]) {
+        total += response.ratings[comp.id];
+        count++;
+      }
+    });
+    
+    if (count > 0) {
+      competencyAverages[comp.name] = total / count;
+    }
+  });
+  
+  const sorted = Object.entries(competencyAverages).sort((a,b) => b[1] - a[1]);
+  return sorted[0] ? sorted[0][0] : 'N/A';
+}
+
+function getImprovementArea(responses) {
+  const competencyAverages = {};
+  
+  feedbackData.competencies.forEach(comp => {
+    let total = 0;
+    let count = 0;
+    
+    responses.forEach(response => {
+      if (response.ratings[comp.id]) {
+        total += response.ratings[comp.id];
+        count++;
+      }
+    });
+    
+    if (count > 0) {
+      competencyAverages[comp.name] = total / count;
+    }
+  });
+  
+  const sorted = Object.entries(competencyAverages).sort((a,b) => a[1] - b[1]);
+  return sorted[0] ? sorted[0][0] : 'N/A';
+}
+
+function generateRadarChart(responses) {
+  // Simplified visual representation
+  const competencyAverages = {};
+  
+  feedbackData.competencies.forEach(comp => {
+    let total = 0;
+    let count = 0;
+    
+    responses.forEach(response => {
+      if (response.ratings[comp.id]) {
+        total += response.ratings[comp.id];
+        count++;
+      }
+    });
+    
+    if (count > 0) {
+      competencyAverages[comp.name] = total / count;
+    }
+  });
+  
+  let html = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:center;">';
+  
+  // Visual bars
+  html += '<div>';
+  Object.entries(competencyAverages).forEach(([name, avg]) => {
+    const percentage = (avg / 5) * 100;
+    const color = avg >= 4 ? 'var(--success)' : avg >= 3 ? 'var(--warning)' : 'var(--danger)';
+    
+    html += `
+      <div style="margin-bottom:16px;">
+        <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+          <span style="font-size:14px;font-weight:500;">${name}</span>
+          <span style="font-size:14px;font-weight:600;color:${color};">${avg.toFixed(1)}</span>
+        </div>
+        <div class="progress-container">
+          <div class="progress-bar" style="width:${percentage}%;background:${color};"></div>
+        </div>
+      </div>
+    `;
+  });
+  html += '</div>';
+  
+  // Legend
+  html += `
+    <div style="background:#f8fafc;padding:20px;border-radius:12px;">
+      <h4 style="margin-bottom:12px;font-size:14px;color:#475569;">Rating Scale</h4>
+      <div style="display:grid;gap:8px;">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div style="width:20px;height:20px;background:var(--success);border-radius:4px;"></div>
+          <span style="font-size:13px;">4.0 - 5.0: Exceptional</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div style="width:20px;height:20px;background:var(--warning);border-radius:4px;"></div>
+          <span style="font-size:13px;">3.0 - 3.9: Proficient</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div style="width:20px;height:20px;background:var(--danger);border-radius:4px;"></div>
+          <span style="font-size:13px;">Below 3.0: Needs Development</span>
+        </div>
+      </div>
+    </div>
+  `;
+  
+  html += '</div>';
+  return html;
+}
+
+function generateRelationshipComparison(responses) {
+  const relationships = ['self', 'manager', 'peer', 'report', 'other'];
+  const relCounts = {};
+  const relAverages = {};
+  
+  relationships.forEach(rel => {
+    const relResponses = responses.filter(r => r.relationship === rel);
+    relCounts[rel] = relResponses.length;
+    
+    if (relResponses.length > 0) {
+      let total = 0;
+      let count = 0;
+      
+      relResponses.forEach(response => {
+        Object.values(response.ratings).forEach(rating => {
+          total += rating;
+          count++;
+        });
+      });
+      
+      relAverages[rel] = count > 0 ? total / count : 0;
+    } else {
+      relAverages[rel] = 0;
+    }
+  });
+  
+  let html = '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:16px;margin-bottom:20px;">';
+  
+  relationships.forEach(rel => {
+    if (relCounts[rel] > 0) {
+      const badgeClass = `rel-${rel}`;
+      html += `
+        <div style="text-align:center;padding:16px;background:#f8fafc;border-radius:8px;">
+          <div class="relationship-badge ${badgeClass}" style="margin-bottom:8px;">${rel.charAt(0).toUpperCase() + rel.slice(1)}</div>
+          <div style="font-size:24px;font-weight:700;color:#1e293b;margin:8px 0;">${relAverages[rel].toFixed(1)}</div>
+          <div style="font-size:12px;color:var(--muted);">${relCounts[rel]} response${relCounts[rel] > 1 ? 's' : ''}</div>
+        </div>
+      `;
+    }
+  });
+  
+  html += '</div>';
+  return html;
+}
+
+function generateCompetencyTable(responses) {
+  let tableHTML = '';
+  
+  feedbackData.competencies.forEach(comp => {
+    const selfRating = getAverageByRelationship(responses, comp.id, 'self');
+    const managerRating = getAverageByRelationship(responses, comp.id, 'manager');
+    const peerRating = getAverageByRelationship(responses, comp.id, 'peer');
+    const reportRating = getAverageByRelationship(responses, comp.id, 'report');
+    
+    let total = 0;
+    let count = 0;
+    responses.forEach(response => {
+      if (response.ratings[comp.id]) {
+        total += response.ratings[comp.id];
+        count++;
+      }
+    });
+    const overall = count > 0 ? total / count : 0;
+    
+    const gap = selfRating > 0 && overall > 0 ? (selfRating - overall).toFixed(1) : 'N/A';
+    const gapColor = gap !== 'N/A' && parseFloat(gap) > 0.5 ? 'var(--warning)' : gap !== 'N/A' && parseFloat(gap) < -0.5 ? 'var(--success)' : '#64748b';
+    
+    tableHTML += `
+      <tr>
+        <td style="font-weight:500;">${comp.name}</td>
+        <td class="score-cell ${getScoreClass(selfRating)}">${selfRating > 0 ? selfRating.toFixed(1) : '-'}</td>
+        <td class="score-cell ${getScoreClass(managerRating)}">${managerRating > 0 ? managerRating.toFixed(1) : '-'}</td>
+        <td class="score-cell ${getScoreClass(peerRating)}">${peerRating > 0 ? peerRating.toFixed(1) : '-'}</td>
+        <td class="score-cell ${getScoreClass(reportRating)}">${reportRating > 0 ? reportRating.toFixed(1) : '-'}</td>
+        <td class="score-cell" style="font-weight:700;color:var(--accent);">${overall.toFixed(1)}</td>
+        <td class="score-cell" style="color:${gapColor};">${gap}</td>
+      </tr>
+    `;
+  });
+  
+  return tableHTML;
+}
+
+function getAverageByRelationship(responses, competencyId, relationship) {
+  const filtered = responses.filter(r => r.relationship === relationship);
+  if (filtered.length === 0) return 0;
+  
+  let total = 0;
+  let count = 0;
+  
+  filtered.forEach(response => {
+    if (response.ratings[competencyId]) {
+      total += response.ratings[competencyId];
+      count++;
+    }
+  });
+  
+  return count > 0 ? total / count : 0;
+}
+
+function getScoreClass(score) {
+  if (score >= 4) return 'score-high';
+  if (score >= 3) return 'score-medium';
+  if (score > 0) return 'score-low';
+  return '';
+}
+
+function generateCommentsSummary(responses) {
+  let html = '';
+  
+  const responseWithComments = responses.filter(r => 
+    (r.comments && Object.keys(r.comments).length > 0) || r.overallComments
+  );
+  
+  if (responseWithComments.length === 0) {
+    return '<div style="text-align:center;padding:40px;color:var(--muted);">No comments provided</div>';
+  }
+  
+  responseWithComments.forEach(response => {
+    const relBadgeClass = `rel-${response.relationship}`;
+    
+    html += `
+      <div class="comment-box">
+        <div class="comment-author">
+          <span class="relationship-badge ${relBadgeClass}">${response.relationship.charAt(0).toUpperCase() + response.relationship.slice(1)}</span>
+          <span style="margin-left:8px;">${response.reviewerName}</span>
+          <span style="margin-left:8px;color:var(--muted);">• ${new Date(response.timestamp).toLocaleDateString()}</span>
+        </div>
+    `;
+    
+    if (response.comments && Object.keys(response.comments).length > 0) {
+      Object.entries(response.comments).forEach(([compId, comment]) => {
+        const comp = feedbackData.competencies.find(c => c.id === parseInt(compId));
+        if (comp && comment) {
+          html += `
+            <div style="margin:8px 0;">
+              <strong style="font-size:13px;color:#475569;">${comp.name}:</strong>
+              <div class="comment-text">"${comment}"</div>
+            </div>
+          `;
+        }
+      });
+    }
+    
+    if (response.overallComments) {
+      html += `
+        <div style="margin:8px 0;">
+          <strong style="font-size:13px;color:#475569;">Overall:</strong>
+          <div class="comment-text">"${response.overallComments}"</div>
+        </div>
+      `;
+    }
+    
+    html += '</div>';
+  });
+  
+  return html;
+}
+
+// Sample data
+function loadSampleData() {
+  // Sample reviewees
+  feedbackData.reviewees = [
+    { id: 1, name: 'Sarah Johnson', role: 'Product Manager', department: 'Product', email: 'sarah.j@company.com', addedDate: new Date().toISOString() },
+    { id: 2, name: 'Michael Chen', role: 'Senior Developer', department: 'Engineering', email: 'michael.c@company.com', addedDate: new Date().toISOString() },
+    { id: 3, name: 'Emily Rodriguez', role: 'UX Designer', department: 'Design', email: 'emily.r@company.com', addedDate: new Date().toISOString() }
+  ];
+  
+  // Sample competencies
+  feedbackData.competencies = [
+    { id: 101, name: 'Leadership', category: 'leadership', description: 'Ability to guide, inspire, and influence others' },
+    { id: 102, name: 'Communication', category: 'interpersonal', description: 'Clear and effective verbal and written communication' },
+    { id: 103, name: 'Technical Skills', category: 'technical', description: 'Proficiency in job-specific technical areas' },
+    { id: 104, name: 'Problem Solving', category: 'performance', description: 'Analytical thinking and creative solution development' },
+    { id: 105, name: 'Teamwork', category: 'interpersonal', description: 'Collaboration and contribution to team success' },
+    { id: 106, name: 'Innovation', category: 'development', description: 'Creativity and ability to drive new ideas' }
+  ];
+  
+  renderReviewees();
+  renderCompetencies();
+  updateStats();
+  saveToLocal();
+  showNotification('Loaded', 'Sample data loaded successfully', 'success');
+}
+
+function generateSampleFeedback() {
+  if (feedbackData.reviewees.length === 0 || feedbackData.competencies.length === 0) {
+    showNotification('Error', 'Please add reviewees and competencies first', 'error');
+    return;
+  }
+  
+  const relationships = ['self', 'manager', 'peer', 'peer', 'report'];
+  const reviewerNames = ['Self', 'John Smith', 'Alice Brown', 'Bob Wilson', 'Carol Davis'];
+  
+  feedbackData.reviewees.forEach(reviewee => {
+    relationships.forEach((rel, index) => {
+      const feedback = {
+        id: Date.now() + Math.random() * 1000,
+        revieweeId: reviewee.id,
+        reviewerName: rel === 'self' ? reviewee.name : reviewerNames[index],
+        relationship: rel,
+        timestamp: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000).toISOString(),
+        ratings: {},
+        comments: {}
+      };
+      
+      feedbackData.competencies.forEach(comp => {
+        // Generate realistic ratings with some variance
+        const baseRating = Math.random() * 2 + 3; // 3-5 range
+        feedback.ratings[comp.id] = Math.min(5, Math.max(1, Math.round(baseRating)));
+        
+        // Add occasional comments
+        if (Math.random() > 0.7) {
+          const sampleComments = [
+            'Shows strong capability in this area',
+            'Consistently demonstrates excellence',
+            'Could benefit from additional development',
+            'Good progress shown recently',
+            'Exceeds expectations regularly'
+          ];
+          feedback.comments[comp.id] = sampleComments[Math.floor(Math.random() * sampleComments.length)];
+        }
+      });
+      
+      if (Math.random() > 0.5) {
+        feedback.overallComments = 'A valuable team member who contributes significantly to
