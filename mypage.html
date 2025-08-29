@@ -539,7 +539,7 @@
 </div>
 
 <script>
-// Sample projects data
+// 샘플 데이터 제거 - 빈 배열로 시작
 let projects = [];
 
 // IPA 프로젝트 로드 함수
@@ -547,34 +547,45 @@ function loadIPAProjects() {
   const ipaSurveyData = localStorage.getItem('ipaSurveyData');
   let allProjects = JSON.parse(localStorage.getItem('allProjects') || '[]');
   
+  console.log('IPA Survey Data:', ipaSurveyData); // 디버깅용
+  
   // IPA 설문이 저장되어 있으면 프로젝트 목록에 추가
   if (ipaSurveyData) {
-    const surveyData = JSON.parse(ipaSurveyData);
-    
-    if (surveyData.title || surveyData.attributes?.length > 0) {
-      // 이미 추가된 프로젝트인지 확인
-      const existingProjectIndex = allProjects.findIndex(p => p.id === 'ipa-main');
+    try {
+      const surveyData = JSON.parse(ipaSurveyData);
+      console.log('Parsed Survey Data:', surveyData); // 디버깅용
       
-      const projectData = {
-        id: 'ipa-main',
-        title: surveyData.title || 'IPA Survey',
-        type: 'ipa',
-        description: surveyData.description || 'Importance-Performance Analysis Survey',
-        createdAt: new Date().toISOString(),
-        lastModified: new Date().toISOString(),
-        responses: surveyData.responses ? surveyData.responses.length : 0,
-        status: surveyData.responses && surveyData.responses.length > 0 ? 'active' : 'draft'
-      };
-      
-      if (existingProjectIndex >= 0) {
-        // 기존 프로젝트 업데이트
-        allProjects[existingProjectIndex] = projectData;
-      } else {
-        // 새 프로젝트 추가
-        allProjects.push(projectData);
+      if (surveyData.title || surveyData.attributes?.length > 0) {
+        // 이미 추가된 프로젝트인지 확인
+        const existingProjectIndex = allProjects.findIndex(p => p.id === 'ipa-main');
+        
+        const projectData = {
+          id: 'ipa-main',
+          title: surveyData.title || 'Untitled IPA Survey',
+          type: 'ipa',
+          description: surveyData.description || 'Importance-Performance Analysis Survey',
+          createdAt: existingProjectIndex >= 0 ? allProjects[existingProjectIndex].createdAt : new Date().toISOString(),
+          lastModified: new Date().toISOString(),
+          responses: surveyData.responses ? surveyData.responses.length : 0,
+          status: surveyData.responses && surveyData.responses.length > 0 ? 'active' : 'draft',
+          attributes: surveyData.attributes?.length || 0
+        };
+        
+        console.log('Project Data:', projectData); // 디버깅용
+        
+        if (existingProjectIndex >= 0) {
+          // 기존 프로젝트 업데이트
+          allProjects[existingProjectIndex] = projectData;
+        } else {
+          // 새 프로젝트 추가
+          allProjects.push(projectData);
+        }
+        
+        localStorage.setItem('allProjects', JSON.stringify(allProjects));
+        console.log('Saved to allProjects:', allProjects); // 디버깅용
       }
-      
-      localStorage.setItem('allProjects', JSON.stringify(allProjects));
+    } catch (e) {
+      console.error('Error parsing IPA survey data:', e);
     }
   }
   
@@ -695,8 +706,28 @@ function refreshProjects() {
 
 // Initialize projects when page loads
 document.addEventListener('DOMContentLoaded', function() {
-  // Always load projects on page load to check for IPA data
+  // 페이지 로드 시 항상 프로젝트 확인
+  console.log('Page loaded, checking for projects...');
+  loadProjects();
+  
+  // Projects 탭이 활성화되면 다시 로드
   if (document.getElementById('projects-tab').classList.contains('active')) {
+    loadProjects();
+  }
+});
+
+// 페이지가 다시 포커스를 받을 때도 프로젝트 새로고침 (IPA에서 돌아왔을 때)
+window.addEventListener('focus', function() {
+  console.log('Window focused, refreshing projects...');
+  if (document.getElementById('projects-tab').classList.contains('active')) {
+    loadProjects();
+  }
+});
+
+// localStorage 변경 감지 (같은 도메인 내에서)
+window.addEventListener('storage', function(e) {
+  if (e.key === 'ipaSurveyData' || e.key === 'allProjects') {
+    console.log('localStorage changed, refreshing projects...');
     loadProjects();
   }
 });
