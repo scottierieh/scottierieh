@@ -696,25 +696,30 @@ function switchMainTab(tab) {
 }
 
 function openTool(tool) {
-  if (tool === 'ipa') {
-    window.location.href = './ipa.html';
-    return;
-  }
-  
-  if (tool === 'dataeditor') {
-    window.location.href = './data_editor.html';
-    return;
-  }
-  
-  if (tool === 'survey') {
-    const choice = confirm('Open IPA (Importance-Performance Analysis) tool?');
-    if (choice) {
-      window.location.href = './ipa.html';
-      return;
-    }
-  }
-  
-  alert(`Opening ${tool} tool... (To be implemented)`);
+ if (tool === 'ipa') {
+   window.location.href = './ipa.html';
+   return;
+ }
+ 
+ if (tool === 'dataeditor') {
+   window.location.href = './data_editor.html';
+   return;
+ }
+ 
+ if (tool === 'survey-builder') {
+   window.location.href = './survey_builder.html';
+   return;
+ }
+ 
+ if (tool === 'survey') {
+   const choice = confirm('Open IPA (Importance-Performance Analysis) tool?');
+   if (choice) {
+     window.location.href = './ipa.html';
+     return;
+   }
+ }
+ 
+ alert(`Opening ${tool} tool... (To be implemented)`);
 }
 
 function loadProjects() {
