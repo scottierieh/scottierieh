@@ -717,6 +717,10 @@ function openTool(tool) {
      window.location.href = './ipa.html';
      return;
    }
+    if (tool === 'survey-builder') {
+   window.location.href = './statistics_main.html';
+   return;
+ }
  }
  
  alert(`Opening ${tool} tool... (To be implemented)`);
