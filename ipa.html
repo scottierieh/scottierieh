@@ -1066,13 +1066,13 @@ function goToMyPage() {
     if (shouldSave) {
       saveToLocal();
       setTimeout(() => {
-        window.location.href = './mypage-complete.html';
+        window.location.href = './mypage.html';
       }, 500);
       return;
     }
   }
   
-  window.location.href = './mypage-complete.html';
+  window.location.href = './mypage.html';
 }
 
 function saveToLocalStorage() {
