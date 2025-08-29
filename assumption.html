@@ -284,23 +284,21 @@
     justify-content:center;
   }
   
-  .enter-btn{
-    padding:12px 28px;
-    background:var(--gradient);
-    color:white;
-    border:none;
-    border-radius:10px;
-    font-weight:600;
-    cursor:pointer;
-    transition:all 0.3s;
+  .category-arrow{
+    width:32px;
+    height:32px;
+    border-radius:8px;
+    background:#f8fafc;
     display:flex;
     align-items:center;
-    gap:8px;
+    justify-content:center;
+    transition:all 0.2s;
   }
   
-  .enter-btn:hover{
+  .test-card:hover .category-arrow{
+    background:var(--accent);
+    color:white;
     transform:translateX(4px);
-    box-shadow:0 8px 24px rgba(139,92,246,0.3);
   }
   
   /* Info Section */
@@ -366,30 +364,6 @@
     color:var(--muted);
   }
   
-  /* Floating Action Button */
-  .fab{
-    position:fixed;
-    bottom:32px;
-    right:32px;
-    width:56px;
-    height:56px;
-    border-radius:50%;
-    background:var(--gradient);
-    color:white;
-    border:none;
-    cursor:pointer;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    font-size:24px;
-    box-shadow:0 8px 24px rgba(0,0,0,0.2);
-    transition:all 0.3s;
-  }
-  
-  .fab:hover{
-    transform:scale(1.1) rotate(90deg);
-    box-shadow:0 12px 32px rgba(0,0,0,0.3);
-  }
   
   @media (max-width: 768px) {
     .header-content{padding:0 16px}
@@ -537,10 +511,7 @@
             <span>Essential</span>
           </div>
         </div>
-        <button class="enter-btn">
-          Enter Test
-          <span>→</span>
-        </button>
+        <div class="category-arrow">→</div>
       </div>
     </div>
     
@@ -606,28 +577,20 @@
             <span>Essential</span>
           </div>
         </div>
-        <button class="enter-btn">
-          Enter Test
-          <span>→</span>
-        </button>
+        <div class="category-arrow">→</div>
       </div>
     </div>
     
   </div>
 </div>
 
-<!-- Floating Action Button -->
-<button class="fab" title="Quick Help">
-  ?
-</button>
-
 <script>
 function openTest(type) {
   // 각 테스트 페이지로 이동
   if (type === 'normality') {
-    window.open('normality_test.html', '_blank');
+    window.location.href = 'normality_test.html';
   } else if (type === 'homogeneity') {
-    window.open('homogeneity_test.html', '_blank');
+    window.location.href = 'homogeneity_test.html';
   }
 }
 
@@ -640,11 +603,6 @@ document.querySelectorAll('.test-card').forEach(card => {
   card.addEventListener('mouseleave', function() {
     this.style.transform = 'translateY(0)';
   });
-});
-
-// FAB click handler
-document.querySelector('.fab').addEventListener('click', function() {
-  alert('Need help with assumption checks? Check our documentation or contact support!');
 });
 
 // Method tag hover effect
