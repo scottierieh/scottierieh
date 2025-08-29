@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>📊 IPA Survey Platform</title>
+<title>📊 IPA (Importance-Performance) Survey Platform</title>
 
 <style>
   :root{
@@ -158,7 +158,8 @@
     </div>
     
     <div class="nav-tabs">
-      <button class="nav-tab active" onclick="switchTab('design')">🎨 Survey Design</button>
+      <button class="nav-tab active" onclick="switchTab('guide')">📖 IPA Guide</button>
+      <button class="nav-tab" onclick="switchTab('design')">🎨 Survey Design</button>
       <button class="nav-tab" onclick="switchTab('collect')">📋 Data Collection</button>
       <button class="nav-tab" onclick="switchTab('analysis')">📈 Analysis</button>
     </div>
@@ -174,8 +175,116 @@
 <!-- Main Container -->
 <div class="main-container">
 
+  <!-- IPA Guide Tab -->
+  <div id="guide-tab" class="content-area active">
+    <div class="card">
+      <div class="card-header">
+        <h2 class="card-title">📖 What is IPA (Importance-Performance Analysis)?</h2>
+      </div>
+      
+      <div style="font-size:16px;line-height:1.8;color:#334155;">
+        <p style="margin-bottom:24px;">
+          <strong>Importance-Performance Analysis (IPA)</strong> is a strategic tool used to evaluate customer satisfaction by plotting service attributes on a two-dimensional grid based on their <strong>importance</strong> to customers and the organization's <strong>performance</strong> in delivering them.
+        </p>
+        
+        <div style="background:#f0f9ff;padding:20px;border-radius:12px;margin-bottom:32px;border-left:4px solid var(--info);">
+          <h3 style="color:#0369a1;margin-bottom:12px;">🎯 The IPA Matrix</h3>
+          <p style="color:#0c4a6e;margin-bottom:16px;">IPA divides attributes into four strategic quadrants:</p>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+            <div style="background:white;padding:16px;border-radius:8px;">
+              <strong style="color:#dc2626;">I. Concentrate Here</strong><br>
+              <small style="color:#64748b;">High Importance + Low Performance<br>Priority for improvement</small>
+            </div>
+            <div style="background:white;padding:16px;border-radius:8px;">
+              <strong style="color:#166534;">II. Keep Up Good Work</strong><br>
+              <small style="color:#64748b;">High Importance + High Performance<br>Maintain current level</small>
+            </div>
+            <div style="background:white;padding:16px;border-radius:8px;">
+              <strong style="color:#a16207;">III. Low Priority</strong><br>
+              <small style="color:#64748b;">Low Importance + Low Performance<br>Monitor but don't prioritize</small>
+            </div>
+            <div style="background:white;padding:16px;border-radius:8px;">
+              <strong style="color:#7c3aed;">IV. Possible Overkill</strong><br>
+              <small style="color:#64748b;">Low Importance + High Performance<br>Consider resource reallocation</small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="card">
+      <div class="card-header">
+        <h2 class="card-title">🚀 How to Design and Conduct Your IPA Survey</h2>
+      </div>
+      
+      <div style="display:grid;gap:24px;">
+        <!-- Step 1 -->
+        <div style="background:#fefce8;padding:24px;border-radius:12px;border-left:4px solid var(--warning);">
+          <h3 style="color:#92400e;margin-bottom:16px;">Step 1: Define Your Survey Scope</h3>
+          <ul style="color:#451a03;padding-left:20px;line-height:1.8;">
+            <li><strong>Identify your objective:</strong> Customer satisfaction, service quality, product features, etc.</li>
+            <li><strong>Define your target audience:</strong> Current customers, potential customers, specific segments</li>
+            <li><strong>Set survey title and description</strong> that clearly explains the purpose</li>
+          </ul>
+        </div>
+        
+        <!-- Step 2 -->
+        <div style="background:#ecfdf5;padding:24px;border-radius:12px;border-left:4px solid var(--success);">
+          <h3 style="color:#065f46;margin-bottom:16px;">Step 2: Create Individual Satisfaction Items</h3>
+          <ul style="color:#064e3b;padding-left:20px;line-height:1.8;">
+            <li><strong>Add 5-15 specific attributes</strong> (e.g., "Product Quality", "Customer Service", "Price Fairness")</li>
+            <li><strong>Use clear, specific language</strong> that customers can easily understand</li>
+            <li><strong>Focus on actionable items</strong> your organization can influence</li>
+            <li><strong>Choose your scale:</strong> 5-point or 7-point Likert scale</li>
+          </ul>
+        </div>
+        
+        <!-- Step 3 -->
+        <div style="background:#eff6ff;padding:24px;border-radius:12px;border-left:4px solid var(--accent);">
+          <h3 style="color:#1e40af;margin-bottom:16px;">Step 3: Set Overall Satisfaction Question</h3>
+          <ul style="color:#1e3a8a;padding-left:20px;line-height:1.8;">
+            <li><strong>Create a global satisfaction question</strong> (e.g., "Overall, how satisfied are you with our service?")</li>
+            <li><strong>This serves as the dependent variable</strong> for calculating importance through correlation</li>
+            <li><strong>Use the same scale</strong> as your individual items for consistency</li>
+          </ul>
+        </div>
+        
+        <!-- Step 4 -->
+        <div style="background:#f3e8ff;padding:24px;border-radius:12px;border-left:4px solid var(--purple);">
+          <h3 style="color:#6b21a8;margin-bottom:16px;">Step 4: Collect Response Data</h3>
+          <ul style="color:#581c87;padding-left:20px;line-height:1.8;">
+            <li><strong>Gather at least 30-50 responses</strong> for reliable statistical analysis</li>
+            <li><strong>Use the quick entry form</strong> or distribute survey links to respondents</li>
+            <li><strong>Ensure representative sampling</strong> of your target population</li>
+            <li><strong>Monitor response quality</strong> and completion rates</li>
+          </ul>
+        </div>
+        
+        <!-- Step 5 -->
+        <div style="background:#fef2f2;padding:24px;border-radius:12px;border-left:4px solid var(--danger);">
+          <h3 style="color:#991b1b;margin-bottom:16px;">Step 5: Analyze Results and Take Action</h3>
+          <ul style="color:#7f1d1d;padding-left:20px;line-height:1.8;">
+            <li><strong>Run the IPA analysis</strong> to generate the matrix and quadrant classifications</li>
+            <li><strong>Focus on "Concentrate Here" items</strong> for immediate improvement priorities</li>
+            <li><strong>Maintain "Keep Up Good Work" items</strong> at current performance levels</li>
+            <li><strong>Consider resource reallocation</strong> from "Possible Overkill" to priority areas</li>
+            <li><strong>Re-survey after 3-6 months</strong> to measure improvement impact</li>
+          </ul>
+        </div>
+      </div>
+      
+      <div style="background:#f8fafc;padding:24px;border-radius:12px;margin-top:32px;text-align:center;">
+        <h3 style="color:#1e293b;margin-bottom:16px;">Ready to get started?</h3>
+        <p style="color:#64748b;margin-bottom:20px;">Follow the step-by-step process using the tabs above</p>
+        <button class="btn primary large" onclick="switchTab('design')" style="padding:12px 32px;">
+          🎨 Start Survey Design
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- Design Tab -->
-  <div id="design-tab" class="content-area active">
+  <div id="design-tab" class="content-area">
     <div class="stats-grid">
       <div class="stat-card">
         <div class="stat-icon">📋</div>
@@ -196,7 +305,7 @@
     
     <div class="card">
       <div class="card-header">
-        <h2 class="card-title">🎨 IPA Survey Design</h2>
+        <h2 class="card-title">🎨 IPA (Importance-Performance) Survey Design</h2>
         <div>
           <button class="btn ghost small" onclick="previewSurvey()">👁️ Preview</button>
           <button class="btn success small" onclick="loadSampleSurvey()">📝 Load Sample Survey</button>
@@ -253,12 +362,6 @@
           <input type="text" id="overall-question" placeholder="e.g., Overall, how satisfied are you with our service?">
           <div class="form-hint">This question will be used as the dependent variable in IPA analysis.</div>
         </div>
-      </div>
-      
-      <div style="text-align:center;margin-top:24px;">
-        <button class="btn primary large" onclick="saveToLocal()" style="padding:14px 40px;font-size:16px;">
-          💾 Save Survey
-        </button>
       </div>
     </div>
   </div>
@@ -429,9 +532,10 @@ function switchTab(tab) {
   
   // Find and activate the correct nav tab
   const navTabs = document.querySelectorAll('.nav-tab');
-  if (tab === 'design') navTabs[0].classList.add('active');
-  else if (tab === 'collect') navTabs[1].classList.add('active');
-  else if (tab === 'analysis') navTabs[2].classList.add('active');
+  if (tab === 'guide') navTabs[0].classList.add('active');
+  else if (tab === 'design') navTabs[1].classList.add('active');
+  else if (tab === 'collect') navTabs[2].classList.add('active');
+  else if (tab === 'analysis') navTabs[3].classList.add('active');
   
   if (tab === 'collect') {
     updateResponseForm();
