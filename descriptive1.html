@@ -280,6 +280,56 @@
         <span></span>
     </button>
 
+  !-- 오버레이 -->
+<div class="overlay" id="overlay"></div>
+
+<!-- 사이드바 메뉴 -->
+<nav class="sidebar" id="sidebar">
+    <div class="menu-list">
+        <!-- Descriptive -->
+        <a href="#" class="menu-item" onclick="showPage('descriptive')">
+            📊 Descriptive
+        </a>
+        
+        <!-- Assumption Check -->
+        <div class="menu-group">
+            <a href="#" class="menu-item" data-submenu="assumption">
+                🔍 Assumption Check
+                <span class="arrow">▶</span>
+            </a>
+            <div class="submenu" id="assumption-submenu">
+                <a href="#" class="submenu-item" onclick="showPage('normality')">
+                    Normality Test
+                </a>
+                <a href="#" class="submenu-item" onclick="showPage('homogeneity')">
+                    Homogeneity Test
+                </a>
+            </div>
+        </div>
+        
+        <!-- Difference Tests -->
+        <div class="menu-group">
+            <a href="#" class="menu-item" data-submenu="difference">
+                ⚖️ Difference Tests
+                <span class="arrow">▶</span>
+            </a>
+            <div class="submenu" id="difference-submenu">
+                <a href="#" class="submenu-item" onclick="showPage('t-test')">
+                    t-Test
+                </a>
+                <a href="#" class="submenu-item" onclick="showPage('anova')">
+                    ANOVA
+                </a>
+                <a href="#" class="submenu-item" onclick="showPage('chi-square')">
+                    Chi-square Test
+                </a>
+            </div>
+        </div>
+        
+        <!-- 나머지 메뉴 항목들도 동일한 패턴으로 추가 -->
+    </div>
+</nav>
+
   
 <!-- Main Container -->
 <div class="main-container">
