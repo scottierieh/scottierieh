@@ -1966,9 +1966,41 @@ function resetAll() {
   
   alert('Descriptive statistics analysis reset successfully!');
 }
+// 메뉴 토글 함수
+function toggleMenu() {
+    const menuToggle = document.getElementById('menuToggle');
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('overlay');
+    
+    menuToggle.classList.toggle('active');
+    sidebar.classList.toggle('active');
+    overlay.classList.toggle('active');
+}
 
-// CSV File Loading
+// 페이지 전환 함수
+function showPage(page) {
+    console.log('Switching to:', page);
+    toggleMenu();
+}
+
+// CSV File Loading - 이 부분은 유지
 document.addEventListener('DOMContentLoaded', function() {
+  // 메뉴 이벤트 리스너 추가
+  document.getElementById('menuToggle').addEventListener('click', toggleMenu);
+  document.getElementById('overlay').addEventListener('click', toggleMenu);
+  
+  // 서브메뉴 토글
+  document.querySelectorAll('.menu-item[data-submenu]').forEach(item => {
+      item.addEventListener('click', function(e) {
+          e.preventDefault();
+          const submenuId = this.getAttribute('data-submenu');
+          const submenu = document.getElementById(submenuId + '-submenu');
+          submenu.classList.toggle('active');
+          this.classList.toggle('active');
+      });
+  });
+
+  // 기존 CSV 파일 로딩 코드 - 유지
   if (document.getElementById('fileInput')) {
     document.getElementById('fileInput').addEventListener('change', function(event) {
       var file = event.target.files[0];
