@@ -5,6 +5,10 @@
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>📊 Analytics Platform - Descriptive Statistics</title>
 
+  
+  <!-- 외부 CSS 파일 연결 -->
+  <link rel="stylesheet" href="styles.css">
+  
 <!-- CSV Parsing -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 <!-- Plotly -->
@@ -269,86 +273,14 @@
 </head>
 <body>
 
-<!-- Header Navigation -->
-<div class="header">
-  <div class="header-content">
-    <div class="logo">
-      <div class="logo-icon">📊</div>
-      <span>Skari</span>
-    </div>
+  <!-- 햄버거 버튼 -->
+    <button class="menu-toggle" id="menuToggle">
+        <span></span>
+        <span></span>
+        <span></span>
+    </button>
 
-        
-        <div class="nav-tabs">
-          <!-- 1. Descriptive Statistics -->
-          <div class="nav-item descriptives">
-            <button class="nav-tab" onclick="selectAnalysis('descriptive.html')">📊 Descriptive</button>
-          </div>
-        
-          <div class="nav-item assumption">
-            <button class="nav-tab">🔍 Assumption Check <span style="font-size:10px">▼</span></button>
-            <div class="dropdown">
-              <div class="dropdown-item" onclick="selectAnalysis('normality.html')">Normality Test</div>
-              <div class="dropdown-item" onclick="selectAnalysis('homogeneity.html')">Homogeneity Test</div>
-            </div>
-          </div>
-    
-    
-    
-          <!-- 2. Difference Tests -->
-          <div class="nav-item difference">
-            <button class="nav-tab">⚖️ Difference Tests <span style="font-size:10px">▼</span></button>
-            <div class="dropdown">
-              <div class="dropdown-item" onclick="selectAnalysis('t_test.html')">t-Test</div>
-              <div class="dropdown-item" onclick="selectAnalysis('anova.html')">ANOVA</div>
-              <div class="dropdown-item" onclick="selectAnalysis('chi_square.html')">Chi-square Test</div>
-              <div class="dropdown-item" onclick="selectAnalysis('nonparametric.html')">Nonparametric Tests</div>
-            </div>
-          </div>
-        
-          <!-- 3. Relationship Analysis -->
-          <div class="nav-item relationship">
-            <button class="nav-tab">📈 Relationship <span style="font-size:10px">▼</span></button>
-            <div class="dropdown">
-              <div class="dropdown-item" onclick="selectAnalysis('correlation.html')">Correlation Analysis</div>
-              <div class="dropdown-item" onclick="selectAnalysis('regression.html')">Regression Analysis</div>
-            </div>
-          </div>
-        
-          <!-- 4. Multivariate Analysis -->
-          <div class="nav-item multivariate">
-            <button class="nav-tab">🎯 Multivariate <span style="font-size:10px">▼</span></button>
-            <div class="dropdown">
-              <div class="dropdown-item" onclick="selectAnalysis('EFA.html')">EFA</div>
-              <div class="dropdown-item" onclick="selectAnalysis('CFA.html')">CFA</div>
-              <div class="dropdown-item" onclick="selectAnalysis('cluster.html')">Cluster Analysis</div>
-              <div class="dropdown-item" onclick="selectAnalysis('discriminant.html')">Discriminant Analysis</div>
-              <div class="dropdown-item" onclick="selectAnalysis('pca.html')">PCA</div>
-              <div class="dropdown-item" onclick="selectAnalysis('mds.html')">MDS</div>
-              <div class="dropdown-item" onclick="selectAnalysis('correspondence.html')">Correspondence Analysis</div>
-            </div>
-          </div>
-        
-               
-        
-          <!-- 6. Specialized Analyses -->
-          <div class="nav-item specialized">
-            <button class="nav-tab">🔬 Specialized <span style="font-size:10px">▼</span></button>
-            <div class="dropdown">
-              <div class="dropdown-item" onclick="selectAnalysis('survival.html')">Survival Analysis</div>
-              <div class="dropdown-item" onclick="selectAnalysis('timeseries.html')">Time Series Analysis (ARIMA, etc.)</div>
-            </div>
-          </div>
-        </div>
-    
-    <div class="header-actions">
-      <button class="btn ghost icon" onclick="showNotifications()">🔔</button>
-      <button class="btn ghost icon" onclick="showSettings()">⚙️</button>
-      <button class="btn primary small" onclick="exportToPDF()">💾 Export</button>
-      <div class="user-avatar">AD</div>
-    </div>
-  </div>
-</div>
-
+  
 <!-- Main Container -->
 <div class="main-container">
   <!-- Descriptive Statistics Tab -->
