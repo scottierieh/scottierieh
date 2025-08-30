@@ -697,21 +697,21 @@ function switchMainTab(tab) {
 
 function openTool(tool) {
  if (tool === 'ipa') {
-   window.location.href = './ipa.html';
+   window.location.href = './urvey/ipa.html';
    return;
  }
  
  if (tool === 'dataeditor') {
-   window.location.href = './data_editor.html';
+   window.location.href = './stats/data_editor.html';
    return;
  }
  
  if (tool === 'survey-builder') {
-   window.location.href = './survey_builder.html';
+   window.location.href = './survey/survey_builder.html';
    return;
  }
  if (tool === '360-feedback') {
-   window.location.href = './360feedback.html';
+   window.location.href = './survey/360feedback.html';
    return;
  } 
  if (tool === 'basic') {
@@ -721,7 +721,7 @@ function openTool(tool) {
  if (tool === 'survey') {
    const choice = confirm('Open IPA (Importance-Performance Analysis) tool?');
    if (choice) {
-     window.location.href = './ipa.html';
+     window.location.href = './survey/ipa.html';
      return;
    }
  }
@@ -786,7 +786,7 @@ function openProject(id) {
   const project = projects.find(p => p.id === id);
   if (project) {
     if (project.type === 'ipa') {
-      window.location.href = './ipa.html';
+      window.location.href = './survey/ipa.html';
     } else {
       alert(`Opening ${project.title}... (To be implemented)`);
     }
@@ -797,7 +797,7 @@ function createNewProject() {
   const projectType = prompt('Enter project type (ipa/survey/statistics):');
   if (projectType) {
     if (projectType.toLowerCase() === 'ipa') {
-      window.location.href = './ipa.html';
+      window.location.href = './survey/ipa.html';
     } else {
       alert(`Creating new ${projectType} project... (To be implemented)`);
     }
